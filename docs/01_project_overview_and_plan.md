@@ -22,21 +22,30 @@
 - 已有固定评测集 v1 review pack 与 GUI 巡检入口：`experiments/fixed_eval/v1/review_pack/`、`scripts/open_fixed_eval_review_gui.ps1`
 - 已基于首轮听审生成固定评测集 `v1_1`：`experiments/fixed_eval/v1_1/`
 - 已有只审替换样本的 GUI 入口：`scripts/open_fixed_eval_v1_1_replacements_gui.ps1`
+- 已基于最终 maybe 决议生成固定评测集 `v1_2`：`experiments/fixed_eval/v1_2/`
+- 已有只审 `v1_2` 新替换样本的 GUI 入口：`scripts/open_fixed_eval_v1_2_replacements_gui.ps1`
+- `v1_2` 新替换样本已补听通过，当前固定评测集终稿位于：`experiments/fixed_eval/v1_2/fixed_eval_review_final_v1_2.csv`
+- 已有 clean 主分析子集：`data/datasets/_meta/utterance_manifest_clean_speech_v1.csv`、`data/datasets/_meta/utterance_manifest_clean_singing_v1.csv`
+- 已有 clean 子集说明：`docs/14_clean_analysis_subsets_v1.md`
+- 已有阶段 0 运行环境基线说明：`docs/15_stage0_runtime_environment_v1.md`
+- 已有阶段 0 基线分析说明与入口：`docs/16_stage0_baseline_analysis_v1.md`、`scripts/run_stage0_baseline_analysis.py`
+- 已有阶段 0 baseline pilot 输出：`experiments/stage0_baseline/v1_pilot/`
+- 已有阶段 0 pilot 中文解释文档：`docs/17_stage0_pilot_interpretation_v1.md`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
 - 已建立实验记录与关键产物保留位点：`reports/daily/`、`experiments/`、`artifacts/checkpoints/keep/`
 - 已建立日报模板：`reports/daily/0000_template.md`
-- 当前还没有依赖锁定说明。
+- 当前已有首版依赖锁定说明：`requirements-stage0-analysis.txt`
 
 ## 当前阶段
-阶段名：数据准备第三步，固定评测集 v1 人工巡检链路已具备，开始向更大范围的 manifest 特征增强过渡
+阶段名：数据准备第五步，阶段 0 baseline pilot 已跑通
 
 当前目标：
-1. 基于 review pack 与 GUI 开始人工抽查。
-2. 把同类特征逐步扩展到更大的 manifest 范围。
-3. 为阶段 0 的预处理与统计脚本准备稳定输入边界。
-4. 固定环境依赖与运行入口。
+1. 把 `stage0_baseline` 从 `pilot` 扩到 `full`。
+2. 在 `clean_singing_v1` 上补更细的 technique / f0 条件分析。
+3. 把同类特征逐步扩展到更大的 manifest 范围。
+4. 开始补阶段 0 的表格与图形报告。
 
 ## 当前结论
 - 本仓库适合采用“文档先行、脚本后补”的轻量起步方式。
@@ -54,12 +63,16 @@
 - 固定评测集 v1 的轻量声学特征与人工巡检工作表已生成，可以开始系统化清洗评测集。
 - 固定评测集 v1 的 review pack 和 GUI 已就绪，可以从高优先级样本开始低成本听审。
 - 已根据首轮听审移除 `11` 条不适合作为固定评测基准的样本，并自动补成 `v1_1`。
+- 已对 `v1_1` 中的 6 条 `maybe` 做最终裁决：保留 2 条轻微瞬态干扰样本，移除 4 条技巧性 singing 样本，并自动补成 `v1_2`。
+- `v1_2` 的 4 条新增替换样本已全部补听通过，当前固定评测集没有残留 `maybe`。
+- `clean_speech_v1` 和 `clean_singing_v1` 已生成，可作为阶段 0/1 的保守分析入口。
+- 阶段 0 baseline 已有首个可运行入口，当前 `pilot` 在 `256 speech + 256 singing` 规模上跑通，且特征提取成功率为 `100%`。
 
 ## 近期任务
-1. 通过 GUI 只补听 `v1_1` 中新增替换的 `11` 条样本。
-2. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
-3. 固定 Python/Torch/音频处理依赖集合，并补环境说明。
-4. 开始把人工巡检结论写入日报和实验记录，而不是只停留在对话里。
+1. 把 `stage0_baseline` 从 `pilot` 扩到 `full`，生成第一版完整缓存。
+2. 在 `gender_feature_summary.csv` 与 `f0_bucket_summary.csv` 基础上补 markdown 报告和图表。
+3. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
+4. 如需引入 Torch 或更正式的特征实现，再单独升级环境锁定版本。
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

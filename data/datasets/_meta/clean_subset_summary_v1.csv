@@ -1,0 +1,21 @@
+subset_name,gender,group_axis,group_value,num_utterances,num_speakers
+clean_speech_v1,female,dataset,LibriTTS-R,3775,39
+clean_speech_v1,female,dataset,VCTK Corpus 0.92,3775,63
+clean_speech_v1,male,dataset,LibriTTS-R,3775,39
+clean_speech_v1,male,dataset,VCTK Corpus 0.92,3775,47
+clean_singing_v1,female,technique,fast_forte,166,9
+clean_singing_v1,female,technique,fast_piano,160,9
+clean_singing_v1,female,technique,forte,45,9
+clean_singing_v1,female,technique,pp,45,9
+clean_singing_v1,female,technique,slow_forte,175,9
+clean_singing_v1,female,technique,slow_piano,176,9
+clean_singing_v1,female,technique,straight,150,9
+clean_singing_v1,female,technique,vibrato,102,9
+clean_singing_v1,male,technique,fast_forte,166,11
+clean_singing_v1,male,technique,fast_piano,160,11
+clean_singing_v1,male,technique,forte,45,11
+clean_singing_v1,male,technique,pp,45,11
+clean_singing_v1,male,technique,slow_forte,175,11
+clean_singing_v1,male,technique,slow_piano,176,11
+clean_singing_v1,male,technique,straight,150,11
+clean_singing_v1,male,technique,vibrato,102,11

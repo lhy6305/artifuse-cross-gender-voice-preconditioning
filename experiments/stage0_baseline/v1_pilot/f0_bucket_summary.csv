@@ -1,0 +1,39 @@
+subset_name,group_axis,group_value,gender,f0_bin,num_rows,f0_bin_upper_q1_hz,f0_bin_upper_q2_hz,f0_bin_upper_q3_hz,mean_f0_median_hz,mean_spectral_centroid_hz,mean_log_centroid_minus_log_f0
+clean_speech,dataset_name,LibriTTS-R,female,q2_midlow,2,107.382371,148.757970,174.734296,146.666881,1704.583773,1.053151
+clean_speech,dataset_name,LibriTTS-R,female,q3_midhigh,48,107.382371,148.757970,174.734296,162.717133,1891.861587,1.062752
+clean_speech,dataset_name,LibriTTS-R,female,q4_high,14,107.382371,148.757970,174.734296,182.566752,2140.870806,1.064695
+clean_speech,dataset_name,LibriTTS-R,male,q1_low,38,107.382371,148.757970,174.734296,101.599463,1702.156627,1.221956
+clean_speech,dataset_name,LibriTTS-R,male,q2_midlow,25,107.382371,148.757970,174.734296,115.596150,1724.134077,1.172700
+clean_speech,dataset_name,LibriTTS-R,male,q3_midhigh,1,107.382371,148.757970,174.734296,155.410669,1052.584604,0.830776
+clean_speech,dataset_name,VCTK Corpus 0.92,female,q3_midhigh,14,107.382371,148.757970,174.734296,167.142561,4386.205345,1.414112
+clean_speech,dataset_name,VCTK Corpus 0.92,female,q4_high,50,107.382371,148.757970,174.734296,189.921409,4507.215729,1.372334
+clean_speech,dataset_name,VCTK Corpus 0.92,male,q1_low,27,107.382371,148.757970,174.734296,102.823662,4384.246185,1.628439
+clean_speech,dataset_name,VCTK Corpus 0.92,male,q2_midlow,37,107.382371,148.757970,174.734296,117.048843,4521.747558,1.585801
+clean_singing,coarse_style,fast_forte,female,q2_midlow,1,181.669885,274.003942,370.617660,274.003942,3172.173649,1.063600
+clean_singing,coarse_style,fast_forte,female,q3_midhigh,11,181.669885,274.003942,370.617660,322.494865,3674.030203,1.056155
+clean_singing,coarse_style,fast_forte,female,q4_high,4,181.669885,274.003942,370.617660,394.226302,3752.941719,0.977223
+clean_singing,coarse_style,fast_forte,male,q1_low,9,181.669885,274.003942,370.617660,151.786832,3498.346355,1.355636
+clean_singing,coarse_style,fast_forte,male,q2_midlow,7,181.669885,274.003942,370.617660,207.329232,4084.791181,1.293356
+clean_singing,coarse_style,fast_piano,female,q3_midhigh,9,181.669885,274.003942,370.617660,324.570438,3929.470973,1.082343
+clean_singing,coarse_style,fast_piano,female,q4_high,7,181.669885,274.003942,370.617660,405.724455,3717.108815,0.961436
+clean_singing,coarse_style,fast_piano,male,q1_low,12,181.669885,274.003942,370.617660,160.151852,3255.621968,1.307821
+clean_singing,coarse_style,fast_piano,male,q2_midlow,4,181.669885,274.003942,370.617660,210.638618,3148.055619,1.174160
+clean_singing,coarse_style,forte,female,q4_high,16,181.669885,274.003942,370.617660,520.304370,3730.701575,0.835661
+clean_singing,coarse_style,forte,male,q2_midlow,16,181.669885,274.003942,370.617660,255.382732,3577.923661,1.140186
+clean_singing,coarse_style,pp,female,q4_high,16,181.669885,274.003942,370.617660,528.243854,3690.735425,0.820438
+clean_singing,coarse_style,pp,male,q2_midlow,16,181.669885,274.003942,370.617660,257.904598,3201.933204,1.089338
+clean_singing,coarse_style,slow_forte,female,q3_midhigh,9,181.669885,274.003942,370.617660,352.103236,3373.180628,0.980369
+clean_singing,coarse_style,slow_forte,female,q4_high,7,181.669885,274.003942,370.617660,444.559933,3935.572041,0.946093
+clean_singing,coarse_style,slow_forte,male,q1_low,9,181.669885,274.003942,370.617660,167.643150,2946.498635,1.242603
+clean_singing,coarse_style,slow_forte,male,q2_midlow,7,181.669885,274.003942,370.617660,218.766059,3348.052586,1.183462
+clean_singing,coarse_style,slow_piano,female,q3_midhigh,10,181.669885,274.003942,370.617660,353.217364,3420.856011,0.984644
+clean_singing,coarse_style,slow_piano,female,q4_high,6,181.669885,274.003942,370.617660,454.382713,3109.911927,0.831761
+clean_singing,coarse_style,slow_piano,male,q1_low,9,181.669885,274.003942,370.617660,168.759212,2711.423770,1.204051
+clean_singing,coarse_style,slow_piano,male,q2_midlow,7,181.669885,274.003942,370.617660,223.300138,2616.180627,1.065436
+clean_singing,coarse_style,straight,female,q3_midhigh,9,181.669885,274.003942,370.617660,340.699575,3575.715847,1.019287
+clean_singing,coarse_style,straight,female,q4_high,7,181.669885,274.003942,370.617660,480.482195,4935.589157,1.005279
+clean_singing,coarse_style,straight,male,q1_low,10,181.669885,274.003942,370.617660,163.428756,2724.145647,1.217900
+clean_singing,coarse_style,straight,male,q2_midlow,6,181.669885,274.003942,370.617660,244.804426,3433.667216,1.146628
+clean_singing,coarse_style,vibrato,female,q3_midhigh,15,181.669885,274.003942,370.617660,348.825617,3240.130355,0.963244
+clean_singing,coarse_style,vibrato,female,q4_high,1,181.669885,274.003942,370.617660,372.654598,3489.019745,0.971397
+clean_singing,coarse_style,vibrato,male,q1_low,16,181.669885,274.003942,370.617660,164.914656,2910.665823,1.244460

@@ -1,0 +1,5 @@
+utt_id,eval_bucket,dataset_name,speaker_id,duration_bin,path_raw,reason
+f1_arpeggios_lip_trill_a,singing_female,VocalSet 1.2,female1,5-7s,data/datasets/singing/vocalset/raw/VocalSet1-2/data_by_singer/female1/arpeggios/lip_trill/f1_arpeggios_lip_trill_a.wav,lip_trill dominates the timbre; not representative of neutral singing input
+f3_scales_lip_trill_o,singing_female,VocalSet 1.2,female3,5-7s,data/datasets/singing/vocalset/raw/VocalSet1-2/data_by_singer/female3/scales/lip_trill/f3_scales_lip_trill_o.wav,lip_trill dominates the timbre; not representative of neutral singing input
+m10_scales_vocal_fry_a,singing_male,VocalSet 1.2,male10,5-7s,data/datasets/singing/vocalset/raw/VocalSet1-2/data_by_singer/male10/scales/vocal_fry/m10_scales_vocal_fry_a.wav,vocal_fry dominates the timbre; not representative of neutral singing input
+m1_scales_lip_trill_o,singing_male,VocalSet 1.2,male1,7-10s,data/datasets/singing/vocalset/raw/VocalSet1-2/data_by_singer/male1/scales/lip_trill/m1_scales_lip_trill_o.wav,lip_trill dominates the timbre; not representative of neutral singing input
