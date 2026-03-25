@@ -3,8 +3,12 @@ from __future__ import annotations
 import argparse
 import csv
 import math
+import os
 import statistics
+import time
 from collections import Counter, defaultdict
+from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
 from pathlib import Path
 
 from enrich_manifest_features import enrich_row
@@ -31,6 +35,27 @@ FEATURE_FIELDS = [
     "f0_p90_hz",
 ]
 
+F0_BUCKET_FIELDNAMES = [
+    "subset_name",
+    "group_axis",
+    "group_value",
+    "gender",
+    "f0_bin",
+    "num_rows",
+    "f0_bin_upper_q1_hz",
+    "f0_bin_upper_q2_hz",
+    "f0_bin_upper_q3_hz",
+    "mean_f0_median_hz",
+    "mean_spectral_centroid_hz",
+    "mean_log_centroid_minus_log_f0",
+]
+
+EXTRA_FIELDNAMES = [
+    "feature_status",
+    "feature_error",
+    *FEATURE_FIELDS,
+]
+
 SPEECH_PILOT_QUOTA_PER_CELL = 64
 SINGING_PILOT_QUOTA_PER_CELL = 16
 
@@ -42,7 +67,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fixed-eval-input", default=str(FIXED_EVAL_FINAL))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     parser.add_argument("--pilot", action="store_true", help="Run on a small deterministic subset first.")
-    parser.add_argument("--reuse-existing", action="store_true", help="Reuse enriched CSVs when they already exist.")
+    parser.add_argument("--subset", choices=["all", "speech", "singing"], default="all")
+    parser.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--progress-every", type=int, default=50)
+    parser.add_argument("--max-rows", type=int, default=0, help="Optional hard cap for smoke test.")
+    parser.add_argument("--overwrite", action="store_true", help="Delete existing enriched CSV before rerun.")
+    parser.add_argument("--finalize-only", action="store_true", help="Skip feature extraction and only build summaries.")
     parser.add_argument("--f0-sr", type=int, default=16000)
     parser.add_argument("--frame-period-ms", type=float, default=10.0)
     return parser.parse_args()
@@ -60,13 +91,27 @@ def read_rows(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(f))
 
 
-def write_rows(path: Path, rows: list[dict[str, str]]) -> None:
-    if not rows:
+def write_rows(path: Path, rows: list[dict[str, str]], fieldnames: list[str] | None = None) -> None:
+    if not rows and not fieldnames:
         raise ValueError(f"No rows to write for {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        resolved_fieldnames = fieldnames or list(rows[0].keys())
+        writer = csv.DictWriter(f, fieldnames=resolved_fieldnames)
         writer.writeheader()
+        if rows:
+            writer.writerows(rows)
+
+
+def append_rows(path: Path, rows: list[dict[str, str]], fieldnames: list[str]) -> None:
+    if not rows:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_header = not path.exists()
+    with path.open("a", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if write_header:
+            writer.writeheader()
         writer.writerows(rows)
 
 
@@ -109,19 +154,171 @@ def build_pilot_inputs(
     return speech_selected, singing_selected
 
 
-def enrich_manifest(
+def format_seconds(value: float) -> str:
+    if value < 0:
+        value = 0
+    total = int(round(value))
+    hours, rem = divmod(total, 3600)
+    minutes, seconds = divmod(rem, 60)
+    if hours > 0:
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    return f"{minutes:02d}:{seconds:02d}"
+
+
+def print_progress(label: str, done: int, total: int, start_time: float, completed_this_session: int) -> None:
+    elapsed = max(time.time() - start_time, 1e-6)
+    rate = completed_this_session / elapsed if completed_this_session > 0 else 0.0
+    remaining = total - done
+    eta = remaining / rate if rate > 0 else 0.0
+    pct = (done / total * 100.0) if total else 100.0
+    print(
+        f"[{label}] {done}/{total} {pct:6.2f}% | {rate:6.2f} rows/s | "
+        f"elapsed {format_seconds(elapsed)} | eta {format_seconds(eta)}",
+        flush=True,
+    )
+
+
+def maybe_trim_rows(rows: list[dict[str, str]], max_rows: int) -> list[dict[str, str]]:
+    if max_rows <= 0:
+        return rows
+    return rows[:max_rows]
+
+
+def enriched_fieldnames(rows: list[dict[str, str]]) -> list[str]:
+    if not rows:
+        raise ValueError("Cannot infer fieldnames from empty row list.")
+    return list(rows[0].keys()) + EXTRA_FIELDNAMES
+
+
+def _enrich_worker(row: dict[str, str], f0_sr: int, frame_period_ms: float) -> dict[str, str]:
+    return enrich_row(row, f0_sr=f0_sr, frame_period_ms=frame_period_ms)
+
+
+def load_cached_rows_for_input(
+    label: str,
+    path: Path,
+    input_rows: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+
+    requested_ids = [row["utt_id"] for row in input_rows]
+    requested_set = set(requested_ids)
+    with path.open("r", encoding="utf-8", newline="") as f:
+        cached_rows = list(csv.DictReader(f))
+
+    cached_by_id: dict[str, dict[str, str]] = {}
+    duplicate_ids: set[str] = set()
+    for row in cached_rows:
+        utt_id = row["utt_id"]
+        if utt_id in cached_by_id:
+            duplicate_ids.add(utt_id)
+        cached_by_id[utt_id] = row
+
+    if duplicate_ids:
+        print(
+            f"[{label}] Warning: found {len(duplicate_ids)} duplicated utt_id rows in {path}; "
+            "keeping the last occurrence for resume alignment.",
+            flush=True,
+        )
+
+    extra_ids = [utt_id for utt_id in cached_by_id if utt_id not in requested_set]
+    if extra_ids:
+        print(
+            f"[{label}] Ignoring {len(extra_ids)} cached rows that are outside the current input selection.",
+            flush=True,
+        )
+
+    return [cached_by_id[utt_id] for utt_id in requested_ids if utt_id in cached_by_id]
+
+
+def enrich_manifest_incremental(
+    label: str,
     rows: list[dict[str, str]],
     out_csv: Path,
-    reuse_existing: bool,
+    overwrite: bool,
+    jobs: int,
+    batch_size: int,
+    progress_every: int,
     f0_sr: int,
     frame_period_ms: float,
 ) -> list[dict[str, str]]:
-    if reuse_existing and out_csv.exists():
-        return read_rows(out_csv)
+    if overwrite and out_csv.exists():
+        out_csv.unlink()
 
-    enriched_rows = [enrich_row(row, f0_sr=f0_sr, frame_period_ms=frame_period_ms) for row in rows]
-    write_rows(out_csv, enriched_rows)
-    return enriched_rows
+    jobs = max(1, jobs)
+    batch_size = max(1, batch_size)
+    progress_every = max(1, progress_every)
+
+    fieldnames = enriched_fieldnames(rows)
+    cached_rows = load_cached_rows_for_input(label, out_csv, rows)
+    processed_ids = {row["utt_id"] for row in cached_rows}
+    cached_by_id = {row["utt_id"]: row for row in cached_rows}
+    pending_rows = [row for row in rows if row["utt_id"] not in processed_ids]
+    done = len(processed_ids)
+    total = len(rows)
+
+    if done:
+        print(f"[{label}] Resume detected: {done}/{total} rows already present in {out_csv}", flush=True)
+
+    if not pending_rows:
+        print(f"[{label}] No pending rows. Reusing {out_csv}", flush=True)
+        return [cached_by_id[row["utt_id"]] for row in rows if row["utt_id"] in cached_by_id]
+
+    start_time = time.time()
+    resume_done = done
+    last_reported_done = done
+    buffered_rows: list[dict[str, str]] = []
+
+    def flush_buffer() -> None:
+        nonlocal buffered_rows
+        append_rows(out_csv, buffered_rows, fieldnames)
+        buffered_rows = []
+
+    print(
+        f"[{label}] Starting extraction: pending {len(pending_rows)}/{total} rows | "
+        f"jobs={jobs} | batch_size={batch_size}",
+        flush=True,
+    )
+
+    if jobs <= 1:
+        iterator = (_enrich_worker(row, f0_sr, frame_period_ms) for row in pending_rows)
+    else:
+        executor = ProcessPoolExecutor(max_workers=jobs)
+        iterator = executor.map(
+            _enrich_worker,
+            pending_rows,
+            repeat(f0_sr),
+            repeat(frame_period_ms),
+            chunksize=max(1, min(batch_size, 256)),
+        )
+
+    try:
+        for enriched_row in iterator:
+            buffered_rows.append(enriched_row)
+            cached_by_id[enriched_row["utt_id"]] = enriched_row
+            done += 1
+            if len(buffered_rows) >= batch_size:
+                flush_buffer()
+            if done == total or done % progress_every == 0:
+                print_progress(label, done, total, start_time, done - resume_done)
+                last_reported_done = done
+    except Exception:
+        if buffered_rows:
+            flush_buffer()
+        print(f"[{label}] Interrupted after writing {done}/{total} rows. Partial progress is saved.", flush=True)
+        raise
+    finally:
+        if jobs > 1:
+            executor.shutdown(wait=True, cancel_futures=False)
+
+    if buffered_rows:
+        flush_buffer()
+
+    if done > last_reported_done:
+        print_progress(label, done, total, start_time, done - resume_done)
+    print(f"[{label}] Finished writing {out_csv}", flush=True)
+    return [cached_by_id[row["utt_id"]] for row in rows if row["utt_id"] in cached_by_id]
 
 
 def build_overview_rows(
@@ -360,9 +557,15 @@ def build_readme(
         "",
         "- 本轮只固定第一版基线入口，不把统计显著性和热图一次做满。",
         "- `f0_bucket_summary.csv` 使用当前样本的 `f0_median_hz` 四分位做分桶。",
-        "- 如需全量开跑，可去掉 `--pilot` 并保留同一输出结构。",
+        "- 全量特征提取支持断点续跑，可分开先跑 speech 再跑 singing。",
     ]
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+
+
+def maybe_write_input_snapshot(path: Path, rows: list[dict[str, str]]) -> None:
+    if not rows:
+        return
+    write_rows(path, rows)
 
 
 def main() -> None:
@@ -377,29 +580,65 @@ def main() -> None:
     singing_rows = read_rows(singing_input)
     fixed_eval_rows = read_rows(fixed_eval_input)
 
-    mode_name = "pilot" if args.pilot else "full"
     if args.pilot:
         speech_rows, singing_rows = build_pilot_inputs(speech_rows, singing_rows)
 
+    speech_rows = maybe_trim_rows(speech_rows, args.max_rows if args.subset in {"all", "speech"} else 0)
+    singing_rows = maybe_trim_rows(singing_rows, args.max_rows if args.subset in {"all", "singing"} else 0)
+
     input_snapshot_dir = output_dir / "input_snapshot"
     input_snapshot_dir.mkdir(parents=True, exist_ok=True)
-    write_rows(input_snapshot_dir / "clean_speech_input.csv", speech_rows)
-    write_rows(input_snapshot_dir / "clean_singing_input.csv", singing_rows)
 
-    speech_enriched = enrich_manifest(
-        speech_rows,
-        output_dir / "clean_speech_enriched.csv",
-        reuse_existing=args.reuse_existing,
-        f0_sr=args.f0_sr,
-        frame_period_ms=args.frame_period_ms,
-    )
-    singing_enriched = enrich_manifest(
-        singing_rows,
-        output_dir / "clean_singing_enriched.csv",
-        reuse_existing=args.reuse_existing,
-        f0_sr=args.f0_sr,
-        frame_period_ms=args.frame_period_ms,
-    )
+    mode_name = "pilot" if args.pilot else "full"
+
+    speech_enriched: list[dict[str, str]] = []
+    singing_enriched: list[dict[str, str]] = []
+
+    if not args.finalize_only and args.subset in {"all", "speech"}:
+        maybe_write_input_snapshot(input_snapshot_dir / "clean_speech_input.csv", speech_rows)
+        speech_enriched = enrich_manifest_incremental(
+            label="speech",
+            rows=speech_rows,
+            out_csv=output_dir / "clean_speech_enriched.csv",
+            overwrite=args.overwrite,
+            jobs=args.jobs,
+            batch_size=args.batch_size,
+            progress_every=args.progress_every,
+            f0_sr=args.f0_sr,
+            frame_period_ms=args.frame_period_ms,
+        )
+    elif (output_dir / "clean_speech_enriched.csv").exists():
+        speech_enriched = load_cached_rows_for_input("speech", output_dir / "clean_speech_enriched.csv", speech_rows)
+
+    if not args.finalize_only and args.subset in {"all", "singing"}:
+        maybe_write_input_snapshot(input_snapshot_dir / "clean_singing_input.csv", singing_rows)
+        singing_enriched = enrich_manifest_incremental(
+            label="singing",
+            rows=singing_rows,
+            out_csv=output_dir / "clean_singing_enriched.csv",
+            overwrite=args.overwrite,
+            jobs=args.jobs,
+            batch_size=args.batch_size,
+            progress_every=args.progress_every,
+            f0_sr=args.f0_sr,
+            frame_period_ms=args.frame_period_ms,
+        )
+    elif (output_dir / "clean_singing_enriched.csv").exists():
+        singing_enriched = load_cached_rows_for_input("singing", output_dir / "clean_singing_enriched.csv", singing_rows)
+
+    if not speech_enriched or not singing_enriched:
+        missing_subsets: list[str] = []
+        if not speech_enriched:
+            missing_subsets.append("speech")
+        if not singing_enriched:
+            missing_subsets.append("singing")
+        print(
+            "Partial extraction complete. Final summaries need both enriched CSVs. "
+            f"Missing: {', '.join(missing_subsets)}.",
+            flush=True,
+        )
+        print("Run the missing subset or call with --finalize-only after both subsets complete.", flush=True)
+        return
 
     overview_rows = build_overview_rows(speech_enriched, singing_enriched, fixed_eval_rows, mode_name)
     write_rows(output_dir / "analysis_overview.csv", overview_rows)
@@ -410,13 +649,13 @@ def main() -> None:
 
     f0_rows = f0_bucket_rows(speech_enriched, "clean_speech", "dataset_name")
     f0_rows.extend(f0_bucket_rows(singing_enriched, "clean_singing", "coarse_style"))
-    write_rows(output_dir / "f0_bucket_summary.csv", f0_rows)
+    write_rows(output_dir / "f0_bucket_summary.csv", f0_rows, fieldnames=F0_BUCKET_FIELDNAMES)
 
     build_readme(output_dir / "README.md", mode_name, speech_enriched, singing_enriched, overview_rows, summary_rows)
 
-    print(f"Wrote baseline analysis to {output_dir}")
-    print(f"Speech rows: {len(speech_enriched)}")
-    print(f"Singing rows: {len(singing_enriched)}")
+    print(f"Wrote baseline analysis to {output_dir}", flush=True)
+    print(f"Speech rows: {len(speech_enriched)}", flush=True)
+    print(f"Singing rows: {len(singing_enriched)}", flush=True)
 
 
 if __name__ == "__main__":

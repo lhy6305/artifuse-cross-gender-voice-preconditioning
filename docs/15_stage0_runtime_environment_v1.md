@@ -25,8 +25,10 @@
   - `experiments/fixed_eval/v1_2/fixed_eval_review_final_v1_2.csv`
 - 脚本：
   - `scripts/run_stage0_baseline_analysis.py`
+  - `scripts/run_stage0_baseline_full.ps1`
 - 输出目录：
-  - `experiments/stage0_baseline/v1/`
+  - `experiments/stage0_baseline/v1_pilot/`
+  - `experiments/stage0_baseline/v1_full/`
 
 ## 推荐运行方式
 
@@ -41,15 +43,51 @@ $OutputEncoding = [Console]::OutputEncoding
   --output-dir experiments/stage0_baseline/v1_pilot
 ```
 
-确认链路没问题后，再跑全量：
+确认链路没问题后，再跑全量。推荐拆成 `speech -> singing -> finalize` 三步，便于并行度控制和断点续跑：
 
 ```powershell
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [Console]::OutputEncoding
 
 .\python.exe .\scripts\run_stage0_baseline_analysis.py `
+  --subset speech `
+  --output-dir experiments/stage0_baseline/v1_full `
+  --jobs 6 `
+  --batch-size 64 `
+  --progress-every 50
+
+.\python.exe .\scripts\run_stage0_baseline_analysis.py `
+  --subset singing `
+  --output-dir experiments/stage0_baseline/v1_full `
+  --jobs 6 `
+  --batch-size 64 `
+  --progress-every 50
+
+.\python.exe .\scripts\run_stage0_baseline_analysis.py `
+  --finalize-only `
   --output-dir experiments/stage0_baseline/v1_full
 ```
+
+如需用 PowerShell 手动入口，优先用：
+
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [Console]::OutputEncoding
+
+.\scripts\run_stage0_baseline_full.ps1 -Step speech
+.\scripts\run_stage0_baseline_full.ps1 -Step singing
+.\scripts\run_stage0_baseline_full.ps1 -Step finalize
+```
+
+常用可选项：
+
+- `-Jobs <N>`：控制并行 worker 数。
+- `-BatchSize <N>`：控制断点写盘粒度。
+- `-ProgressEvery <N>`：控制进度打印频率。
+- `-Overwrite`：清空已有 enriched CSV 后重跑当前步骤。
+- `-OutputDir <path>`：改写输出目录，便于 smoke test 或单独实验。
+- `-Pilot`：复用同一包装入口跑 `pilot` 模式。
+- 第二个子集如果补齐了另一侧缓存，脚本会顺手刷新汇总文件；`-Step finalize` 主要用于只重建汇总而不再提特征。
 
 ## 当前设计边界
 
@@ -65,4 +103,5 @@ $OutputEncoding = [Console]::OutputEncoding
 ## 备注
 
 - 当前 `stage0 baseline` 直接复用 `scripts/enrich_manifest_features.py` 的特征定义，避免字段漂移。
+- `full` 特征提取现在支持按 `subset` 分步执行、按 `utt_id` 断点续跑，并持续打印进度与 ETA。
 - 若后面切换更正式的 band energy / tilt 实现，应升级版本号，不要原地改写 `v1` 产物。

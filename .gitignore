@@ -23,6 +23,9 @@ env/
 tmp/
 scratch/
 *.log
+!tmp/
+tmp/*
+!tmp/.gitkeep
 
 # Sensitive local auth and push helpers
 ssh-*

@@ -29,12 +29,14 @@
 - 已有 clean 子集说明：`docs/14_clean_analysis_subsets_v1.md`
 - 已有阶段 0 运行环境基线说明：`docs/15_stage0_runtime_environment_v1.md`
 - 已有阶段 0 基线分析说明与入口：`docs/16_stage0_baseline_analysis_v1.md`、`scripts/run_stage0_baseline_analysis.py`
+- 已有阶段 0 full 手动入口：`scripts/run_stage0_baseline_full.ps1`
 - 已有阶段 0 baseline pilot 输出：`experiments/stage0_baseline/v1_pilot/`
 - 已有阶段 0 pilot 中文解释文档：`docs/17_stage0_pilot_interpretation_v1.md`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
 - 已建立实验记录与关键产物保留位点：`reports/daily/`、`experiments/`、`artifacts/checkpoints/keep/`
+- 根目录 `tmp/` 作为统一临时产物落点，默认可随时清空
 - 已建立日报模板：`reports/daily/0000_template.md`
 - 当前已有首版依赖锁定说明：`requirements-stage0-analysis.txt`
 
@@ -67,6 +69,7 @@
 - `v1_2` 的 4 条新增替换样本已全部补听通过，当前固定评测集没有残留 `maybe`。
 - `clean_speech_v1` 和 `clean_singing_v1` 已生成，可作为阶段 0/1 的保守分析入口。
 - 阶段 0 baseline 已有首个可运行入口，当前 `pilot` 在 `256 speech + 256 singing` 规模上跑通，且特征提取成功率为 `100%`。
+- 阶段 0 `full` 入口已补上并行、断点续跑、可见进度和 PowerShell 手动入口，可以拆成 `speech -> singing -> finalize` 三步执行。
 
 ## 近期任务
 1. 把 `stage0_baseline` 从 `pilot` 扩到 `full`，生成第一版完整缓存。

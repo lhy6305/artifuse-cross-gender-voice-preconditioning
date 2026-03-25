@@ -85,7 +85,8 @@ $OutputEncoding = [Console]::OutputEncoding
   - `tools/`
   - `data/datasets/_meta/`
   - `third_party/` 放已说明用途的第三方参考代码
-- 临时文件放入 `tmp/`、`scratch/` 或带 `_tmp` 标记的文件名中。
+- 临时文件统一放入仓库根目录 `tmp/`。
+- `tmp/` 视为可随时人工清空的临时区，不承载正式产物。
 
 ### 6. 决策与实验推进
 - 当前阶段以“开题和仓库整备”为主，不直接假设模型训练或大规模实验已经开跑。
