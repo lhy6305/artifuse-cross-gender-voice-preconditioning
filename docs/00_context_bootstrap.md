@@ -6,11 +6,16 @@
 - 当前定位：围绕 RVC 跨性别前置属性修正的研究设计、实验规划、文档沉淀与后续脚本实现子仓库。
 
 ## 当前仓库边界
-- 应纳管内容：设计文档、实验计划、脚本、轻量配置、结构化摘要。
-- 默认不纳管内容：模型权重、FAISS 索引、原始或派生音频、私钥、一次性推送脚本、本地依赖副本。
+- 应纳管内容：设计文档、实验计划、脚本、轻量配置、结构化摘要、日报、实验记录、少量关键 checkpoint。
+- 默认不纳管内容：原始或派生音频、大型下载包、绝大多数模型权重和索引、私钥、一次性推送脚本、本地依赖副本。
 - 当前已知本地资产：
   - `pretrained_rvc_firefly_fp32/`：本地预训练 RVC 资产，默认只留本地。
   - `Retrieval-based-Voice-Conversion-WebUI-7ef1986/`：本地可改 RVC 工作目录，用于训练/测试联调，但整个目录默认不纳入当前仓库 Git 追踪。
+- 当前约定保留位点：
+  - `data/datasets/_meta/`：结构化数据清单与样本级 manifest。
+  - `reports/daily/`：日报、阶段小结、临时结论沉淀。
+  - `experiments/`：实验配置、抽样规则、结果摘要、对比记录。
+  - `artifacts/checkpoints/keep/`：少量关键 checkpoint 或索引，仅保留可用于恢复进度的里程碑版本。
 
 ## 读取顺序
 每次开始新一轮工作，或历史上下文丢失时，按以下顺序恢复：
@@ -57,6 +62,8 @@ $OutputEncoding = [Console]::OutputEncoding
   - 原始/派生音频；
   - 模型权重、索引、大型中间缓存；
   - 本地训练/测试用的 RVC 工作目录。
+- 数据集的下载包与解压 `raw/` 树默认只留本地，仓库中只保留脚本、来源说明和结构化摘要。
+- 关键 checkpoint 可以纳管，但必须放到 `artifacts/checkpoints/keep/`，且数量保持克制。
 - 每次修改 `.gitignore` 后，至少核对一次 `git status --short --ignored`。
 
 ### 4. 文档维护纪律
@@ -72,8 +79,11 @@ $OutputEncoding = [Console]::OutputEncoding
 - 后续新增内容时优先使用明确目录，例如：
   - `docs/`
   - `scripts/`
+  - `reports/daily/`
+  - `experiments/`
+  - `artifacts/checkpoints/keep/`
   - `tools/`
-  - `data/` 或 `artifacts/` 的本地忽略子目录
+  - `data/datasets/_meta/`
   - `third_party/` 放已说明用途的第三方参考代码
 - 临时文件放入 `tmp/`、`scratch/` 或带 `_tmp` 标记的文件名中。
 

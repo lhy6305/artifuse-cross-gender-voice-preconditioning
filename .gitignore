@@ -24,9 +24,24 @@ tmp/
 scratch/
 *.log
 
-# Optional large local caches / model artifacts
+# Sensitive local auth and push helpers
+ssh-*
+git-*.bat
+git-*.sh
+
+# Local third-party worktrees / bundled runtimes
+pretrained_rvc_firefly_fp32/
+Retrieval-based-Voice-Conversion-WebUI-7ef1986/
+python.exe
+pythonw.exe
+codex_perm_cleanup_static.exe
+*.dll
+
+# Optional large local caches
 *.npy
 *.npz
+
+# Model artifacts stay local by default; curated keepers live under artifacts/checkpoints/keep/
 *.pt
 *.pth
 *.ckpt
@@ -34,14 +49,10 @@ scratch/
 *.onnx
 *.bin
 *.index
-pretrained_rvc_firefly_fp32/
-Retrieval-based-Voice-Conversion-WebUI-7ef1986/
-
-# Local bundled executables
-python.exe
-pythonw.exe
-codex_perm_cleanup_static.exe
-*.dll
+!artifacts/
+!artifacts/checkpoints/
+!artifacts/checkpoints/keep/
+!artifacts/checkpoints/keep/**
 
 # Never publish raw or derived audio assets
 *.lab
@@ -54,7 +65,17 @@ codex_perm_cleanup_static.exe
 *.wma
 *.opus
 
-# github auth key and push tools
-ssh-*
-git-*.bat
-git-*.sh
+# Dataset downloads and extracted raw trees stay local.
+data/datasets/**/raw/
+data/datasets/**/*.zip
+data/datasets/**/*.7z
+data/datasets/**/*.tar
+data/datasets/**/*.tar.gz
+data/datasets/**/*.tgz
+data/datasets/**/*.gz
+data/datasets/**/*.xz
+data/datasets/**/*.rar
+
+# Structured dataset metadata stays in Git.
+!data/datasets/_meta/
+!data/datasets/_meta/**
