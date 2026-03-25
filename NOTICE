@@ -1,0 +1,16 @@
+Artifuse Cross-Gender Voice Preconditioning
+Copyright 2026 lhy6305
+
+This NOTICE file provides repository-level attribution and distribution notes.
+It does not modify the licensing terms stated in the LICENSE file.
+
+This repository is intended to publish code, experiment structure, evaluation
+artifacts, and public-safe model outputs for the project.
+
+The repository intentionally excludes raw/source audio, text labels, dataset
+bundles, local dependency worktrees, and other assets that may be
+copyright-restricted, privacy-sensitive, or otherwise not approved for
+redistribution.
+
+Any third-party code, models, datasets, or other materials referenced by this
+project remain subject to their own licenses and redistribution terms.
