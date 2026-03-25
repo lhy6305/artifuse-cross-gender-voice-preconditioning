@@ -11,6 +11,7 @@
 ## 当前仓库现状
 - 已有高层设计文档：`initial_design.md`
 - 已有阶段 0/1 实验设计：`docs/10_stage0_stage1_experiment_design.md`
+- 已有公开数据集候选清单：`docs/11_public_dataset_shortlist.md`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
