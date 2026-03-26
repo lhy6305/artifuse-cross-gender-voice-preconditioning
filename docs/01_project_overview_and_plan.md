@@ -162,6 +162,13 @@
 - 在 `v3 / v2` 听审后，已确认两条线共同问题是“变化仍偏弱，只能 barely 分辨”；因此当前已切到 `audibility stress test`：
   - `artifacts/listening_review/stage0_speech_envelope_listening_pack/v4/`
   - `artifacts/listening_review/stage0_speech_world_stft_delta_listening_pack/v3/`
+- 在 `v4 / v3` 听审后，已进一步确认：
+  - `envelope warp v4` 虽然已稳定可辨，但主观方向整体反转；
+  - `WORLD-guided STFT delta v3` 主观方向正确，但总体仍明显偏弱；
+  - 因此当前已继续导出：
+    - `artifacts/listening_review/stage0_speech_envelope_listening_pack/v5/`
+    - `artifacts/listening_review/stage0_speech_world_stft_delta_listening_pack/v4/`
+- 当前阶段自动量化里的 `direction` 指标只保留为弱参考；主观听审已优先于该指标，特别是在 `envelope / world_stft_delta` 两条线上。
 
 ## 近期任务
 1. 以 `scripts/build_listening_review_rollup.py` 为标准汇总入口，后续不再要求把稀疏标注手工补成满表。
