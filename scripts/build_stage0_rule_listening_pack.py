@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "rule_candidate_v1.json"
 DEFAULT_PROFILE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "rule_candidate_band_gain_profiles_v1.json"
 DEFAULT_INPUT_CSV = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "clean_singing_enriched.csv"
-DEFAULT_OUTPUT_DIR = ROOT / "tmp" / "stage0_rule_listening_pack" / "v1"
+DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage0_rule_listening_pack" / "v1"
 
 
 def parse_args() -> argparse.Namespace:

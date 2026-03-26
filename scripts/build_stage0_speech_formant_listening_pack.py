@@ -16,7 +16,7 @@ from build_stage0_speech_listening_pack import TARGET_DIRECTION_BY_SOURCE_GENDER
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_formant_anchor_candidate_v1.json"
 DEFAULT_INPUT_CSV = ROOT / "experiments" / "fixed_eval" / "v1_2" / "fixed_eval_review_final_v1_2.csv"
-DEFAULT_OUTPUT_DIR = ROOT / "tmp" / "stage0_speech_formant_listening_pack" / "v1"
+DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage0_speech_formant_listening_pack" / "v1"
 
 
 def parse_args() -> argparse.Namespace:

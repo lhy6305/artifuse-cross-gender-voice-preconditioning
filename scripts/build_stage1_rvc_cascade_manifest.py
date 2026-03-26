@@ -22,10 +22,10 @@ from build_stage0_speech_world_stft_delta_listening_pack import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SUMMARY_CSV = ROOT / "tmp" / "stage0_speech_world_stft_delta_listening_pack" / "v1" / "listening_pack_summary.csv"
+DEFAULT_SUMMARY_CSV = ROOT / "artifacts" / "listening_review" / "stage0_speech_world_stft_delta_listening_pack" / "v1" / "listening_pack_summary.csv"
 DEFAULT_TARGET_REGISTRY = ROOT / "experiments" / "stage1_rvc_eval" / "v1" / "rvc_target_registry_v1.json"
 DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_world_stft_delta_candidate_v1.json"
-DEFAULT_OUTPUT_DIR = ROOT / "tmp" / "stage1_rvc_cascade_eval" / "v1"
+DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage1_rvc_cascade_eval" / "v1"
 DEFAULT_DATA_ROOT = ROOT / "data"
 DEFAULT_TARGET_AUDIO_ROOT = ROOT / "data" / "dataset_firefly_raw"
 DEFAULT_TARGET_REFERENCE_CACHE = DEFAULT_OUTPUT_DIR / "target_f0_reference_cache.json"

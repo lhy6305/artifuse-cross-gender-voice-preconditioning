@@ -6,9 +6,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MANIFEST = ROOT / "tmp" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_manifest.csv"
-DEFAULT_OUTPUT_CSV = ROOT / "tmp" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_review_queue.csv"
-DEFAULT_SUMMARY_MD = ROOT / "tmp" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_review_summary.md"
+DEFAULT_MANIFEST = ROOT / "artifacts" / "listening_review" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_manifest.csv"
+DEFAULT_OUTPUT_CSV = ROOT / "artifacts" / "listening_review" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_review_queue.csv"
+DEFAULT_SUMMARY_MD = ROOT / "artifacts" / "listening_review" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_review_summary.md"
 
 
 def parse_args() -> argparse.Namespace:
@@ -160,7 +160,6 @@ def build_review_rows(manifest_rows: list[dict[str, str]]) -> list[dict[str, str
                 "artifact_issue": "",
                 "strength_fit": "",
                 "keep_recommendation": "",
-                "reviewer": "",
                 "review_notes": "",
             }
         )

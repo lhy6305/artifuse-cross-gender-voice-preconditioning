@@ -61,6 +61,8 @@
 - 已有阶段 1 RVC 串联评测 pivot 说明：`docs/33_stage1_rvc_cascade_eval_pivot_v1.md`
 - 已有阶段 1 RVC 串联评测桥：`experiments/stage1_rvc_eval/v1/rvc_target_registry_v1.json`、`scripts/build_stage1_rvc_cascade_manifest.py`、`scripts/run_stage1_rvc_cascade_batch.py`、`scripts/run_stage1_rvc_cascade_batch.ps1`
 - 已有阶段 1 RVC 串联听审清单与 GUI 入口：`scripts/build_stage1_rvc_cascade_review_queue.py`、`scripts/open_stage1_rvc_cascade_review_gui.ps1`、`scripts/open_stage1_rvc_cascade_review_gui.cmd`
+- 已有听审稀疏标注汇总脚本：`scripts/build_listening_review_rollup.py`
+- 听审包与听审结果当前已迁到正式目录：`artifacts/listening_review/`；`tmp/` 不再作为长期保留位点
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
@@ -70,13 +72,13 @@
 - 当前已有首版依赖锁定说明：`requirements-stage0-analysis.txt`
 
 ## 当前阶段
-阶段名：阶段 1 串联评测桥已跑通
+阶段名：模块本体主观听审回收（临时回切）
 
 当前目标：
-1. 用固定样本对比 `raw -> RVC` 与 `preconditioned -> RVC`。
-2. 判断这些“单独听起来无感”的前置器，是否会在串联后改善跨性别结果。
-3. 若串联仍无收益，再正式收缩前置器目标为安全归一化。
-4. 逐步补最小串联听审与汇总工具，不再继续堆单独听感原型。
+1. 暂时不把 `RVC` 串联结果当成人工主 gate，先只判断模块本体 `修正前 / 修正后` 的主观差异。
+2. 避免把 `RVC` 目标说话人性别对听感判断的干扰，误记成前置模块本身的有效性。
+3. 把现有共用听审 GUI 收口到模块优先口径，统一写回主观结论。
+4. 在模块本体结论稳定后，再决定是否恢复 `stage1 cascade` 作为下一轮正式 gate。
 
 ## 当前结论
 - 本仓库适合采用“文档先行、脚本后补”的轻量起步方式。
@@ -131,12 +133,31 @@
 - 当前已恢复到设计稿中的正式主指标：看 `前置器 + RVC` 串联后是否整体改善，而不是要求前置器自己单独就有明显耳感。
 - 阶段 1 的 RVC 串联评测桥已经跑通，当前本地 `fzjv2.pth` 可对固定样本做 `raw / preconditioned` 成对推理，并支持 manifest 断点续跑。
 - 当前 `stage1_rvc_cascade_eval v1` 已完成 `16/16` 条推理，并已整理成 `8` 条 `raw->RVC vs preconditioned->RVC` 的成对听审队列，可直接进入人工比较。
+- 但由于 `RVC` 目标说话人性别本身可能影响主观判断，当前人工口径已临时回切为“先只审模块本体修正前后”，不把 cascade 听感当作本轮第一判断依据。
+- 共用听审 GUI 已同步切到该口径：默认按 `source vs preconditioned` 听，移除 `审核人`，改为左侧文件列表 + 可拖宽度 + 右侧滚动详情。
+- 当前已回查各 `stage0` / `stage1` 听审队列，确认主观结果基本收敛：
+  - `speech static EQ / resonance tilt / formant anchor / WORLD-guided STFT delta` 仍以“无可感知差异”为主；
+  - `envelope warp v1` 是当前唯一进入“部分可感知”区间的方法，但结论仍偏弱，且 `keep` 只在少数 `masculine` 样本上给到 `maybe`；
+  - `envelope warp v2` 虽比 `v1` 更可感知，但已开始稳定出现 `slight` 级不自然，尤其不适合作为当前保守主线；
+- `vocal-tract morph v1` 虽然 `8/8` 可感知，但同时 `8/8` 明确为方向错误且有明显伪影，应继续排除；
+- `stage1 cascade` 队列当前也已全部标成 `reviewed`，但字段填写明显不完整，暂不足以支持正式阶段结论。
+- 当前已不再把这些空字段视为“漏填”；它们按用户口径属于稀疏标注的一部分，后续应通过汇总脚本解释，而不是回头机械补表。
+- 当前已生成第一版听审汇总：`tmp/listening_review_rollup/v1/`
+- 按该汇总的当前判断：
+  - `stage0_speech_listening_pack/v1`、`resonance v1`、`formant v1`、`WORLD-guided STFT delta v1` 均可冻结为 `null_result`
+  - `stage0_speech_vocal_tract_listening_pack/v1` 可冻结为 `reject`
+  - `stage0_speech_envelope_listening_pack/v1` 可保留为 `watch`
+  - `stage0_speech_envelope_listening_pack/v2` 仅能保留为 `watch_with_risk`
+  - `stage1_rvc_cascade_eval/v1` 当前只保留为 `watch` 级参考，不上升为正式主线结论
 
 ## 近期任务
-1. 跑完 `tmp/stage1_rvc_cascade_eval/v1/` 的 `raw / preconditioned` 串联对照。
-2. 基于成对结果建立最小听审清单，判断前置器是否真的减轻 RVC 跨性别干瘪感。
-3. 如果串联仍无收益，则正式停止继续堆新的前置原型，并把前置器目标收缩为安全归一化。
-4. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
+1. 以 `scripts/build_listening_review_rollup.py` 为标准汇总入口，后续不再要求把稀疏标注手工补成满表。
+2. 基于 `tmp/listening_review_rollup/v1/` 正式冻结以下结论：
+   - `static EQ / resonance tilt / formant anchor / WORLD-guided STFT delta` 归入 `null result`；
+   - `vocal-tract morph v1` 归入“方向错误且伪影明显”的排除项；
+   - `envelope warp` 保留为唯一待定分支，但默认只保留 `v1`，不继续沿 `v2` 硬推。
+3. 在模块本体结论冻结前，暂停把 `stage1 cascade` 当成正式 gate；如需继续，只把它作为次级参考，不先驱动路线切换。
+4. 若基于当前汇总仍无新增正证据，则短期不再新增同族前置原型，而是转向“安全归一化”收缩方案或等待新的方法级 pivot。
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

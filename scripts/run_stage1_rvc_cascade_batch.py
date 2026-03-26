@@ -10,10 +10,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MANIFEST = ROOT / "tmp" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_manifest.csv"
+DEFAULT_MANIFEST = ROOT / "artifacts" / "listening_review" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_manifest.csv"
 DEFAULT_RVC_ROOT = ROOT / "Retrieval-based-Voice-Conversion-WebUI-7ef1986"
 DEFAULT_INFER_CLI = DEFAULT_RVC_ROOT / "infer_cli.py"
-DEFAULT_SUMMARY_MD = ROOT / "tmp" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_run_summary.md"
+DEFAULT_SUMMARY_MD = ROOT / "artifacts" / "listening_review" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_run_summary.md"
 
 
 def parse_args() -> argparse.Namespace:

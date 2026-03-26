@@ -54,7 +54,7 @@ if ($MyInvocation.Line) {
   }
 }
 
-$packDir = Join-Path $repoRoot (Join-Path "tmp\stage0_rule_listening_pack" $PackVersion)
+$packDir = Join-Path $repoRoot (Join-Path "artifacts\listening_review\stage0_rule_listening_pack" $PackVersion)
 $summaryCsv = Join-Path $packDir "listening_pack_summary.csv"
 $queueCsv = Join-Path $packDir "listening_review_queue.csv"
 

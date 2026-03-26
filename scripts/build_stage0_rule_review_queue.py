@@ -14,9 +14,9 @@ from enrich_manifest_features import compute_features, load_audio
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "rule_candidate_v1.json"
-DEFAULT_SUMMARY_CSV = ROOT / "tmp" / "stage0_rule_listening_pack" / "v1" / "listening_pack_summary.csv"
-DEFAULT_OUTPUT_CSV = ROOT / "tmp" / "stage0_rule_listening_pack" / "v1" / "listening_review_queue.csv"
-DEFAULT_SUMMARY_MD = ROOT / "tmp" / "stage0_rule_listening_pack" / "v1" / "listening_review_quant_summary.md"
+DEFAULT_SUMMARY_CSV = ROOT / "artifacts" / "listening_review" / "stage0_rule_listening_pack" / "v1" / "listening_pack_summary.csv"
+DEFAULT_OUTPUT_CSV = ROOT / "artifacts" / "listening_review" / "stage0_rule_listening_pack" / "v1" / "listening_review_queue.csv"
+DEFAULT_SUMMARY_MD = ROOT / "artifacts" / "listening_review" / "stage0_rule_listening_pack" / "v1" / "listening_review_quant_summary.md"
 
 
 def parse_args() -> argparse.Namespace:
@@ -105,6 +105,8 @@ def load_existing_cache(path: Path) -> dict[tuple[str, str, str, str], dict[str,
         return {}
     with path.open("r", encoding="utf-8", newline="") as f:
         rows = list(csv.DictReader(f))
+    for row in rows:
+        row.pop("reviewer", None)
     return {build_cache_key(row): row for row in rows}
 
 
@@ -423,7 +425,6 @@ def build_output_row(
         "artifact_issue": "",
         "strength_fit": "",
         "keep_recommendation": "",
-        "reviewer": "",
         "review_notes": "",
     }
 

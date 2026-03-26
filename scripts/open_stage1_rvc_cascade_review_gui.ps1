@@ -10,7 +10,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $pythonExe = Join-Path $repoRoot "python.exe"
 $queueBuildScript = Join-Path $PSScriptRoot "build_stage1_rvc_cascade_review_queue.py"
 $guiScript = Join-Path $PSScriptRoot "stage0_rule_review_gui.py"
-$queueCsv = Join-Path $repoRoot "tmp\stage1_rvc_cascade_eval\v1\rvc_cascade_review_queue.csv"
+$queueCsv = Join-Path $repoRoot "artifacts\listening_review\stage1_rvc_cascade_eval\v1\rvc_cascade_review_queue.csv"
 
 function Invoke-Python {
   param(
