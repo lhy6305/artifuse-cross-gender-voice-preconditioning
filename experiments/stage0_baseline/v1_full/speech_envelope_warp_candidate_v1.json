@@ -1,0 +1,143 @@
+{
+  "config_version": "stage0_speech_envelope_warp_candidate_v1",
+  "source": "fixed_eval_review_final_v1_2 speech audibility pivot after static_eq_null_result",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "voiced_envelope_warp_audibility_probe"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_envwarp_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_envwarp",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 50,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 1.12,
+        "blend": 0.9,
+        "envelope_smooth_bins": 33,
+        "max_envelope_gain_db": 7.0,
+        "voiced_rms_gate_db": 32.0
+      },
+      "notes": "LibriTTS-R 男声女性向：仅在 voiced 段做更明显的谱包络上移。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_envwarp",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 49,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 1.08,
+        "blend": 0.85,
+        "envelope_smooth_bins": 33,
+        "max_envelope_gain_db": 6.0,
+        "voiced_rms_gate_db": 32.0
+      },
+      "notes": "VCTK 男声女性向：保留更强可感知性，但比 LibriTTS-R 稍收一档。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_envwarp",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 50,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 0.9,
+        "blend": 0.9,
+        "envelope_smooth_bins": 33,
+        "max_envelope_gain_db": 7.0,
+        "voiced_rms_gate_db": 32.0
+      },
+      "notes": "LibriTTS-R 女声男性向：仅在 voiced 段做更明显的谱包络下移。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_envwarp",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 49,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 0.92,
+        "blend": 0.85,
+        "envelope_smooth_bins": 33,
+        "max_envelope_gain_db": 6.0,
+        "voiced_rms_gate_db": 32.0
+      },
+      "notes": "VCTK 女声男性向：保留更强可感知性，但比 LibriTTS-R 稍收一档。"
+    }
+  ]
+}

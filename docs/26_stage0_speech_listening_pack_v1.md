@@ -120,6 +120,18 @@
 - `VCTK female -> masculine` 两条也显示 `wrong_direction`
 - `VCTK male -> feminine` 两条虽然改变量不小，但方向仍偏弱
 
+## 人工听审结果
+
+当前这 `8` 条样本已经完成第一轮人工听审。
+
+人工结论：
+
+- `8/8 reviewed`
+- `8/8 effect_audible = no`
+- `8/8 strength_fit = too_weak`
+
+也就是说，即使切到 `speech-first`，这一版静态 6 段 EQ 仍然没有任何一条达到“人耳可感知差异”。
+
 ## 当前解读
 
 这轮结果和 singing 最大的不同是：
@@ -132,14 +144,15 @@
 2. `LibriTTS-R` 与 `VCTK` 的响应并不一致
 3. 当前 profile 更像“可感知性探针”，还不是“跨数据集稳定规则”
 
-所以当前最合理的阶段结论是：
+但人工听审已经把这件事说死了：
 
-- `speech-first` 比 `singing` 更值得继续推进
-- 但 `speech` 规则还不能直接冻结
-- 下一轮应优先结合人工听审，判断：
-  - `LibriTTS-R feminine` 是否真的开始可感知
-  - `masculine` profile 是否只是代理口径不对，还是人耳上也不对
-  - `VCTK` 是否需要单独 profile，而不应共用同一路线
+- 当前静态 6 段 EQ 在 `speech` 上也仍然无感
+
+所以当前最合理的阶段结论改成：
+
+- 这版 `speech-first static EQ` 仍然不是可用路线
+- 不再继续微调静态 6 段 EQ
+- 下一步转向 `voiced-envelope-warp`
 
 ## 启动命令
 

@@ -46,6 +46,8 @@
 - 已记录 singing 听审结果与 speech pivot：`docs/25_stage0_singing_listening_outcome_and_speech_pivot_v1.md`
 - 已有 speech-first 试听包构建与 GUI 入口：`scripts/build_stage0_speech_listening_pack.py`、`scripts/open_stage0_speech_review_gui.ps1`、`scripts/open_stage0_speech_review_gui.cmd`
 - 已有 speech-first 试听包说明：`docs/26_stage0_speech_listening_pack_v1.md`
+- 已有 speech envelope warp 原型与 GUI 入口：`scripts/build_stage0_speech_envelope_listening_pack.py`、`scripts/open_stage0_speech_envelope_review_gui.ps1`、`scripts/open_stage0_speech_envelope_review_gui.cmd`
+- 已有静态 EQ null result 与 envelope warp pivot 说明：`docs/27_stage0_static_eq_null_result_and_envelope_warp_pivot_v1.md`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
@@ -97,11 +99,13 @@
 - 已生成更激进的 `v2` band-gain profile 与试听包，当前可直接对比 `v1 / v2` 两轮听感。
 - `singing v1 / v2` 两轮听审均无可感知差异，当前应优先转向 `speech-first`。
 - `speech-first` 首轮量化已跑通，当前 `LibriTTS-R` 与 `VCTK` 的响应不一致，说明静态 EQ 在 speech 上开始有信息，但还不是稳定规则。
+- `speech-first static EQ` 的 `8` 条人工听审也已完成，结果仍是 `8/8 no audible difference`，当前静态 6 段 EQ 可视为阶段性 `null result`。
+- 下一步已切到 `speech voiced-envelope-warp` 原型，不再继续微调静态 6 段 EQ。
 
 ## 近期任务
-1. 对 `tmp/stage0_speech_listening_pack/v1/` 做第一轮人工听审，确认哪些 profile 已可感知。
-2. 根据 speech 听审结果，决定是继续做 dataset-specific speech profile，还是直接转更强的 envelope / mask 路线。
-3. 如 speech 听审仍然普遍无感，再评估是否放弃静态 6 段 EQ。
+1. 对 `tmp/stage0_speech_envelope_listening_pack/v1/` 做第一轮人工听审，确认 envelope warp 是否终于可感知。
+2. 如果 envelope warp 仍无感，再评估是否直接转更强的 formant-aware 路线。
+3. 如果 envelope warp 可感知，再判断是否需要 dataset-specific 参数，而不是统一 speech profile。
 4. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
 
 ## 当前阶段验收标准
