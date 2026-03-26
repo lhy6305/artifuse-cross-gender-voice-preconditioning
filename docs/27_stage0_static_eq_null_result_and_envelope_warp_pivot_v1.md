@@ -103,6 +103,67 @@
 
 - 虽然代理口径不漂亮，但人耳上是否终于开始可感知
 
+## v1 人工听审结果
+
+当前 `tmp/stage0_speech_envelope_listening_pack/v1/` 已完成一轮人工听审。
+
+结果不是“全部无感”，而是：
+
+- 已经出现部分可感知差异
+- 但仅在部分样本上可感知
+- 且整体差异仍然偏小
+
+写回结果摘要：
+
+- `2/8 effect_audible = yes`
+- `6/8 effect_audible = maybe`
+- `2/8 keep_recommendation = maybe`
+- `2/8 direction_correct = maybe`
+- `8/8 strength_fit = too_weak 或留空但整体偏弱`
+
+更具体地说：
+
+- 当前最明确开始“有耳感”的是 `LibriTTS-R / female -> masculine`
+- 其余样本大多是“似乎有一点，但还不够确定”
+
+这说明：
+
+- `voiced-envelope-warp` 已经比静态 EQ 更接近可感知区间
+- 但 `v1` 强度仍然偏弱
+- 下一步不该换方法，而该先做定向补强的 `v2`
+
+## v2 调整策略
+
+当前已经基于这轮听审结果，生成：
+
+- `experiments/stage0_baseline/v1_full/speech_envelope_warp_candidate_v2.json`
+- `tmp/stage0_speech_envelope_listening_pack/v2/`
+
+调整原则不是“全部粗暴拉大”，而是：
+
+- `feminine` 侧加大更多，优先补强此前 mostly-maybe 的样本
+- `LibriTTS-R masculine` 侧只做中等上调，避免把已开始可感知的样本一下推过头
+- 同时降低 `envelope_smooth_bins`、提高 `voiced_rms_gate_db`，让 warp 更集中在真正有共鸣主体的区段
+
+## v2 量化快照
+
+当前 `v2` 的量化摘要已经生成：
+
+- `avg auto_quant_score = 53.16`
+- `avg auto_direction_score = 24.51`
+- `avg auto_preservation_score = 96.54`
+- `avg auto_effect_score = 52.69`
+- `1 strong_pass + 1 borderline + 6 fail`
+
+其中最强的是：
+
+- `VCTK male -> feminine` 两条
+
+这说明：
+
+- `v2` 相比 `v1` 已明显更强
+- 当前最值得优先再次人工确认的是 `VCTK male -> feminine`
+
 ## 第一版 envelope warp 参数
 
 当前第一版不是正式规则，只是可感知性探针。
@@ -143,4 +204,14 @@ PowerShell:
 
 ```cmd
 .\scripts\open_stage0_speech_envelope_review_gui.cmd
+```
+
+打开 `v2`：
+
+```powershell
+.\scripts\open_stage0_speech_envelope_review_gui.ps1 -PackVersion v2
+```
+
+```cmd
+.\scripts\open_stage0_speech_envelope_review_gui.cmd -PackVersion v2
 ```

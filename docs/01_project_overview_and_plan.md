@@ -48,6 +48,7 @@
 - 已有 speech-first 试听包说明：`docs/26_stage0_speech_listening_pack_v1.md`
 - 已有 speech envelope warp 原型与 GUI 入口：`scripts/build_stage0_speech_envelope_listening_pack.py`、`scripts/open_stage0_speech_envelope_review_gui.ps1`、`scripts/open_stage0_speech_envelope_review_gui.cmd`
 - 已有静态 EQ null result 与 envelope warp pivot 说明：`docs/27_stage0_static_eq_null_result_and_envelope_warp_pivot_v1.md`
+- 已有 speech envelope warp `v2` 配置：`experiments/stage0_baseline/v1_full/speech_envelope_warp_candidate_v2.json`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
@@ -101,11 +102,13 @@
 - `speech-first` 首轮量化已跑通，当前 `LibriTTS-R` 与 `VCTK` 的响应不一致，说明静态 EQ 在 speech 上开始有信息，但还不是稳定规则。
 - `speech-first static EQ` 的 `8` 条人工听审也已完成，结果仍是 `8/8 no audible difference`，当前静态 6 段 EQ 可视为阶段性 `null result`。
 - 下一步已切到 `speech voiced-envelope-warp` 原型，不再继续微调静态 6 段 EQ。
+- `speech envelope warp v1` 已出现“部分样本可感知，但整体仍偏弱”的人工结果，说明这条路线比静态 EQ 更有前景。
+- `speech envelope warp v2` 已生成，当前应优先对 `v2` 做下一轮听审，而不是再次改路线。
 
 ## 近期任务
-1. 对 `tmp/stage0_speech_envelope_listening_pack/v1/` 做第一轮人工听审，确认 envelope warp 是否终于可感知。
-2. 如果 envelope warp 仍无感，再评估是否直接转更强的 formant-aware 路线。
-3. 如果 envelope warp 可感知，再判断是否需要 dataset-specific 参数，而不是统一 speech profile。
+1. 对 `tmp/stage0_speech_envelope_listening_pack/v2/` 做下一轮人工听审，确认可感知样本是否扩大。
+2. 重点判断 `VCTK male -> feminine` 是否已稳定可感知，以及 `LibriTTS-R masculine` 是否被推过头。
+3. 根据 `v2` 听审结果，决定是继续做 dataset-specific envelope 参数，还是转更强的 formant-aware 路线。
 4. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
 
 ## 当前阶段验收标准

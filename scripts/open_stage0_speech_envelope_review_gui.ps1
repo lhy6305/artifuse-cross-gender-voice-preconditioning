@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
   [switch]$Rebuild,
+  [string]$PackVersion = "v1",
   [int]$AutoCloseMs = 0
 )
 
@@ -12,8 +13,8 @@ $pythonExe = Join-Path $repoRoot "python.exe"
 $packBuildScript = Join-Path $PSScriptRoot "build_stage0_speech_envelope_listening_pack.py"
 $queueBuildScript = Join-Path $PSScriptRoot "build_stage0_rule_review_queue.py"
 $guiScript = Join-Path $PSScriptRoot "stage0_rule_review_gui.py"
-$ruleConfig = Join-Path $repoRoot "experiments\stage0_baseline\v1_full\speech_envelope_warp_candidate_v1.json"
-$packDir = Join-Path $repoRoot "tmp\stage0_speech_envelope_listening_pack\v1"
+$ruleConfig = Join-Path $repoRoot ("experiments\stage0_baseline\v1_full\speech_envelope_warp_candidate_{0}.json" -f $PackVersion)
+$packDir = Join-Path $repoRoot ("tmp\stage0_speech_envelope_listening_pack\{0}" -f $PackVersion)
 $summaryCsv = Join-Path $packDir "listening_pack_summary.csv"
 $queueCsv = Join-Path $packDir "listening_review_queue.csv"
 $summaryMd = Join-Path $packDir "listening_review_quant_summary.md"
@@ -34,7 +35,11 @@ function Invoke-Python {
 
 if (-not (Test-Path $summaryCsv)) {
   Write-Host "Building speech envelope listening pack..."
-  Invoke-Python -Arguments @($packBuildScript)
+  Invoke-Python -Arguments @(
+    $packBuildScript,
+    "--rule-config", $ruleConfig,
+    "--output-dir", $packDir
+  )
 }
 
 if (-not (Test-Path $summaryCsv)) {
