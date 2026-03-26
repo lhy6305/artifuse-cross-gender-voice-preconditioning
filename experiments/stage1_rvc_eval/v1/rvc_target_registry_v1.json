@@ -1,0 +1,24 @@
+{
+  "config_version": "stage1_rvc_target_registry_v1",
+  "source": "user_confirmed_firefly_target_2026_03_26",
+  "targets": [
+    {
+      "target_id": "firefly_fp32_target_v1",
+      "enabled": true,
+      "weight_root": "pretrained_rvc_firefly_fp32",
+      "model_name": "0_rel_556_264656.pth",
+      "index_path": "pretrained_rvc_firefly_fp32/added_IVF3130_Flat_nprobe_1_firefly_v2.index",
+      "spk_id": 0,
+      "f0_up_key": 0,
+      "f0_method": "rmvpe",
+      "index_rate": 0.75,
+      "filter_radius": 3,
+      "resample_sr": 0,
+      "rms_mix_rate": 0.25,
+      "protect": 0.33,
+      "target_direction": "feminine",
+      "profile_group_value": "LibriTTS-R",
+      "notes": "User-confirmed firefly target from pretrained_rvc_firefly_fp32."
+    }
+  ]
+}

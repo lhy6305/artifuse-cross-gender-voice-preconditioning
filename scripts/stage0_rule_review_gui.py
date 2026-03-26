@@ -173,8 +173,12 @@ class ReviewApp:
         ttk.Button(button_row, text="上一条", command=self.prev_row).pack(side=tk.LEFT)
         ttk.Button(button_row, text="下一条", command=self.next_row).pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(button_row, text="下一条未审", command=self.next_pending_row).pack(side=tk.LEFT, padx=(6, 0))
-        ttk.Button(button_row, text="播放原音", command=self.play_original).pack(side=tk.LEFT, padx=(20, 0))
-        ttk.Button(button_row, text="播放处理音", command=self.play_processed).pack(side=tk.LEFT, padx=(6, 0))
+        self.source_button = ttk.Button(button_row, text="播放源音频", command=self.play_source)
+        self.source_button.pack(side=tk.LEFT, padx=(20, 0))
+        self.original_button = ttk.Button(button_row, text="播放原音", command=self.play_original)
+        self.original_button.pack(side=tk.LEFT, padx=(6, 0))
+        self.processed_button = ttk.Button(button_row, text="播放处理音", command=self.play_processed)
+        self.processed_button.pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(button_row, text="停止", command=self.stop_audio).pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(button_row, text="标记保留", command=self.mark_keep).pack(side=tk.LEFT, padx=(20, 0))
         ttk.Button(button_row, text="标记待复核", command=self.mark_maybe).pack(side=tk.LEFT, padx=(6, 0))
@@ -228,6 +232,7 @@ class ReviewApp:
         self.root.bind("<Left>", lambda _: self.prev_row())
         self.root.bind("<Right>", lambda _: self.next_row())
         self.root.bind("n", lambda _: self.next_pending_row())
+        self.root.bind("e", lambda _: self.play_source())
         self.root.bind("q", lambda _: self.play_original())
         self.root.bind("w", lambda _: self.play_processed())
         self.root.bind("<space>", lambda _: self.stop_audio())
@@ -243,6 +248,7 @@ class ReviewApp:
         if not self.rows:
             return
         row = self.current_row()
+        cascade_mode = row.get("action_family") == "cascade_compare"
         pending_count = sum(1 for item in self.rows if item.get("review_status") in {"pending", "待审"})
         self.status_text.set(f"第 {self.index + 1} / {len(self.rows)} 条 | 待审={pending_count}")
         self.identity_text.set(
@@ -271,7 +277,23 @@ class ReviewApp:
             f"delta_voiced={row.get('delta_f0_voiced_ratio', '')} | delta_clip={row.get('delta_clipping_ratio', '')} | "
             f"stft_l1={row.get('stft_logmag_l1', '')}"
         )
-        self.path_text.set(f"original={row.get('original_copy', '')}\nprocessed={row.get('processed_audio', '')}")
+        if cascade_mode:
+            self.original_button.configure(text="播放修正后音频")
+            self.processed_button.configure(text="播放RVC输出")
+            self.path_text.set(
+                f"source={row.get('input_audio', '')}\n"
+                f"preconditioned={row.get('original_copy', '')}\n"
+                f"rvc_output={row.get('processed_audio', '')}\n"
+                f"rvc_baseline={row.get('rvc_baseline_audio', '')}"
+            )
+        else:
+            self.original_button.configure(text="播放原音")
+            self.processed_button.configure(text="播放处理音")
+            self.path_text.set(
+                f"source={row.get('input_audio', '')}\n"
+                f"original={row.get('original_copy', '')}\n"
+                f"processed={row.get('processed_audio', '')}"
+            )
 
         self.review_status_var.set(REVIEW_STATUS_LABELS.get(row.get("review_status", "pending"), "待审"))
         self.direction_correct_var.set(BOOL_LABELS.get(row.get("direction_correct", ""), row.get("direction_correct", "")))
@@ -343,6 +365,9 @@ class ReviewApp:
         sd.play(audio, sr)
         self.current_audio = audio
         self.current_sr = sr
+
+    def play_source(self) -> None:
+        self.play_path(self.current_row()["input_audio"])
 
     def play_original(self) -> None:
         self.play_path(self.current_row()["original_copy"])

@@ -56,6 +56,11 @@
 - 已有阶段 0 轻量前置修正 phase gate 文档：`docs/30_stage0_lightweight_preconditioning_phase_gate_v1.md`
 - 已有 speech source-filter / vocal-tract morph 原型与 GUI 入口：`scripts/build_stage0_speech_vocal_tract_listening_pack.py`、`scripts/open_stage0_speech_vocal_tract_review_gui.ps1`、`scripts/open_stage0_speech_vocal_tract_review_gui.cmd`
 - 已有 source-filter / vocal-tract morph 说明：`docs/31_stage0_source_filter_vocal_tract_morph_v1.md`
+- 已有 WORLD 重合成副作用结论与 STFT delta pivot 说明：`docs/32_stage0_world_resynthesis_artifact_and_stft_delta_pivot_v1.md`
+- 已有 speech WORLD-guided STFT delta 原型与 GUI 入口：`scripts/build_stage0_speech_world_stft_delta_listening_pack.py`、`scripts/open_stage0_speech_world_stft_delta_review_gui.ps1`、`scripts/open_stage0_speech_world_stft_delta_review_gui.cmd`
+- 已有阶段 1 RVC 串联评测 pivot 说明：`docs/33_stage1_rvc_cascade_eval_pivot_v1.md`
+- 已有阶段 1 RVC 串联评测桥：`experiments/stage1_rvc_eval/v1/rvc_target_registry_v1.json`、`scripts/build_stage1_rvc_cascade_manifest.py`、`scripts/run_stage1_rvc_cascade_batch.py`、`scripts/run_stage1_rvc_cascade_batch.ps1`
+- 已有阶段 1 RVC 串联听审清单与 GUI 入口：`scripts/build_stage1_rvc_cascade_review_queue.py`、`scripts/open_stage1_rvc_cascade_review_gui.ps1`、`scripts/open_stage1_rvc_cascade_review_gui.cmd`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
@@ -65,13 +70,13 @@
 - 当前已有首版依赖锁定说明：`requirements-stage0-analysis.txt`
 
 ## 当前阶段
-阶段名：阶段 0 听审验证，第一个 source-filter 原型已跑通
+阶段名：阶段 1 串联评测桥已跑通
 
 当前目标：
-1. 验证 `speech source-filter / vocal-tract morph v1` 是否首次产生稳定可感知差异。
-2. 如果可感知，则把问题收缩到方向控制与副作用约束。
-3. 如果仍不可感知，则重新评估“独立前置器听感收益”是否值得继续追。
-4. 评估是否把前置器目标收缩为安全归一化并服务下游模型。
+1. 用固定样本对比 `raw -> RVC` 与 `preconditioned -> RVC`。
+2. 判断这些“单独听起来无感”的前置器，是否会在串联后改善跨性别结果。
+3. 若串联仍无收益，再正式收缩前置器目标为安全归一化。
+4. 逐步补最小串联听审与汇总工具，不再继续堆单独听感原型。
 
 ## 当前结论
 - 本仓库适合采用“文档先行、脚本后补”的轻量起步方式。
@@ -119,11 +124,18 @@
 - 下一步不再建议继续堆同类轻量频谱变体，而应做阶段门选择：转更强的 source-filter / vocal-tract 路线，或收缩前置器职责为安全归一化。
 - `speech source-filter / vocal-tract morph v1` 已跑通，当前 `8` 条样本的机器侧量化第一次明显进入高改变量区间，说明这条路线至少在作用层级上强于轻量频谱修正。
 - 当前 `vocal-tract morph v1` 的主要风险集中在 `female -> masculine` 方向仍可能反向，因此下一步优先级已经收缩成“先听审，再决定这条路线是继续调参还是继续升级方法”。
+- `speech source-filter / vocal-tract morph v1` 的人工听审已确认：主要听到的是底噪和瞬态脏声，人声目标方向基本没有起来，因此 `WORLD full resynthesis` 当前可视为实现层面的失败，而不是单纯参数没调好。
+- 为避免把重合成噪声误当成“有效变化”，后续已改成 `WORLD analysis only + voiced STFT magnitude delta`，即保留原始相位和时域细节，只借 WORLD 提供谱包络差分。
+- `speech WORLD-guided STFT delta v1` 已跑通，当前机器侧显示“保真明显更好，但方向性接近 0 且多为反向”，说明这版首先是去掉噪声成功了，但是否有听感价值仍需人工确认。
+- `speech WORLD-guided STFT delta v1` 的人工听审也已确认：无可感知差异，但无失真/不自然；至此“前置器单独试听”已经不足以继续作为主 gate。
+- 当前已恢复到设计稿中的正式主指标：看 `前置器 + RVC` 串联后是否整体改善，而不是要求前置器自己单独就有明显耳感。
+- 阶段 1 的 RVC 串联评测桥已经跑通，当前本地 `fzjv2.pth` 可对固定样本做 `raw / preconditioned` 成对推理，并支持 manifest 断点续跑。
+- 当前 `stage1_rvc_cascade_eval v1` 已完成 `16/16` 条推理，并已整理成 `8` 条 `raw->RVC vs preconditioned->RVC` 的成对听审队列，可直接进入人工比较。
 
 ## 近期任务
-1. 完成 `tmp/stage0_speech_vocal_tract_listening_pack/v1/` 的人工听审。
-2. 根据听审结果决定 `vocal-tract morph` 是进入 `v2` 调参，还是继续升级到更强的 source-filter / formant-aware 路线。
-3. 如果人工仍判无感，则重新评估“独立前置器听感收益”是否值得继续追，并考虑把前置器目标收缩为安全归一化。
+1. 跑完 `tmp/stage1_rvc_cascade_eval/v1/` 的 `raw / preconditioned` 串联对照。
+2. 基于成对结果建立最小听审清单，判断前置器是否真的减轻 RVC 跨性别干瘪感。
+3. 如果串联仍无收益，则正式停止继续堆新的前置原型，并把前置器目标收缩为安全归一化。
 4. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
 
 ## 当前阶段验收标准

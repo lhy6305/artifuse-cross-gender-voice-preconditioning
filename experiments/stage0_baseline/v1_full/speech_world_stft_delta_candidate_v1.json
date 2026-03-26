@@ -1,0 +1,163 @@
+{
+  "config_version": "stage0_speech_world_stft_delta_candidate_v1",
+  "source": "phase_gate_source_filter_route_b",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "world_guided_stft_delta_probe"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_world_stft_delta_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 90,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 1.14,
+        "blend": 0.90,
+        "wet_mix": 1.0,
+        "max_gain_db": 4.5,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 5,
+        "freq_smooth_bins": 9
+      },
+      "notes": "WORLD 只提供谱包络差分，实际作用在原始 STFT 幅度上，避免全量重合成噪声。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 89,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 1.10,
+        "blend": 0.88,
+        "wet_mix": 1.0,
+        "max_gain_db": 4.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 5,
+        "freq_smooth_bins": 9
+      },
+      "notes": "VCTK feminine 侧略收一档，仍保持 WORLD 分析 + 原相位重建。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 90,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 0.90,
+        "blend": 0.90,
+        "wet_mix": 1.0,
+        "max_gain_db": 4.5,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 5,
+        "freq_smooth_bins": 9
+      },
+      "notes": "masculine 侧保留 WORLD 差分，但避免 WORLD 重合成引入的底噪和瞬态脏声。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 89,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 0.92,
+        "blend": 0.88,
+        "wet_mix": 1.0,
+        "max_gain_db": 4.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 5,
+        "freq_smooth_bins": 9
+      },
+      "notes": "VCTK masculine 侧略收一档，尽量先消掉 WORLD 重合成副作用。"
+    }
+  ]
+}

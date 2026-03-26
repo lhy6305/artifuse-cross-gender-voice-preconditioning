@@ -90,6 +90,26 @@
 - 更强的 source-filter / vocal-tract 操作，是否终于能在人工听审里稳定跨过可感知阈值
 - 如果能听见，问题更可能收缩到“方向控制”和“副作用约束”
 
+## 人工听审结果
+
+人工听审已经完成，结论是否定的：
+
+- 全部样本都出现明显底噪
+- 可听到类似接线接触不良的瞬态干扰
+- 人声本身没有形成有价值的目标方向变化
+
+所以这版当前不再继续调 `warp_ratio / blend`，而是直接判定：
+
+- `WORLD full resynthesis` 不适合作为阶段 0 的直接试听实现
+
+后续已转向：
+
+- `WORLD-guided voiced STFT delta`
+
+对应说明见：
+
+- `docs/32_stage0_world_resynthesis_artifact_and_stft_delta_pivot_v1.md`
+
 ## 启动命令
 
 PowerShell:
