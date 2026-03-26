@@ -30,6 +30,10 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--rule-config", default=str(DEFAULT_RULE_CONFIG))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
+    parser.add_argument("--profile-version", default="stage0_band_gain_profile_v1")
+    parser.add_argument("--output-stem", default="rule_candidate_band_gain_profiles_v1")
+    parser.add_argument("--default-gain-scale", type=float, default=1.0)
+    parser.add_argument("--max-gain-scale", type=float, default=1.0)
     return parser.parse_args()
 
 
@@ -53,7 +57,13 @@ def write_rows(path: Path, rows: list[dict[str, str]], fieldnames: list[str]) ->
             writer.writerows(rows)
 
 
-def build_profile_rows(rule_config: dict) -> tuple[list[dict[str, str]], dict]:
+def build_profile_rows(
+    rule_config: dict,
+    *,
+    profile_version: str,
+    default_gain_scale: float,
+    max_gain_scale: float,
+) -> tuple[list[dict[str, str]], dict]:
     csv_rows: list[dict[str, str]] = []
     json_rules: list[dict] = []
 
@@ -66,8 +76,8 @@ def build_profile_rows(rule_config: dict) -> tuple[list[dict[str, str]], dict]:
 
         alpha_default = rule["strength"]["alpha_default"]
         alpha_max = rule["strength"]["alpha_max"]
-        gain_db_default = [round(weight * alpha_default, 4) for weight in weights]
-        gain_db_max = [round(weight * alpha_max, 4) for weight in weights]
+        gain_db_default = [round(weight * alpha_default * default_gain_scale, 4) for weight in weights]
+        gain_db_max = [round(weight * alpha_max * max_gain_scale, 4) for weight in weights]
 
         json_rules.append(
             {
@@ -78,11 +88,13 @@ def build_profile_rows(rule_config: dict) -> tuple[list[dict[str, str]], dict]:
                 "action_family": action_family,
                 "signal_name": rule["signal_name"],
                 "prototype_profile": {
-                    "profile_version": "stage0_band_gain_profile_v1",
+                    "profile_version": profile_version,
                     "band_edges_hz": BANDS_HZ,
                     "normalized_weights": weights,
                     "gain_db_default": gain_db_default,
                     "gain_db_max": gain_db_max,
+                    "default_gain_scale": default_gain_scale,
+                    "max_gain_scale": max_gain_scale,
                 },
                 "confidence": rule["confidence"],
                 "priority": rule["priority"],
@@ -111,9 +123,11 @@ def build_profile_rows(rule_config: dict) -> tuple[list[dict[str, str]], dict]:
             )
 
     json_payload = {
-        "profile_version": "stage0_band_gain_profile_v1",
+        "profile_version": profile_version,
         "source_rule_config": rule_config["config_version"],
         "bands_hz": BANDS_HZ,
+        "default_gain_scale": default_gain_scale,
+        "max_gain_scale": max_gain_scale,
         "rules": json_rules,
     }
     return csv_rows, json_payload
@@ -124,9 +138,14 @@ def main() -> None:
     rule_config = load_json(resolve_path(args.rule_config))
     output_dir = resolve_path(args.output_dir)
 
-    csv_rows, json_payload = build_profile_rows(rule_config)
-    csv_path = output_dir / "rule_candidate_band_gain_profiles_v1.csv"
-    json_path = output_dir / "rule_candidate_band_gain_profiles_v1.json"
+    csv_rows, json_payload = build_profile_rows(
+        rule_config,
+        profile_version=args.profile_version,
+        default_gain_scale=args.default_gain_scale,
+        max_gain_scale=args.max_gain_scale,
+    )
+    csv_path = output_dir / f"{args.output_stem}.csv"
+    json_path = output_dir / f"{args.output_stem}.json"
 
     write_rows(
         csv_path,

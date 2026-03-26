@@ -29,6 +29,16 @@
 
 如果你手动清空了 `tmp/`，应先重跑试听包构建，再重跑量化队列表生成。
 
+## 启动行为
+
+`open_stage0_rule_review_gui.ps1` 当前改为：
+
+- 默认直接打开已有 `listening_review_queue.csv`
+- 仅在队列表不存在时自动重建
+- 如需强制重建，使用 `-Rebuild`
+
+这样常规复审时不必每次等待量化预处理。
+
 ## 当前量化口径
 
 ### 1. 主方向
@@ -141,4 +151,10 @@ GUI 写回字段包括：
 
 ```powershell
 .\scripts\open_stage0_rule_review_gui.ps1
+```
+
+### 4. 强制重建后再打开
+
+```powershell
+.\scripts\open_stage0_rule_review_gui.ps1 -Rebuild
 ```

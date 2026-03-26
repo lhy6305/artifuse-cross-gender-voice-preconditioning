@@ -29,6 +29,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--frame-period-ms", type=float, default=10.0)
     parser.add_argument("--n-fft", type=int, default=2048)
     parser.add_argument("--hop-length", type=int, default=512)
+    parser.add_argument("--reuse-cache", action="store_true")
     return parser.parse_args()
 
 
@@ -64,6 +65,47 @@ def clamp(value: float, low: float, high: float) -> float:
 def load_rule_lookup(path: Path) -> dict[str, dict]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     return {row["rule_id"]: row for row in payload["rules"]}
+
+
+def file_mtime_ns(path_value: str) -> int:
+    return Path(path_value).stat().st_mtime_ns
+
+
+def build_cache_key(row: dict[str, str]) -> tuple[str, str, str, str]:
+    return (
+        row["rule_id"],
+        row["utt_id"],
+        row["original_copy"],
+        row["processed_audio"],
+    )
+
+
+def build_summary_signature(row: dict[str, str]) -> str:
+    fields = [
+        "rule_id",
+        "utt_id",
+        "source_gender",
+        "target_direction",
+        "group_value",
+        "f0_condition",
+        "f0_median_hz",
+        "confidence",
+        "strength_label",
+        "alpha_default",
+        "alpha_max",
+        "input_audio",
+        "original_copy",
+        "processed_audio",
+    ]
+    return "|".join(row.get(field, "") for field in fields)
+
+
+def load_existing_cache(path: Path) -> dict[tuple[str, str, str, str], dict[str, str]]:
+    if not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    return {build_cache_key(row): row for row in rows}
 
 
 def feature_map(audio: np.ndarray, sample_rate: int, f0_sr: int, frame_period_ms: float) -> dict[str, float | None]:
@@ -331,9 +373,12 @@ def build_output_row(
         "alpha_max": row["alpha_max"],
         "action_family": rule["action_family"],
         "rule_notes": rule.get("notes", ""),
+        "summary_signature": build_summary_signature(row),
         "input_audio": row["input_audio"],
         "original_copy": row["original_copy"],
         "processed_audio": row["processed_audio"],
+        "original_mtime_ns": str(file_mtime_ns(row["original_copy"])),
+        "processed_mtime_ns": str(file_mtime_ns(row["processed_audio"])),
         "original_rms_dbfs": fmt_float(original_features.get("rms_dbfs")),
         "processed_rms_dbfs": fmt_float(processed_features.get("rms_dbfs")),
         "delta_rms_dbfs": fmt_float(delta_rms_dbfs),
@@ -445,18 +490,41 @@ def write_summary_md(path: Path, rows: list[dict[str, str]]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def can_reuse_cached_row(cached_row: dict[str, str], summary_row: dict[str, str]) -> bool:
+    if cached_row.get("summary_signature", "") != build_summary_signature(summary_row):
+        return False
+    try:
+        original_mtime = str(file_mtime_ns(summary_row["original_copy"]))
+        processed_mtime = str(file_mtime_ns(summary_row["processed_audio"]))
+    except FileNotFoundError:
+        return False
+    return (
+        cached_row.get("original_mtime_ns", "") == original_mtime
+        and cached_row.get("processed_mtime_ns", "") == processed_mtime
+    )
+
+
 def main() -> None:
     args = parse_args()
     rule_lookup = load_rule_lookup(resolve_path(args.rule_config))
     summary_csv = resolve_path(args.summary_csv)
     output_csv = resolve_path(args.output_csv)
     summary_md = resolve_path(args.summary_md)
+    cached_rows = load_existing_cache(output_csv) if args.reuse_cache else {}
 
     with summary_csv.open("r", encoding="utf-8", newline="") as f:
         summary_rows = list(csv.DictReader(f))
 
     output_rows: list[dict[str, str]] = []
+    reused_count = 0
     for row in summary_rows:
+        cache_key = build_cache_key(row)
+        cached_row = cached_rows.get(cache_key)
+        if cached_row is not None and can_reuse_cached_row(cached_row, row):
+            output_rows.append(cached_row)
+            reused_count += 1
+            continue
+
         rule = rule_lookup[row["rule_id"]]
         original_audio, original_sr = load_audio(Path(row["original_copy"]))
         processed_audio, processed_sr = load_audio(Path(row["processed_audio"]))
@@ -489,6 +557,8 @@ def main() -> None:
     print(f"Wrote {output_csv}")
     print(f"Wrote {summary_md}")
     print(f"Rows: {len(output_rows)}")
+    print(f"Reused cache: {reused_count}")
+    print(f"Recomputed: {len(output_rows) - reused_count}")
 
 
 if __name__ == "__main__":

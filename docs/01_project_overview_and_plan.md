@@ -89,6 +89,7 @@
 - 阶段 0 band-gain 原型已经形成，当前 `brightness_up / brightness_down` 已映射到 6 粗频带的保守 gain 模板。
 - 阶段 0 最小规则前置器原型已跑通，当前已生成一版 `tmp/stage0_rule_listening_pack/v1/` 试听包。
 - 阶段 0 试听环节已补量化评分与 GUI，当前可以把原音/处理音差异和人工听审写回同一张表。
+- 规则试听 GUI 启动入口已改为默认复用已有队列表，避免每次打开前都被量化预处理阻塞。
 
 ## 近期任务
 1. 对 `tmp/stage0_rule_listening_pack/v1/` 做第一轮量化 + GUI 听审并记录结论。
