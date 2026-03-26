@@ -1,0 +1,199 @@
+{
+  "config_version": "stage0_speech_resonance_tilt_candidate_v1",
+  "source": "envelope_warp_v2_listening_feedback resonance_tilt_pivot",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "voiced_broad_resonance_tilt_probe"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_restilt_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_resonance_tilt_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_restilt_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 70,
+      "method_family": "voiced_resonance_tilt",
+      "method_params": {
+        "bands": [
+          {
+            "center_hz": 700.0,
+            "width_oct": 1.15,
+            "gain_db": -1.6
+          },
+          {
+            "center_hz": 3200.0,
+            "width_oct": 1.1,
+            "gain_db": 2.8
+          },
+          {
+            "center_hz": 5200.0,
+            "width_oct": 0.9,
+            "gain_db": 1.2
+          }
+        ],
+        "blend": 0.92,
+        "voiced_rms_gate_db": 34.0
+      },
+      "notes": "女性向：减一点胸腔闷感，补 broad presence / brilliance，不再做 envelope warp。"
+    },
+    {
+      "rule_id": "stage0_speech_restilt_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_resonance_tilt_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_restilt_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 69,
+      "method_family": "voiced_resonance_tilt",
+      "method_params": {
+        "bands": [
+          {
+            "center_hz": 750.0,
+            "width_oct": 1.1,
+            "gain_db": -1.2
+          },
+          {
+            "center_hz": 3000.0,
+            "width_oct": 1.0,
+            "gain_db": 2.4
+          },
+          {
+            "center_hz": 4800.0,
+            "width_oct": 0.85,
+            "gain_db": 1.0
+          }
+        ],
+        "blend": 0.9,
+        "voiced_rms_gate_db": 34.0
+      },
+      "notes": "VCTK 女性向：同样补 presence，但比 LibriTTS-R 略收一档。"
+    },
+    {
+      "rule_id": "stage0_speech_restilt_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_resonance_tilt_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_restilt_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 70,
+      "method_family": "voiced_resonance_tilt",
+      "method_params": {
+        "bands": [
+          {
+            "center_hz": 620.0,
+            "width_oct": 1.25,
+            "gain_db": 2.8
+          },
+          {
+            "center_hz": 1200.0,
+            "width_oct": 1.0,
+            "gain_db": 0.9
+          },
+          {
+            "center_hz": 3000.0,
+            "width_oct": 1.05,
+            "gain_db": -2.0
+          }
+        ],
+        "blend": 0.94,
+        "voiced_rms_gate_db": 34.0
+      },
+      "notes": "男性向：宽带补 600-1200 Hz 共鸣壳体，同时压 3k 附近，不再收窄频带。"
+    },
+    {
+      "rule_id": "stage0_speech_restilt_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_resonance_tilt_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_restilt_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 69,
+      "method_family": "voiced_resonance_tilt",
+      "method_params": {
+        "bands": [
+          {
+            "center_hz": 680.0,
+            "width_oct": 1.2,
+            "gain_db": 2.4
+          },
+          {
+            "center_hz": 1300.0,
+            "width_oct": 0.95,
+            "gain_db": 0.7
+          },
+          {
+            "center_hz": 2900.0,
+            "width_oct": 1.0,
+            "gain_db": -1.8
+          }
+        ],
+        "blend": 0.92,
+        "voiced_rms_gate_db": 34.0
+      },
+      "notes": "VCTK 男性向：同样走 broad resonance tilt，但比 LibriTTS-R 略收一档。"
+    }
+  ]
+}
