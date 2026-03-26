@@ -41,6 +41,7 @@
 - 已有阶段 0 候选规则 selector 原型：`scripts/select_stage0_candidate_rules.py`、`experiments/stage0_baseline/v1_full/rule_selector_preview_summary_v1.md`
 - 已有阶段 0 band-gain 原型：`docs/22_stage0_band_gain_profile_prototype_v1.md`、`scripts/build_stage0_band_gain_profiles.py`、`experiments/stage0_baseline/v1_full/rule_candidate_band_gain_profiles_v1.json`
 - 已有阶段 0 最小规则前置器原型：`docs/23_stage0_rule_preconditioner_prototype_v1.md`、`scripts/apply_stage0_rule_preconditioner.py`、`scripts/build_stage0_rule_listening_pack.py`
+- 已有阶段 0 规则试听量化与 GUI：`docs/24_stage0_rule_review_quant_gui_v1.md`、`scripts/build_stage0_rule_review_queue.py`、`scripts/stage0_rule_review_gui.py`、`scripts/open_stage0_rule_review_gui.ps1`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
@@ -87,10 +88,11 @@
 - 阶段 0 规则 selector 原型已跑通，当前 `clean_singing_v1` preview 覆盖率与 `median_split` 预期一致。
 - 阶段 0 band-gain 原型已经形成，当前 `brightness_up / brightness_down` 已映射到 6 粗频带的保守 gain 模板。
 - 阶段 0 最小规则前置器原型已跑通，当前已生成一版 `tmp/stage0_rule_listening_pack/v1/` 试听包。
+- 阶段 0 试听环节已补量化评分与 GUI，当前可以把原音/处理音差异和人工听审写回同一张表。
 
 ## 近期任务
-1. 对 `tmp/stage0_rule_listening_pack/v1/` 做第一轮人工试听并记录主观反馈。
-2. 根据试听结果决定哪些规则需要加大强度，哪些应保持保守。
+1. 对 `tmp/stage0_rule_listening_pack/v1/` 做第一轮量化 + GUI 听审并记录结论。
+2. 根据 `listening_review_queue.csv` 的量化分数和听审结果，决定哪些规则需要加大强度，哪些应保持保守。
 3. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
 4. 如需引入 Torch 或更正式的特征实现，再单独升级环境锁定版本。
 

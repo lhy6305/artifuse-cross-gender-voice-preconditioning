@@ -39,6 +39,11 @@
 - `processed/`
 - `listening_pack_summary.csv`
 
+这批文件属于临时试听产物，符合 `tmp/readme.md` 的约定：
+
+- 可以被随时删除
+- 删除后应通过脚本重建，而不是长期保留在 `tmp/`
+
 当前 pack 共 `10` 条规则样本，一条规则对应一条样本。
 
 ## 当前验证状态
@@ -48,6 +53,7 @@
 - selector 可以正确选中规则
 - `forte / pp` 仍保持排除
 - `processed` 音频与 `original` 音频存在实际波形差异，不是空操作
+- 当前已补量化评审队列与 GUI，后续试听不再只依赖主观描述
 
 ## 推荐用法
 
@@ -70,10 +76,24 @@
   --output-dir tmp/stage0_rule_listening_pack/v1
 ```
 
+### 量化评审队列
+
+```powershell
+.\python.exe .\scripts\build_stage0_rule_review_queue.py `
+  --summary-csv tmp/stage0_rule_listening_pack/v1/listening_pack_summary.csv `
+  --output-csv tmp/stage0_rule_listening_pack/v1/listening_review_queue.csv
+```
+
+### 打开 GUI
+
+```powershell
+.\scripts\open_stage0_rule_review_gui.ps1
+```
+
 ## 下一步
 
 当前最自然的下一步是：
 
-1. 对 `tmp/stage0_rule_listening_pack/v1/` 做第一轮人工试听。
-2. 记录哪些 rule 方向正确但太弱，哪些已经可感知。
-3. 再决定是否补 voiced mask 或 envelope warp。
+1. 对 `tmp/stage0_rule_listening_pack/v1/` 做第一轮量化 + 人工联合试听。
+2. 区分“方向对但太弱”和“机械上有变化但代理指标没被推到目标方向”。
+3. 再决定是否补 voiced mask、加强 gain 或改 envelope warp。
