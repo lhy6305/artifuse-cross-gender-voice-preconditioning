@@ -74,6 +74,33 @@
 - 但整体强度仍然偏保守
 - 下一步需要靠人工听审确认：它是不是比 envelope warp 更自然
 
+## resonance tilt 人工听审结果
+
+当前 `tmp/stage0_speech_resonance_listening_pack/v1/` 已完成一轮人工听审。
+
+人工结论：
+
+- `8/8 effect_audible = no`
+- 没有出现失真
+- 也没有出现明显不自然感
+
+这说明：
+
+- `resonance tilt` 的确比 `envelope warp` 更安全
+- 但它仍然没有跨过“可感知差异”门槛
+- 当前问题已经不是“自然不自然”，而是“仍然太弱”
+
+## 下一步
+
+基于这轮反馈，下一条路线改成：
+
+- `voiced adaptive formant-anchor morph`
+
+这条路线会直接围绕每帧检测到的 `F1 / F2` 代理峰做宽带搬移，目标是：
+
+- 比 `resonance tilt` 更有针对性
+- 比 `envelope warp` 更少窄带假感
+
 ## 启动命令
 
 PowerShell:

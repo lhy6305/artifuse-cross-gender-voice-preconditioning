@@ -51,6 +51,11 @@
 - 已有 speech envelope warp `v2` 配置：`experiments/stage0_baseline/v1_full/speech_envelope_warp_candidate_v2.json`
 - 已有 speech resonance tilt 原型与 GUI 入口：`scripts/build_stage0_speech_resonance_listening_pack.py`、`scripts/open_stage0_speech_resonance_review_gui.ps1`、`scripts/open_stage0_speech_resonance_review_gui.cmd`
 - 已有 envelope warp 听审反馈与 resonance tilt pivot 说明：`docs/28_stage0_envelope_warp_feedback_and_resonance_tilt_pivot_v1.md`
+- 已有 speech formant anchor 原型与 GUI 入口：`scripts/build_stage0_speech_formant_listening_pack.py`、`scripts/open_stage0_speech_formant_review_gui.ps1`、`scripts/open_stage0_speech_formant_review_gui.cmd`
+- 已有 resonance tilt 听审反馈与 formant anchor pivot 说明：`docs/29_stage0_resonance_tilt_feedback_and_formant_anchor_pivot_v1.md`
+- 已有阶段 0 轻量前置修正 phase gate 文档：`docs/30_stage0_lightweight_preconditioning_phase_gate_v1.md`
+- 已有 speech source-filter / vocal-tract morph 原型与 GUI 入口：`scripts/build_stage0_speech_vocal_tract_listening_pack.py`、`scripts/open_stage0_speech_vocal_tract_review_gui.ps1`、`scripts/open_stage0_speech_vocal_tract_review_gui.cmd`
+- 已有 source-filter / vocal-tract morph 说明：`docs/31_stage0_source_filter_vocal_tract_morph_v1.md`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
@@ -60,13 +65,13 @@
 - 当前已有首版依赖锁定说明：`requirements-stage0-analysis.txt`
 
 ## 当前阶段
-阶段名：数据准备第五步，阶段 0 baseline pilot 已跑通
+阶段名：阶段 0 听审验证，第一个 source-filter 原型已跑通
 
 当前目标：
-1. 把 `stage0_baseline` 从 `pilot` 扩到 `full`。
-2. 在 `clean_singing_v1` 上补更细的 technique / f0 条件分析。
-3. 把同类特征逐步扩展到更大的 manifest 范围。
-4. 开始补阶段 0 的表格与图形报告。
+1. 验证 `speech source-filter / vocal-tract morph v1` 是否首次产生稳定可感知差异。
+2. 如果可感知，则把问题收缩到方向控制与副作用约束。
+3. 如果仍不可感知，则重新评估“独立前置器听感收益”是否值得继续追。
+4. 评估是否把前置器目标收缩为安全归一化并服务下游模型。
 
 ## 当前结论
 - 本仓库适合采用“文档先行、脚本后补”的轻量起步方式。
@@ -108,11 +113,17 @@
 - `speech envelope warp v2` 已生成，当前应优先对 `v2` 做下一轮听审，而不是再次改路线。
 - `speech envelope warp v2` 听审后已确认：`female` 侧容易变成“窄带且不自然”，`male` 侧变化仍偏小，因此当前已转向 `speech broad-resonance tilt`。
 - `speech broad-resonance tilt v1` 已生成，当前应优先验证它是否比 envelope warp 更自然、但仍可感知。
+- `speech broad-resonance tilt v1` 人工听审已确认“自然但无感”，说明这条路线安全但仍然太弱。
+- `speech formant anchor v1` 已生成，但机器侧先验比 resonance tilt 更弱，当前应把它当作新的探索分支，而不是已验证更优路线。
+- `speech formant anchor v1` 的人工听审也已确认“无感但无伪影”，当前 `static EQ / envelope warp / resonance tilt / formant anchor` 这整个轻量频谱前置家族可视为阶段性 `null result`。
+- 下一步不再建议继续堆同类轻量频谱变体，而应做阶段门选择：转更强的 source-filter / vocal-tract 路线，或收缩前置器职责为安全归一化。
+- `speech source-filter / vocal-tract morph v1` 已跑通，当前 `8` 条样本的机器侧量化第一次明显进入高改变量区间，说明这条路线至少在作用层级上强于轻量频谱修正。
+- 当前 `vocal-tract morph v1` 的主要风险集中在 `female -> masculine` 方向仍可能反向，因此下一步优先级已经收缩成“先听审，再决定这条路线是继续调参还是继续升级方法”。
 
 ## 近期任务
-1. 对 `tmp/stage0_speech_resonance_listening_pack/v1/` 做第一轮人工听审，判断它是否比 envelope warp 更自然。
-2. 重点判断 `LibriTTS-R masculine` 是否终于更像“补 male resonance”，而不是单纯变闷。
-3. 如果 resonance tilt 仍然太弱，再评估是否进入更强的 formant-aware 路线。
+1. 完成 `tmp/stage0_speech_vocal_tract_listening_pack/v1/` 的人工听审。
+2. 根据听审结果决定 `vocal-tract morph` 是进入 `v2` 调参，还是继续升级到更强的 source-filter / formant-aware 路线。
+3. 如果人工仍判无感，则重新评估“独立前置器听感收益”是否值得继续追，并考虑把前置器目标收缩为安全归一化。
 4. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
 
 ## 当前阶段验收标准

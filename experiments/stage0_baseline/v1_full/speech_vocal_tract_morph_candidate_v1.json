@@ -1,0 +1,151 @@
+{
+  "config_version": "stage0_speech_vocal_tract_morph_candidate_v1",
+  "source": "phase_gate_source_filter_route_a",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "world_source_filter_vocal_tract_morph_probe"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_vtmorph_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_vocal_tract_morph_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_vtmorph_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 90,
+      "method_family": "world_vocal_tract_morph",
+      "method_params": {
+        "warp_ratio": 1.16,
+        "blend": 0.95,
+        "max_gain_db": 7.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0
+      },
+      "notes": "WORLD route: feminine 侧通过上移 spectral envelope 模拟更短 vocal tract。"
+    },
+    {
+      "rule_id": "stage0_speech_vtmorph_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_vocal_tract_morph_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_vtmorph_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 89,
+      "method_family": "world_vocal_tract_morph",
+      "method_params": {
+        "warp_ratio": 1.12,
+        "blend": 0.92,
+        "max_gain_db": 6.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0
+      },
+      "notes": "WORLD route: VCTK feminine 侧略收一档。"
+    },
+    {
+      "rule_id": "stage0_speech_vtmorph_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_vocal_tract_morph_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_vtmorph_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 90,
+      "method_family": "world_vocal_tract_morph",
+      "method_params": {
+        "warp_ratio": 0.88,
+        "blend": 0.95,
+        "max_gain_db": 7.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0
+      },
+      "notes": "WORLD route: masculine 侧通过下移 spectral envelope 模拟更长 vocal tract。"
+    },
+    {
+      "rule_id": "stage0_speech_vtmorph_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_vocal_tract_morph_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_vtmorph_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 89,
+      "method_family": "world_vocal_tract_morph",
+      "method_params": {
+        "warp_ratio": 0.91,
+        "blend": 0.92,
+        "max_gain_db": 6.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0
+      },
+      "notes": "WORLD route: VCTK masculine 侧略收一档。"
+    }
+  ]
+}
