@@ -1,0 +1,122 @@
+{
+  "config_version": "stage0_speech_rule_candidate_v1",
+  "source": "fixed_eval_review_final_v1_2.csv speech diagnostic listening pack",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_pool": "fixed_eval_v1_2 reviewed usable speech rows",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "audibility_diagnostic_not_final_directional_rule"
+  },
+  "strength_presets": {
+    "diagnostic_high": {
+      "alpha_default": 0.75,
+      "alpha_max": 1.0
+    },
+    "diagnostic_medium_high": {
+      "alpha_default": 0.65,
+      "alpha_max": 0.9
+    }
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_libritts_feminine_brightness_up_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_audibility_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_high",
+        "alpha_default": 0.75,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 40,
+      "notes": "Speech-first 可感知性探针：对 LibriTTS-R 男声做更明显的 upper-mid / brilliance 提升。"
+    },
+    {
+      "rule_id": "stage0_speech_vctk_feminine_brightness_up_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_audibility_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_medium_high",
+        "alpha_default": 0.65,
+        "alpha_max": 0.9
+      },
+      "confidence": "diagnostic",
+      "priority": 39,
+      "notes": "Speech-first 可感知性探针：VCTK 本身更亮，因此女性向增亮略收一档。"
+    },
+    {
+      "rule_id": "stage0_speech_libritts_masculine_brightness_down_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_audibility_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_high",
+        "alpha_default": 0.75,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 40,
+      "notes": "Speech-first 可感知性探针：对 LibriTTS-R 女声做更明显的 low-mid / presence 下拉。"
+    },
+    {
+      "rule_id": "stage0_speech_vctk_masculine_brightness_down_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_audibility_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_medium_high",
+        "alpha_default": 0.65,
+        "alpha_max": 0.9
+      },
+      "confidence": "diagnostic",
+      "priority": 39,
+      "notes": "Speech-first 可感知性探针：VCTK 女性样本已偏亮，男性向降亮略收一档。"
+    }
+  ]
+}

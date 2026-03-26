@@ -93,6 +93,7 @@ RUBRIC_TEXT = """巡检判定速查
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", default=str(DEFAULT_CSV), help="Queue CSV path relative to repo root or absolute path.")
+    parser.add_argument("--auto-close-ms", type=int, default=0, help="Auto close after N milliseconds for smoke tests.")
     return parser.parse_args()
 
 
@@ -395,7 +396,16 @@ def main() -> None:
     csv_path = resolve_path(args.csv)
     root = tk.Tk()
     app = ReviewApp(root, csv_path)
-    root.protocol("WM_DELETE_WINDOW", lambda: (app.save_form_into_row(), app.save_rows(), app.stop_audio(), root.destroy()))
+
+    def close_app() -> None:
+        app.save_form_into_row()
+        app.save_rows()
+        app.stop_audio()
+        root.destroy()
+
+    root.protocol("WM_DELETE_WINDOW", close_app)
+    if args.auto_close_ms > 0:
+        root.after(args.auto_close_ms, close_app)
     root.mainloop()
 
 

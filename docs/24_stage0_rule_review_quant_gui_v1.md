@@ -5,6 +5,8 @@
 - `scripts/build_stage0_rule_review_queue.py`
 - `scripts/stage0_rule_review_gui.py`
 - `scripts/open_stage0_rule_review_gui.ps1`
+- `scripts/open_stage0_speech_review_gui.ps1`
+- `scripts/open_stage0_speech_review_gui.cmd`
 
 ## 作用
 
@@ -29,6 +31,10 @@
 
 如果你手动清空了 `tmp/`，应先重跑试听包构建，再重跑量化队列表生成。
 
+新增的 speech-first 临时目录位于：
+
+- `tmp/stage0_speech_listening_pack/v1/`
+
 ## 启动行为
 
 `open_stage0_rule_review_gui.ps1` 当前改为：
@@ -36,8 +42,18 @@
 - 默认直接打开已有 `listening_review_queue.csv`
 - 仅在队列表不存在时自动重建
 - 如需强制重建，使用 `-Rebuild`
+- 可用 `-PackVersion v2` 之类的参数切到不同试听包目录
 
 这样常规复审时不必每次等待量化预处理。
+
+## GUI Smoke
+
+当前两个 Tk GUI 都已补 `--auto-close-ms`：
+
+- `scripts/stage0_rule_review_gui.py`
+- `scripts/fixed_eval_review_gui.py`
+
+可用于最小联通性 smoke，而不必手动关窗。
 
 ## 当前量化口径
 
@@ -130,6 +146,31 @@ GUI 写回字段包括：
 - 是否只是量化代理太严格，但听感其实已经成立
 - 还是当前 gain 模板确实太弱，需要加大强度或改作用方式
 
+## v2 强化试听包
+
+当前已额外生成一版更激进的 `v2` profile：
+
+- `experiments/stage0_baseline/v1_full/rule_candidate_band_gain_profiles_v2.json`
+- `tmp/stage0_rule_listening_pack/v2/`
+
+这版不是改规则选择逻辑，而是把 band-gain 强度整体放大到 `5x`：
+
+- 高区 `brightness_up` 主带约到 `+1.5 dB`
+- 低区 `brightness_down` 主带约到 `-0.9 dB`
+- 弱规则也提升到约 `-0.6 dB`
+
+当前 `v2` 的量化结论是：
+
+- 相比 `v1`，`auto_quant_score` 均值从约 `34.09` 提到约 `44.23`
+- `auto_effect_score` 均值从约 `10.12` 提到约 `27.30`
+- 但整体仍未进入自动“通过”区
+
+这说明：
+
+- `v1` 确实太弱
+- 但即使拉到 `v2`，当前静态 6 段 band-gain 也仍然偏保守
+- 是否能听出来，需要继续靠 `v2` 人工听审确认
+
 ## 推荐命令
 
 ### 1. 重建试听包
@@ -157,4 +198,36 @@ GUI 写回字段包括：
 
 ```powershell
 .\scripts\open_stage0_rule_review_gui.ps1 -Rebuild
+```
+
+### 5. 打开 `v2` 试听包
+
+```powershell
+.\scripts\open_stage0_rule_review_gui.ps1 -PackVersion v2
+```
+
+### 6. GUI 自动退出 smoke
+
+```powershell
+.\python.exe .\scripts\stage0_rule_review_gui.py `
+  --csv tmp/stage0_rule_listening_pack/v2/listening_review_queue.csv `
+  --auto-close-ms 2000
+```
+
+也可以直接对 PowerShell 入口做 smoke：
+
+```powershell
+.\scripts\open_stage0_rule_review_gui.ps1 -PackVersion v2 -AutoCloseMs 2000
+```
+
+### 7. 打开 speech-first 听审包
+
+```powershell
+.\scripts\open_stage0_speech_review_gui.ps1
+```
+
+### 8. 在 `cmd.exe` 中打开 speech-first 听审包
+
+```cmd
+.\scripts\open_stage0_speech_review_gui.cmd
 ```
