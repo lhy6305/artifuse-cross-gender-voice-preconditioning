@@ -1,0 +1,143 @@
+{
+  "config_version": "stage0_speech_envelope_warp_candidate_v3",
+  "source": "parallel_compare_midpoint_between_envwarp_v1_watch_and_v2_watch_with_risk",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "voiced_envelope_warp_parallel_compare_v3"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_envwarp_libritts_feminine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_envwarp_v3",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 65,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 1.15,
+        "blend": 0.92,
+        "envelope_smooth_bins": 29,
+        "max_envelope_gain_db": 7.2,
+        "voiced_rms_gate_db": 34.0
+      },
+      "notes": "v3: 取 v1 与 v2 的中间档，优先保留 feminine 侧的可听性，同时压住 v2 暴露出的窄带风险。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_vctk_feminine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_envwarp_v3",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 64,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 1.11,
+        "blend": 0.88,
+        "envelope_smooth_bins": 29,
+        "max_envelope_gain_db": 6.4,
+        "voiced_rms_gate_db": 34.0
+      },
+      "notes": "v3: VCTK feminine 侧维持比 LibriTTS-R 更收一档的安全中间值。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_libritts_masculine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_envwarp_v3",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 65,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 0.88,
+        "blend": 0.92,
+        "envelope_smooth_bins": 29,
+        "max_envelope_gain_db": 7.4,
+        "voiced_rms_gate_db": 34.0
+      },
+      "notes": "v3: masculine 侧保持略强于 v1 的可感知性，但回避 v2 的过推倾向。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_vctk_masculine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_envwarp_v3",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 64,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 0.90,
+        "blend": 0.88,
+        "envelope_smooth_bins": 29,
+        "max_envelope_gain_db": 6.4,
+        "voiced_rms_gate_db": 34.0
+      },
+      "notes": "v3: VCTK masculine 侧采用中间强度，避免继续把副作用抬高。"
+    }
+  ]
+}

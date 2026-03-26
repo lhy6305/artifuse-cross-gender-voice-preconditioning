@@ -142,22 +142,40 @@
 - `vocal-tract morph v1` 虽然 `8/8` 可感知，但同时 `8/8` 明确为方向错误且有明显伪影，应继续排除；
 - `stage1 cascade` 队列当前也已全部标成 `reviewed`，但字段填写明显不完整，暂不足以支持正式阶段结论。
 - 当前已不再把这些空字段视为“漏填”；它们按用户口径属于稀疏标注的一部分，后续应通过汇总脚本解释，而不是回头机械补表。
-- 当前已生成第一版听审汇总：`tmp/listening_review_rollup/v1/`
+- 当前已生成第一版听审汇总：`artifacts/listening_review_rollup/v1/`
 - 按该汇总的当前判断：
-  - `stage0_speech_listening_pack/v1`、`resonance v1`、`formant v1`、`WORLD-guided STFT delta v1` 均可冻结为 `null_result`
+  - `stage0_speech_listening_pack/v1`、`resonance v1`、`formant v1` 可冻结为 `null_result`
   - `stage0_speech_vocal_tract_listening_pack/v1` 可冻结为 `reject`
   - `stage0_speech_envelope_listening_pack/v1` 可保留为 `watch`
   - `stage0_speech_envelope_listening_pack/v2` 仅能保留为 `watch_with_risk`
   - `stage1_rvc_cascade_eval/v1` 当前只保留为 `watch` 级参考，不上升为正式主线结论
+- 在修正 `stage0` GUI 播放口径并将听审包迁到 `artifacts/listening_review/` 后，已对受影响的 4 个分支完成复听：
+  - `stage0_speech_listening_pack/v1`：仍为 `null_result`
+  - `stage0_speech_resonance_listening_pack/v1`：仍为 `null_result`
+  - `stage0_speech_formant_listening_pack/v1`：仍为 `null_result`
+  - `stage0_speech_world_stft_delta_listening_pack/v1`：从 `null_result` 上调为 `watch`
+- 当前 `WORLD-guided STFT delta v1` 的最新人工结果是：`8/8 reviewed`，其中 `audible_yes=2`、`audible_maybe=2`、`audible_no=4`，且已审样本里未出现显式伪影报告；但可辨识样本仍普遍被标为 `too_weak`，暂不足以单独升级为主线方法。
+- 当前已正式设定并行比较清单：`docs/34_stage0_parallel_envelope_vs_world_comparison_v1.md`
+- 当前并行比较的两条新候选已导出到正式听审目录：
+  - `artifacts/listening_review/stage0_speech_envelope_listening_pack/v3/`
+  - `artifacts/listening_review/stage0_speech_world_stft_delta_listening_pack/v2/`
+- 在 `v3 / v2` 听审后，已确认两条线共同问题是“变化仍偏弱，只能 barely 分辨”；因此当前已切到 `audibility stress test`：
+  - `artifacts/listening_review/stage0_speech_envelope_listening_pack/v4/`
+  - `artifacts/listening_review/stage0_speech_world_stft_delta_listening_pack/v3/`
 
 ## 近期任务
 1. 以 `scripts/build_listening_review_rollup.py` 为标准汇总入口，后续不再要求把稀疏标注手工补成满表。
-2. 基于 `tmp/listening_review_rollup/v1/` 正式冻结以下结论：
-   - `static EQ / resonance tilt / formant anchor / WORLD-guided STFT delta` 归入 `null result`；
+2. 基于 `artifacts/listening_review_rollup/v1/` 正式冻结以下结论：
+   - `static EQ / resonance tilt / formant anchor` 归入 `null result`；
    - `vocal-tract morph v1` 归入“方向错误且伪影明显”的排除项；
-   - `envelope warp` 保留为唯一待定分支，但默认只保留 `v1`，不继续沿 `v2` 硬推。
+   - `envelope warp v1` 与 `WORLD-guided STFT delta v1` 保留为待定分支，但都不应直接升格为主线；
+   - `envelope warp v2` 不继续沿原方向硬推。
 3. 在模块本体结论冻结前，暂停把 `stage1 cascade` 当成正式 gate；如需继续，只把它作为次级参考，不先驱动路线切换。
 4. 若基于当前汇总仍无新增正证据，则短期不再新增同族前置原型，而是转向“安全归一化”收缩方案或等待新的方法级 pivot。
+5. 当前先执行最后一轮受控并行比较，只保留两个新包：
+   - `envelope warp v3`
+   - `WORLD-guided STFT delta v2`
+6. 若 `v3 / v2` 仍只停留在 barely 可辨，则继续推进到更强的 `audibility stress test`，并在听审时不把轻微整体音色偏移直接记作伪影。
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

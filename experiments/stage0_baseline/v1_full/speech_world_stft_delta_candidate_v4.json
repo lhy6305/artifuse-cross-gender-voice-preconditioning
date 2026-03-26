@@ -1,0 +1,163 @@
+{
+  "config_version": "stage0_speech_world_stft_delta_candidate_v4",
+  "source": "stronger_audibility_stress_test_after_world_stft_delta_v3_subjectively_correct_but_still_weak",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "world_guided_stft_delta_stronger_stress_test_v4"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_world_stft_delta_libritts_feminine_v4",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v4_stronger",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 96,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 1.30,
+        "blend": 1.00,
+        "wet_mix": 1.0,
+        "max_gain_db": 7.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 4,
+        "freq_smooth_bins": 7
+      },
+      "notes": "v4: 在 v3 主观方向正确的前提下继续提高 warp 与 gain，并减少平滑，目标是把可辨识度再抬一档。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_vctk_feminine_v4",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v4_stronger",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 95,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 1.24,
+        "blend": 0.98,
+        "wet_mix": 1.0,
+        "max_gain_db": 6.5,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 4,
+        "freq_smooth_bins": 7
+      },
+      "notes": "v4: VCTK feminine 侧同步加大差分强度，优先解决 still weak 的主观反馈。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_libritts_masculine_v4",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v4_stronger",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 96,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 0.78,
+        "blend": 1.00,
+        "wet_mix": 1.0,
+        "max_gain_db": 7.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 4,
+        "freq_smooth_bins": 7
+      },
+      "notes": "v4: masculine 侧继续拉大下移量，保持 v3 主观正确方向，同时提高可辨识度。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_vctk_masculine_v4",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v4_stronger",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 95,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 0.82,
+        "blend": 0.98,
+        "wet_mix": 1.0,
+        "max_gain_db": 6.5,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 4,
+        "freq_smooth_bins": 7
+      },
+      "notes": "v4: VCTK masculine 侧同步放大差分，继续以稳定可辨为主目标。"
+    }
+  ]
+}

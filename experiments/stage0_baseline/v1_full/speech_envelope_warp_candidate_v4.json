@@ -1,0 +1,143 @@
+{
+  "config_version": "stage0_speech_envelope_warp_candidate_v4",
+  "source": "audibility_stress_test_strengthened_after_envwarp_v3_remained_barely_distinguishable",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "voiced_envelope_warp_audibility_stress_test_v4"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_envwarp_libritts_feminine_v4",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_envwarp_v4_stress",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 70,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 1.22,
+        "blend": 0.96,
+        "envelope_smooth_bins": 27,
+        "max_envelope_gain_db": 8.6,
+        "voiced_rms_gate_db": 36.0
+      },
+      "notes": "v4 stress: 进一步提高 feminine 侧的谱包络上移与混合强度，但保留比 v2 稍宽的包络平滑，目标是先稳定进入可辨区。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_vctk_feminine_v4",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_envwarp_v4_stress",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 69,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 1.17,
+        "blend": 0.93,
+        "envelope_smooth_bins": 27,
+        "max_envelope_gain_db": 7.6,
+        "voiced_rms_gate_db": 36.0
+      },
+      "notes": "v4 stress: VCTK feminine 侧同步加一档，优先解决 v3 仍只能 barely 区分的问题。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_libritts_masculine_v4",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_envwarp_v4_stress",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 70,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 0.84,
+        "blend": 0.95,
+        "envelope_smooth_bins": 27,
+        "max_envelope_gain_db": 8.6,
+        "voiced_rms_gate_db": 36.0
+      },
+      "notes": "v4 stress: masculine 侧继续增强下移量，目的不是最终保守版本，而是确认这条作用方式是否能稳定被听出。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_vctk_masculine_v4",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_envwarp_v4_stress",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 69,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 0.86,
+        "blend": 0.92,
+        "envelope_smooth_bins": 27,
+        "max_envelope_gain_db": 7.6,
+        "voiced_rms_gate_db": 36.0
+      },
+      "notes": "v4 stress: VCTK masculine 侧推到高于 v3 的诊断强度，接受一定音色偏移，换取更清楚的 A/B 差异。"
+    }
+  ]
+}

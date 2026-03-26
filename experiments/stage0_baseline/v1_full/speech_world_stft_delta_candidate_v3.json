@@ -1,0 +1,163 @@
+{
+  "config_version": "stage0_speech_world_stft_delta_candidate_v3",
+  "source": "audibility_stress_test_strengthened_after_world_stft_delta_v2_remained_barely_distinguishable",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "world_guided_stft_delta_audibility_stress_test_v3"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_world_stft_delta_libritts_feminine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v3_stress",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 94,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 1.22,
+        "blend": 0.97,
+        "wet_mix": 1.0,
+        "max_gain_db": 6.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 5,
+        "freq_smooth_bins": 9
+      },
+      "notes": "v3 stress: 放弃 v2 过强平滑带来的保守性，改成更大的 warp 与 gain，目标是先把差异推到稳定可辨。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_vctk_feminine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v3_stress",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 93,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 1.17,
+        "blend": 0.95,
+        "wet_mix": 1.0,
+        "max_gain_db": 5.5,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 5,
+        "freq_smooth_bins": 9
+      },
+      "notes": "v3 stress: VCTK feminine 侧同步放松时频平滑，并提高 blend，优先解决 barely 区分的问题。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_libritts_masculine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v3_stress",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 94,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 0.84,
+        "blend": 0.97,
+        "wet_mix": 1.0,
+        "max_gain_db": 6.0,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 5,
+        "freq_smooth_bins": 9
+      },
+      "notes": "v3 stress: masculine 侧采用更大的下移量与 gain，接受不再追求最干净，只要先把效果推到可明确判断。"
+    },
+    {
+      "rule_id": "stage0_speech_world_stft_delta_vctk_masculine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_world_guided_stft_delta_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_world_stft_delta_v3_stress",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 93,
+      "method_family": "world_guided_stft_delta",
+      "method_params": {
+        "warp_ratio": 0.87,
+        "blend": 0.95,
+        "wet_mix": 1.0,
+        "max_gain_db": 5.5,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 5,
+        "freq_smooth_bins": 9
+      },
+      "notes": "v3 stress: VCTK masculine 侧提高整体差分强度，并恢复到 v1 级平滑，优先验证 audibility 而非最终保守性。"
+    }
+  ]
+}

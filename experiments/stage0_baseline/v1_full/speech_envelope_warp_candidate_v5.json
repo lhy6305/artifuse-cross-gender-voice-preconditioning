@@ -1,0 +1,143 @@
+{
+  "config_version": "stage0_speech_envelope_warp_candidate_v5",
+  "source": "direction_corrected_audibility_stress_test_after_envwarp_v4_reversed_subjective_direction",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "voiced_envelope_warp_direction_corrected_stress_test_v5"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_envwarp_libritts_feminine_v5",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_envwarp_v5_direction_corrected",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 72,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 0.82,
+        "blend": 0.97,
+        "envelope_smooth_bins": 27,
+        "max_envelope_gain_db": 8.8,
+        "voiced_rms_gate_db": 36.0
+      },
+      "notes": "v5: 基于 v4 主观确认方向反转，直接翻转 warp 方向并保留 stress 强度，优先验证 feminine 侧能否既方向正确又稳定可辨。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_vctk_feminine_v5",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_envwarp_v5_direction_corrected",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 71,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 0.86,
+        "blend": 0.94,
+        "envelope_smooth_bins": 27,
+        "max_envelope_gain_db": 7.8,
+        "voiced_rms_gate_db": 36.0
+      },
+      "notes": "v5: VCTK feminine 侧同步翻转方向，并保持接近 v4 的可辨强度。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_libritts_masculine_v5",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_envwarp_v5_direction_corrected",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 72,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 1.19,
+        "blend": 0.96,
+        "envelope_smooth_bins": 27,
+        "max_envelope_gain_db": 8.8,
+        "voiced_rms_gate_db": 36.0
+      },
+      "notes": "v5: masculine 侧改为与 v4 相反的 warp 方向，并维持高强度，判断纠偏后是否仍能稳定可辨。"
+    },
+    {
+      "rule_id": "stage0_speech_envwarp_vctk_masculine_v5",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_envelope_warp_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_envwarp_v5_direction_corrected",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 71,
+      "method_family": "voiced_envelope_warp",
+      "method_params": {
+        "warp_factor": 1.15,
+        "blend": 0.93,
+        "envelope_smooth_bins": 27,
+        "max_envelope_gain_db": 7.8,
+        "voiced_rms_gate_db": 36.0
+      },
+      "notes": "v5: VCTK masculine 侧同步方向纠偏，仍以可辨识优先。"
+    }
+  ]
+}
