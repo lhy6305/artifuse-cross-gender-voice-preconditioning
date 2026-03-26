@@ -14,7 +14,11 @@
 - `experiments/stage0_baseline/v1_full/analysis_overview.csv`
 - `experiments/stage0_baseline/v1_full/gender_feature_summary.csv`
 - `experiments/stage0_baseline/v1_full/f0_bucket_summary.csv`
+- `experiments/stage0_baseline/v1_full/f0_bucket_summary_stable_v1.csv`
+- `experiments/stage0_baseline/v1_full/f0_bucket_group_scheme_summary_v1.csv`
 - `experiments/stage0_baseline/v1_full/README.md`
+- `experiments/stage0_baseline/v1_full/stage0_full_report_v1.md`
+- `experiments/stage0_baseline/v1_full/plots/`
 
 ## 先给一句总判断
 

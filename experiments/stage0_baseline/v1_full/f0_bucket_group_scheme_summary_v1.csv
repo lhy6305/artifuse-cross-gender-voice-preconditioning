@@ -1,0 +1,11 @@
+subset_name,group_axis,group_value,bucket_scheme,num_bins,min_comparable_count,group_comparable_bins,group_sparse_bins,thresholds_hz
+clean_speech,dataset_name,LibriTTS-R,tertile,3,8,3,0,129.953/190.239
+clean_speech,dataset_name,VCTK Corpus 0.92,median_split,2,8,2,0,158.042
+clean_singing,coarse_style,fast_forte,median_split,2,8,2,0,273.055
+clean_singing,coarse_style,fast_piano,median_split,2,8,2,0,285.050
+clean_singing,coarse_style,forte,tertile,3,8,1,2,262.615/511.596
+clean_singing,coarse_style,pp,tertile,3,8,1,2,264.745/524.296
+clean_singing,coarse_style,slow_forte,median_split,2,8,2,0,326.899
+clean_singing,coarse_style,slow_piano,median_split,2,8,2,0,330.570
+clean_singing,coarse_style,straight,median_split,2,8,2,0,327.359
+clean_singing,coarse_style,vibrato,median_split,2,8,2,0,321.534
