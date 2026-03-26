@@ -36,6 +36,7 @@
 - 已有阶段 0 full 中文解释文档：`docs/18_stage0_full_interpretation_v1.md`
 - 已有阶段 0 full 报告脚本与图表入口：`scripts/build_stage0_full_report.py`、`experiments/stage0_baseline/v1_full/stage0_full_report_v1.md`、`experiments/stage0_baseline/v1_full/plots/`
 - 已有阶段 0 候选信号短名单：`docs/19_stage0_candidate_signal_shortlist_v1.md`
+- 已有阶段 0 方向性规则草案：`docs/20_stage0_directional_rule_draft_v1.md`、`experiments/stage0_baseline/v1_full/directional_rule_draft_v1.csv`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
@@ -77,10 +78,11 @@
 - 阶段 0 `full` 已跑完，当前 `15100 speech + 2038 singing` 特征提取成功率为 `100%`。
 - 阶段 0 `full` 已补第一版报告、图表和稳健分桶摘要，当前可直接进入候选信号筛选。
 - 阶段 0 第一版候选信号已经收缩到 `spectral centroid` 与 `log_centroid_minus_log_f0` 主线，`rms / silence / voiced_ratio` 暂保留为分析监控指标。
+- 阶段 0 第一版方向性规则草案已经形成，当前建议先只从 `singing` 域的稳定 style 和高区/低区条件开始保守启用。
 
 ## 近期任务
-1. 基于候选信号短名单，写第一版“方向性规则草案”。
-2. 给 `speech` 和 `singing` 分别补保守强度上限建议，尤其是 `singing` 高低音区。
+1. 把方向性规则草案收缩成真正的 v1 候选规则表，并补保守强度上限。
+2. 准备最小配置格式，供后续前置器设计或规则脚本直接读取。
 3. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
 4. 如需引入 Torch 或更正式的特征实现，再单独升级环境锁定版本。
 
