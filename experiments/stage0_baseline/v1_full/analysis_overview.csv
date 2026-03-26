@@ -1,0 +1,4 @@
+section,name,mode_name,num_rows,female_rows,male_rows,feature_ok_rows,feature_error_rows,notes
+subset_overview,clean_speech,full,15100,7550,7550,15100,0,
+subset_overview,clean_singing,full,2038,1019,1019,2038,0,
+fixed_eval_status,fixed_eval_v1_2,full,96,48,48,96,0,usable_yes=96;reviewed=96

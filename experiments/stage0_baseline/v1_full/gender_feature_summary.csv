@@ -1,0 +1,101 @@
+subset_name,group_axis,group_value,feature_name,female_count,male_count,female_mean,male_mean,female_minus_male
+clean_speech,dataset_name,LibriTTS-R,rms_dbfs,3775,3775,-17.679746,-18.658974,0.979229
+clean_speech,dataset_name,LibriTTS-R,peak_dbfs,3775,3775,-0.910507,-0.906348,-0.004159
+clean_speech,dataset_name,LibriTTS-R,clipping_ratio,3775,3775,0.000000,0.000000,0.000000
+clean_speech,dataset_name,LibriTTS-R,silence_ratio_40db,3775,3775,0.013083,0.010215,0.002868
+clean_speech,dataset_name,LibriTTS-R,zcr_mean,3775,3775,0.088994,0.075903,0.013091
+clean_speech,dataset_name,LibriTTS-R,spectral_centroid_hz_mean,3775,3775,2041.258674,1797.645917,243.612757
+clean_speech,dataset_name,LibriTTS-R,f0_voiced_ratio,3775,3775,0.833507,0.769456,0.064050
+clean_speech,dataset_name,LibriTTS-R,f0_median_hz,3775,3775,197.070915,128.031739,69.039176
+clean_speech,dataset_name,LibriTTS-R,f0_p10_hz,3775,3775,159.015610,99.787671,59.227939
+clean_speech,dataset_name,LibriTTS-R,f0_p90_hz,3775,3775,262.112086,175.582245,86.529841
+clean_speech,dataset_name,VCTK Corpus 0.92,rms_dbfs,3775,3775,-26.792545,-26.744425,-0.048119
+clean_speech,dataset_name,VCTK Corpus 0.92,peak_dbfs,3775,3775,-7.820012,-7.897271,0.077259
+clean_speech,dataset_name,VCTK Corpus 0.92,clipping_ratio,3775,3775,0.000000,0.000000,0.000000
+clean_speech,dataset_name,VCTK Corpus 0.92,silence_ratio_40db,3775,3775,0.025447,0.027856,-0.002409
+clean_speech,dataset_name,VCTK Corpus 0.92,zcr_mean,3775,3775,0.052003,0.044993,0.007009
+clean_speech,dataset_name,VCTK Corpus 0.92,spectral_centroid_hz_mean,3775,3775,4871.465068,4662.350427,209.114640
+clean_speech,dataset_name,VCTK Corpus 0.92,f0_voiced_ratio,3775,3775,0.436893,0.396421,0.040472
+clean_speech,dataset_name,VCTK Corpus 0.92,f0_median_hz,3775,3775,203.339176,111.871806,91.467371
+clean_speech,dataset_name,VCTK Corpus 0.92,f0_p10_hz,3775,3775,159.492288,92.915475,66.576813
+clean_speech,dataset_name,VCTK Corpus 0.92,f0_p90_hz,3775,3775,247.494313,141.976607,105.517706
+clean_singing,coarse_style,fast_forte,rms_dbfs,166,166,-22.011702,-27.960742,5.949039
+clean_singing,coarse_style,fast_forte,peak_dbfs,166,166,-6.633146,-12.400637,5.767491
+clean_singing,coarse_style,fast_forte,clipping_ratio,166,166,0.000386,0.000000,0.000386
+clean_singing,coarse_style,fast_forte,silence_ratio_40db,166,166,0.224044,0.121744,0.102300
+clean_singing,coarse_style,fast_forte,zcr_mean,166,166,0.072980,0.063049,0.009930
+clean_singing,coarse_style,fast_forte,spectral_centroid_hz_mean,166,166,4142.801950,3064.243777,1078.558173
+clean_singing,coarse_style,fast_forte,f0_voiced_ratio,166,166,0.880488,0.937926,-0.057438
+clean_singing,coarse_style,fast_forte,f0_median_hz,166,166,362.706294,186.788789,175.917505
+clean_singing,coarse_style,fast_forte,f0_p10_hz,166,166,228.987134,143.192535,85.794599
+clean_singing,coarse_style,fast_forte,f0_p90_hz,166,166,570.719809,299.813961,270.905848
+clean_singing,coarse_style,fast_piano,rms_dbfs,160,160,-27.686537,-35.557777,7.871240
+clean_singing,coarse_style,fast_piano,peak_dbfs,160,160,-12.984093,-20.871662,7.887569
+clean_singing,coarse_style,fast_piano,clipping_ratio,160,160,0.000002,0.000000,0.000002
+clean_singing,coarse_style,fast_piano,silence_ratio_40db,160,160,0.191614,0.069613,0.122001
+clean_singing,coarse_style,fast_piano,zcr_mean,160,160,0.065480,0.048107,0.017373
+clean_singing,coarse_style,fast_piano,spectral_centroid_hz_mean,160,160,3983.456871,3010.103556,973.353315
+clean_singing,coarse_style,fast_piano,f0_voiced_ratio,160,160,0.893660,0.942297,-0.048637
+clean_singing,coarse_style,fast_piano,f0_median_hz,160,160,372.850360,190.617354,182.233007
+clean_singing,coarse_style,fast_piano,f0_p10_hz,160,160,238.160017,147.780026,90.379991
+clean_singing,coarse_style,fast_piano,f0_p90_hz,160,160,583.314501,303.327279,279.987222
+clean_singing,coarse_style,forte,rms_dbfs,45,45,-19.774518,-25.303799,5.529281
+clean_singing,coarse_style,forte,peak_dbfs,45,45,-6.301883,-11.195113,4.893230
+clean_singing,coarse_style,forte,clipping_ratio,45,45,0.000116,0.000000,0.000116
+clean_singing,coarse_style,forte,silence_ratio_40db,45,45,0.184043,0.137673,0.046370
+clean_singing,coarse_style,forte,zcr_mean,45,45,0.073766,0.068283,0.005483
+clean_singing,coarse_style,forte,spectral_centroid_hz_mean,45,45,3783.385079,3133.099146,650.285934
+clean_singing,coarse_style,forte,f0_voiced_ratio,45,45,0.896728,0.916166,-0.019438
+clean_singing,coarse_style,forte,f0_median_hz,45,45,521.134957,266.652416,254.482541
+clean_singing,coarse_style,forte,f0_p10_hz,45,45,225.272000,132.689783,92.582217
+clean_singing,coarse_style,forte,f0_p90_hz,45,45,727.417467,371.751031,355.666436
+clean_singing,coarse_style,pp,rms_dbfs,45,45,-29.244357,-35.963604,6.719247
+clean_singing,coarse_style,pp,peak_dbfs,45,45,-16.427227,-23.854860,7.427632
+clean_singing,coarse_style,pp,clipping_ratio,45,45,0.000000,0.000000,0.000000
+clean_singing,coarse_style,pp,silence_ratio_40db,45,45,0.149384,0.067292,0.082092
+clean_singing,coarse_style,pp,zcr_mean,45,45,0.069986,0.044545,0.025441
+clean_singing,coarse_style,pp,spectral_centroid_hz_mean,45,45,3769.165985,2899.248444,869.917541
+clean_singing,coarse_style,pp,f0_voiced_ratio,45,45,0.896275,0.932862,-0.036587
+clean_singing,coarse_style,pp,f0_median_hz,45,45,530.331805,269.446951,260.884854
+clean_singing,coarse_style,pp,f0_p10_hz,45,45,223.878539,131.320337,92.558202
+clean_singing,coarse_style,pp,f0_p90_hz,45,45,729.864501,373.152760,356.711742
+clean_singing,coarse_style,slow_forte,rms_dbfs,175,175,-21.950320,-27.599512,5.649192
+clean_singing,coarse_style,slow_forte,peak_dbfs,175,175,-6.567609,-12.632576,6.064968
+clean_singing,coarse_style,slow_forte,clipping_ratio,175,175,0.000158,0.000000,0.000158
+clean_singing,coarse_style,slow_forte,silence_ratio_40db,175,175,0.130660,0.077329,0.053331
+clean_singing,coarse_style,slow_forte,zcr_mean,175,175,0.063742,0.062383,0.001359
+clean_singing,coarse_style,slow_forte,spectral_centroid_hz_mean,175,175,3340.651936,2668.130060,672.521876
+clean_singing,coarse_style,slow_forte,f0_voiced_ratio,175,175,0.925144,0.951065,-0.025921
+clean_singing,coarse_style,slow_forte,f0_median_hz,175,175,405.342324,206.375825,198.966499
+clean_singing,coarse_style,slow_forte,f0_p10_hz,175,175,276.918114,153.671499,123.246616
+clean_singing,coarse_style,slow_forte,f0_p90_hz,175,175,601.370310,310.290049,291.080261
+clean_singing,coarse_style,slow_piano,rms_dbfs,176,176,-28.408070,-36.345245,7.937175
+clean_singing,coarse_style,slow_piano,peak_dbfs,176,176,-13.884989,-22.368146,8.483157
+clean_singing,coarse_style,slow_piano,clipping_ratio,176,176,0.000001,0.000000,0.000001
+clean_singing,coarse_style,slow_piano,silence_ratio_40db,176,176,0.109721,0.040201,0.069520
+clean_singing,coarse_style,slow_piano,zcr_mean,176,176,0.053670,0.042469,0.011200
+clean_singing,coarse_style,slow_piano,spectral_centroid_hz_mean,176,176,3087.673574,2518.316248,569.357326
+clean_singing,coarse_style,slow_piano,f0_voiced_ratio,176,176,0.928471,0.956686,-0.028216
+clean_singing,coarse_style,slow_piano,f0_median_hz,176,176,409.025080,207.215094,201.809985
+clean_singing,coarse_style,slow_piano,f0_p10_hz,176,176,289.038958,153.489324,135.549634
+clean_singing,coarse_style,slow_piano,f0_p90_hz,176,176,608.486524,312.369098,296.117426
+clean_singing,coarse_style,straight,rms_dbfs,150,150,-28.102441,-31.462022,3.359580
+clean_singing,coarse_style,straight,peak_dbfs,150,150,-14.282528,-18.038614,3.756085
+clean_singing,coarse_style,straight,clipping_ratio,150,150,0.000000,0.000000,0.000000
+clean_singing,coarse_style,straight,silence_ratio_40db,150,150,0.140973,0.084239,0.056734
+clean_singing,coarse_style,straight,zcr_mean,150,150,0.063098,0.051244,0.011854
+clean_singing,coarse_style,straight,spectral_centroid_hz_mean,150,150,3399.303761,2758.549988,640.753773
+clean_singing,coarse_style,straight,f0_voiced_ratio,150,150,0.912599,0.937797,-0.025198
+clean_singing,coarse_style,straight,f0_median_hz,150,150,406.058152,212.243526,193.814626
+clean_singing,coarse_style,straight,f0_p10_hz,150,150,243.779743,137.548425,106.231317
+clean_singing,coarse_style,straight,f0_p90_hz,150,150,577.400967,307.972034,269.428933
+clean_singing,coarse_style,vibrato,rms_dbfs,102,102,-26.036303,-28.450348,2.414045
+clean_singing,coarse_style,vibrato,peak_dbfs,102,102,-9.927950,-13.186317,3.258367
+clean_singing,coarse_style,vibrato,clipping_ratio,102,102,0.000000,0.000000,0.000000
+clean_singing,coarse_style,vibrato,silence_ratio_40db,102,102,0.106568,0.068179,0.038390
+clean_singing,coarse_style,vibrato,zcr_mean,102,102,0.059161,0.058273,0.000888
+clean_singing,coarse_style,vibrato,spectral_centroid_hz_mean,102,102,3150.620285,2566.551123,584.069162
+clean_singing,coarse_style,vibrato,f0_voiced_ratio,102,102,0.941770,0.955612,-0.013843
+clean_singing,coarse_style,vibrato,f0_median_hz,102,102,349.294814,186.505071,162.789743
+clean_singing,coarse_style,vibrato,f0_p10_hz,102,102,252.471427,136.928867,115.542560
+clean_singing,coarse_style,vibrato,f0_p90_hz,102,102,512.890557,278.846624,234.043932

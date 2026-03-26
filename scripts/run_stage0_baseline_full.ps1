@@ -14,7 +14,7 @@ param(
 $OutputEncoding = [Console]::OutputEncoding
 
 if ($Jobs -le 0) {
-    $Jobs = [Math]::Max(1, [Environment]::ProcessorCount / 2)
+    $Jobs = [Math]::Max(1, [Environment]::ProcessorCount / 1)
 }
 
 $args = @(
@@ -51,5 +51,5 @@ switch ($Step) {
         $args += '--finalize-only'
     }
 }
-
+cd ..
 & .\python.exe @args

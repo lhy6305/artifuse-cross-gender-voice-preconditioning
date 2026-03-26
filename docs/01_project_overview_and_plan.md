@@ -32,6 +32,8 @@
 - 已有阶段 0 full 手动入口：`scripts/run_stage0_baseline_full.ps1`
 - 已有阶段 0 baseline pilot 输出：`experiments/stage0_baseline/v1_pilot/`
 - 已有阶段 0 pilot 中文解释文档：`docs/17_stage0_pilot_interpretation_v1.md`
+- 已有阶段 0 baseline full 输出：`experiments/stage0_baseline/v1_full/`
+- 已有阶段 0 full 中文解释文档：`docs/18_stage0_full_interpretation_v1.md`
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
 - 已约定本地 RVC 工作目录：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/`，允许为训练/测试修改代码，但不纳入当前 Git。
@@ -70,10 +72,11 @@
 - `clean_speech_v1` 和 `clean_singing_v1` 已生成，可作为阶段 0/1 的保守分析入口。
 - 阶段 0 baseline 已有首个可运行入口，当前 `pilot` 在 `256 speech + 256 singing` 规模上跑通，且特征提取成功率为 `100%`。
 - 阶段 0 `full` 入口已补上并行、断点续跑、可见进度和 PowerShell 手动入口，可以拆成 `speech -> singing -> finalize` 三步执行。
+- 阶段 0 `full` 已跑完，当前 `15100 speech + 2038 singing` 特征提取成功率为 `100%`。
 
 ## 近期任务
-1. 把 `stage0_baseline` 从 `pilot` 扩到 `full`，生成第一版完整缓存。
-2. 在 `gender_feature_summary.csv` 与 `f0_bucket_summary.csv` 基础上补 markdown 报告和图表。
+1. 基于 `v1_full` 的 `gender_feature_summary.csv` 与 `f0_bucket_summary.csv` 补第一版图表与 markdown 报告。
+2. 评估 `f0` 分桶是否改为更稳健的条件分桶，减少 `female low / male high` 极稀疏桶。
 3. 评估是否把特征增强脚本扩到 `utterance_manifest.csv` 的更大子集。
 4. 如需引入 Torch 或更正式的特征实现，再单独升级环境锁定版本。
 
