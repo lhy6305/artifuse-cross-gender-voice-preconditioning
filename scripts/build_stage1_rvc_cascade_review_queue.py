@@ -84,7 +84,7 @@ def build_review_rows(manifest_rows: list[dict[str, str]]) -> list[dict[str, str
                 "target_direction": raw_row["target_direction"],
                 "group_value": raw_row["group_value"],
                 "f0_condition": "cascade_pair",
-                "f0_median_hz": "",
+                "f0_median_hz": raw_row.get("f0_median_hz", ""),
                 "confidence": "stage1_cascade_eval",
                 "strength_label": "raw_vs_preconditioned",
                 "alpha_default": "",
@@ -94,7 +94,11 @@ def build_review_rows(manifest_rows: list[dict[str, str]]) -> list[dict[str, str
                     f"cascade_compare | source=input_audio | "
                     f"original_copy=preconditioned_audio | processed_audio=rvc_output_audio | "
                     f"rvc_baseline_audio={raw_row['output_audio']} | "
-                    f"target={raw_row['target_id']} model={raw_row['model_name']}"
+                    f"target={raw_row['target_id']} model={raw_row['model_name']} | "
+                    f"source_f0_hz={raw_row.get('f0_median_hz', '')} | "
+                    f"target_f0_hz={raw_row.get('target_f0_reference_hz', '')} | "
+                    f"f0_up_key={raw_row.get('f0_up_key', '')} | "
+                    f"f0_reason={raw_row.get('f0_up_key_reason', '')}"
                 ),
                 "summary_signature": f"{raw_row['utt_id']}|{raw_row['target_id']}",
                 "input_audio": raw_row["input_audio"],

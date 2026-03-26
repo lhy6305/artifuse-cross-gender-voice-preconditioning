@@ -6,6 +6,7 @@
       "target_id": "firefly_fp32_target_v1",
       "enabled": true,
       "weight_root": "pretrained_rvc_firefly_fp32",
+      "target_audio_root": "data/dataset_firefly_raw",
       "model_name": "0_rel_556_264656.pth",
       "index_path": "pretrained_rvc_firefly_fp32/added_IVF3130_Flat_nprobe_1_firefly_v2.index",
       "spk_id": 0,

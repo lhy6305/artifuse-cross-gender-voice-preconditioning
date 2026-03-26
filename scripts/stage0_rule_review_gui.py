@@ -124,6 +124,7 @@ class ReviewApp:
         self.auto_text = tk.StringVar()
         self.metric_text = tk.StringVar()
         self.path_text = tk.StringVar()
+        self.playback_text = tk.StringVar()
 
         self.review_status_var = tk.StringVar()
         self.direction_correct_var = tk.StringVar()
@@ -132,6 +133,8 @@ class ReviewApp:
         self.strength_fit_var = tk.StringVar()
         self.keep_recommendation_var = tk.StringVar()
         self.reviewer_var = tk.StringVar()
+        self.normalize_peak_var = tk.BooleanVar(value=True)
+        self.volume_scale_var = tk.DoubleVar(value=1.0)
 
         self.build_ui()
         self.bind_shortcuts()
@@ -179,11 +182,33 @@ class ReviewApp:
         self.original_button.pack(side=tk.LEFT, padx=(6, 0))
         self.processed_button = ttk.Button(button_row, text="播放处理音", command=self.play_processed)
         self.processed_button.pack(side=tk.LEFT, padx=(6, 0))
+        self.baseline_button = ttk.Button(button_row, text="播放raw->RVC", command=self.play_baseline)
+        self.baseline_button.pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(button_row, text="停止", command=self.stop_audio).pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(button_row, text="标记保留", command=self.mark_keep).pack(side=tk.LEFT, padx=(20, 0))
         ttk.Button(button_row, text="标记待复核", command=self.mark_maybe).pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(button_row, text="标记淘汰", command=self.mark_reject).pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(button_row, text="保存", command=self.save_current_and_flush).pack(side=tk.RIGHT)
+
+        playback_row = ttk.Frame(container)
+        playback_row.pack(fill=tk.X, pady=(0, 10))
+        ttk.Checkbutton(
+            playback_row,
+            text="播放时按片段峰值归一化",
+            variable=self.normalize_peak_var,
+            command=self.update_playback_text,
+        ).pack(side=tk.LEFT)
+        ttk.Label(playback_row, text="音量").pack(side=tk.LEFT, padx=(16, 6))
+        volume_scale = ttk.Scale(
+            playback_row,
+            from_=0.25,
+            to=2.0,
+            variable=self.volume_scale_var,
+            orient=tk.HORIZONTAL,
+            command=lambda _value: self.update_playback_text(),
+        )
+        volume_scale.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Label(playback_row, textvariable=self.playback_text, width=22).pack(side=tk.LEFT, padx=(10, 0))
 
         form = ttk.Frame(container)
         form.pack(fill=tk.X, pady=(0, 10))
@@ -235,6 +260,7 @@ class ReviewApp:
         self.root.bind("e", lambda _: self.play_source())
         self.root.bind("q", lambda _: self.play_original())
         self.root.bind("w", lambda _: self.play_processed())
+        self.root.bind("r", lambda _: self.play_baseline())
         self.root.bind("<space>", lambda _: self.stop_audio())
         self.root.bind("1", lambda _: self.mark_keep())
         self.root.bind("2", lambda _: self.mark_maybe())
@@ -243,6 +269,11 @@ class ReviewApp:
 
     def current_row(self) -> dict[str, str]:
         return self.rows[self.index]
+
+    def update_playback_text(self) -> None:
+        normalize_text = "on" if self.normalize_peak_var.get() else "off"
+        volume_percent = int(round(self.volume_scale_var.get() * 100.0))
+        self.playback_text.set(f"normalize={normalize_text} | volume={volume_percent}%")
 
     def load_row_into_form(self) -> None:
         if not self.rows:
@@ -280,15 +311,17 @@ class ReviewApp:
         if cascade_mode:
             self.original_button.configure(text="播放修正后音频")
             self.processed_button.configure(text="播放RVC输出")
+            self.baseline_button.configure(text="播放raw->RVC", state=tk.NORMAL)
             self.path_text.set(
                 f"source={row.get('input_audio', '')}\n"
                 f"preconditioned={row.get('original_copy', '')}\n"
                 f"rvc_output={row.get('processed_audio', '')}\n"
-                f"rvc_baseline={row.get('rvc_baseline_audio', '')}"
+                f"raw_rvc_baseline={row.get('rvc_baseline_audio', '')}"
             )
         else:
             self.original_button.configure(text="播放原音")
             self.processed_button.configure(text="播放处理音")
+            self.baseline_button.configure(text="raw->RVC仅限stage1", state=tk.DISABLED)
             self.path_text.set(
                 f"source={row.get('input_audio', '')}\n"
                 f"original={row.get('original_copy', '')}\n"
@@ -305,6 +338,7 @@ class ReviewApp:
 
         self.notes_text.delete("1.0", tk.END)
         self.notes_text.insert("1.0", row.get("review_notes", ""))
+        self.update_playback_text()
         self.stop_audio()
 
     def save_form_into_row(self) -> None:
@@ -354,16 +388,30 @@ class ReviewApp:
         audio = np.asarray(audio, dtype=np.float32)
         if audio.ndim == 2:
             audio = audio.mean(axis=1)
-        peak = np.max(np.abs(audio))
-        if peak > 1.0:
-            audio = audio / peak
         return audio, sr
+
+    def prepare_playback_audio(self, audio: np.ndarray) -> np.ndarray:
+        output = np.array(audio, dtype=np.float32, copy=True)
+        peak = float(np.max(np.abs(output))) if output.size else 0.0
+        if self.normalize_peak_var.get() and peak > 1e-6:
+            output = output * (0.9 / peak)
+            peak = 0.9
+        elif peak > 1.0:
+            output = output / peak
+            peak = 1.0
+
+        output = output * float(self.volume_scale_var.get())
+        final_peak = float(np.max(np.abs(output))) if output.size else 0.0
+        if final_peak > 0.999:
+            output = output * (0.999 / final_peak)
+        return output
 
     def play_path(self, path_value: str) -> None:
         self.stop_audio()
         audio, sr = self.load_audio(path_value)
-        sd.play(audio, sr)
-        self.current_audio = audio
+        playback_audio = self.prepare_playback_audio(audio)
+        sd.play(playback_audio, sr)
+        self.current_audio = playback_audio
         self.current_sr = sr
 
     def play_source(self) -> None:
@@ -374,6 +422,12 @@ class ReviewApp:
 
     def play_processed(self) -> None:
         self.play_path(self.current_row()["processed_audio"])
+
+    def play_baseline(self) -> None:
+        path_value = self.current_row().get("rvc_baseline_audio", "").strip()
+        if not path_value:
+            return
+        self.play_path(path_value)
 
     def stop_audio(self) -> None:
         sd.stop()
