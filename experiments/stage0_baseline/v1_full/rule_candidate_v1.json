@@ -1,0 +1,273 @@
+{
+  "config_version": "stage0_rule_candidate_v1",
+  "source": "directional_rule_draft_v1.csv",
+  "selection_policy": {
+    "domain": "singing_only",
+    "excluded_groups": [
+      "forte",
+      "pp"
+    ],
+    "high_band_target": "feminine_only",
+    "low_band_target": "masculine_only"
+  },
+  "strength_presets": {
+    "weak": {
+      "alpha_default": 0.12,
+      "alpha_max": 0.18
+    },
+    "medium": {
+      "alpha_default": 0.18,
+      "alpha_max": 0.28
+    },
+    "medium_high": {
+      "alpha_default": 0.24,
+      "alpha_max": 0.34
+    },
+    "high": {
+      "alpha_default": 0.3,
+      "alpha_max": 0.42
+    }
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_singing_slow_forte_high_band_feminine_brightness_up_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "slow_forte",
+        "f0_condition": "high_band",
+        "f0_lower_hz": 326.899,
+        "f0_upper_hz": null,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "high",
+        "alpha_default": 0.3,
+        "alpha_max": 0.42
+      },
+      "confidence": "high",
+      "priority": 34,
+      "notes": "高区正向最强之一，delta=+0.172。"
+    },
+    {
+      "rule_id": "stage0_singing_straight_high_band_feminine_brightness_up_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "straight",
+        "f0_condition": "high_band",
+        "f0_lower_hz": 327.359,
+        "f0_upper_hz": null,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "high",
+        "alpha_default": 0.3,
+        "alpha_max": 0.42
+      },
+      "confidence": "high",
+      "priority": 34,
+      "notes": "高区正向稳定，delta=+0.169。"
+    },
+    {
+      "rule_id": "stage0_singing_vibrato_high_band_feminine_brightness_up_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "vibrato",
+        "f0_condition": "high_band",
+        "f0_lower_hz": 321.534,
+        "f0_upper_hz": null,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "high",
+        "alpha_default": 0.3,
+        "alpha_max": 0.42
+      },
+      "confidence": "high",
+      "priority": 34,
+      "notes": "高区正向稳定，delta=+0.163。"
+    },
+    {
+      "rule_id": "stage0_singing_fast_forte_high_band_feminine_brightness_up_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "fast_forte",
+        "f0_condition": "high_band",
+        "f0_lower_hz": 273.055,
+        "f0_upper_hz": null,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "medium_high",
+        "alpha_default": 0.24,
+        "alpha_max": 0.34
+      },
+      "confidence": "high",
+      "priority": 33,
+      "notes": "高区正向稳定，delta=+0.168。"
+    },
+    {
+      "rule_id": "stage0_singing_straight_low_band_masculine_brightness_down_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "straight",
+        "f0_condition": "low_band",
+        "f0_lower_hz": null,
+        "f0_upper_hz": 327.359,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "medium",
+        "alpha_default": 0.18,
+        "alpha_max": 0.28
+      },
+      "confidence": "high",
+      "priority": 32,
+      "notes": "低区负向较强，delta=-0.154。"
+    },
+    {
+      "rule_id": "stage0_singing_vibrato_low_band_masculine_brightness_down_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "vibrato",
+        "f0_condition": "low_band",
+        "f0_lower_hz": null,
+        "f0_upper_hz": 321.534,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "medium",
+        "alpha_default": 0.18,
+        "alpha_max": 0.28
+      },
+      "confidence": "high",
+      "priority": 32,
+      "notes": "低区负向较强，delta=-0.146。"
+    },
+    {
+      "rule_id": "stage0_singing_fast_piano_high_band_feminine_brightness_up_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "fast_piano",
+        "f0_condition": "high_band",
+        "f0_lower_hz": 285.05,
+        "f0_upper_hz": null,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "medium",
+        "alpha_default": 0.18,
+        "alpha_max": 0.28
+      },
+      "confidence": "medium",
+      "priority": 22,
+      "notes": "高区为正但略弱于 fast_forte。"
+    },
+    {
+      "rule_id": "stage0_singing_slow_piano_high_band_feminine_brightness_up_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "slow_piano",
+        "f0_condition": "high_band",
+        "f0_lower_hz": 330.57,
+        "f0_upper_hz": null,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "medium",
+        "alpha_default": 0.18,
+        "alpha_max": 0.28
+      },
+      "confidence": "medium",
+      "priority": 22,
+      "notes": "高区正向稳定，但低于 slow_forte / straight / vibrato。"
+    },
+    {
+      "rule_id": "stage0_singing_slow_forte_low_band_masculine_brightness_down_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "slow_forte",
+        "f0_condition": "low_band",
+        "f0_lower_hz": null,
+        "f0_upper_hz": 326.899,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "weak",
+        "alpha_default": 0.12,
+        "alpha_max": 0.18
+      },
+      "confidence": "medium",
+      "priority": 21,
+      "notes": "低区为负，建议仅保守开启。"
+    },
+    {
+      "rule_id": "stage0_singing_slow_piano_low_band_masculine_brightness_down_v1",
+      "enabled": true,
+      "match": {
+        "domain": "singing",
+        "group_axis": "coarse_style",
+        "group_value": "slow_piano",
+        "f0_condition": "low_band",
+        "f0_lower_hz": null,
+        "f0_upper_hz": 330.57,
+        "bucket_scheme": "median_split"
+      },
+      "signal_name": "mean_log_centroid_minus_log_f0",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "weak",
+        "alpha_default": 0.12,
+        "alpha_max": 0.18
+      },
+      "confidence": "medium",
+      "priority": 21,
+      "notes": "低区为负但幅度中等，适合保守男性向候选。"
+    }
+  ]
+}
