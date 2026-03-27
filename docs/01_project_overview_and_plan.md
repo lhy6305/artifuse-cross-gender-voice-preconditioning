@@ -54,6 +54,8 @@
 - 已有 speech formant anchor 原型与 GUI 入口：`scripts/build_stage0_speech_formant_listening_pack.py`、`scripts/open_stage0_speech_formant_review_gui.ps1`、`scripts/open_stage0_speech_formant_review_gui.cmd`
 - 已有 resonance tilt 听审反馈与 formant anchor pivot 说明：`docs/29_stage0_resonance_tilt_feedback_and_formant_anchor_pivot_v1.md`
 - 已有 post-envelope/world 的新 formant-aware pivot 说明：`docs/35_stage0_post_envelope_world_formant_pivot_v1.md`
+- 已有表示层转型说明：`docs/36_representation_layer_pivot_v1.md`
+- 已有 LPC 编辑与重建原型说明：`docs/37_representation_layer_lpc_edit_probe_v1.md`
 - 已有阶段 0 轻量前置修正 phase gate 文档：`docs/30_stage0_lightweight_preconditioning_phase_gate_v1.md`
 - 已有 speech source-filter / vocal-tract morph 原型与 GUI 入口：`scripts/build_stage0_speech_vocal_tract_listening_pack.py`、`scripts/open_stage0_speech_vocal_tract_review_gui.ps1`、`scripts/open_stage0_speech_vocal_tract_review_gui.cmd`
 - 已有 source-filter / vocal-tract morph 说明：`docs/31_stage0_source_filter_vocal_tract_morph_v1.md`
@@ -63,6 +65,13 @@
 - 已有阶段 1 RVC 串联评测桥：`experiments/stage1_rvc_eval/v1/rvc_target_registry_v1.json`、`scripts/build_stage1_rvc_cascade_manifest.py`、`scripts/run_stage1_rvc_cascade_batch.py`、`scripts/run_stage1_rvc_cascade_batch.ps1`
 - 已有阶段 1 RVC 串联听审清单与 GUI 入口：`scripts/build_stage1_rvc_cascade_review_queue.py`、`scripts/open_stage1_rvc_cascade_review_gui.ps1`、`scripts/open_stage1_rvc_cascade_review_gui.cmd`
 - 已有听审稀疏标注汇总脚本：`scripts/build_listening_review_rollup.py`
+- 已有表示层 probe 入口：`scripts/run_representation_layer_probe.py`、`scripts/run_representation_layer_probe.ps1`
+- 已有 LPC 编辑听审包构建与 GUI 入口：`scripts/build_stage0_speech_lpc_listening_pack.py`、`scripts/open_stage0_speech_lpc_review_gui.ps1`、`scripts/open_stage0_speech_lpc_review_gui.cmd`
+- 已有表示层 pilot 输出：
+  - `experiments/representation_layer/v1_fixed_eval_pilot/`
+  - `experiments/representation_layer/v1_clean_speech_probe/`
+- 已有 LPC v1 听审包输出：
+  - `artifacts/listening_review/stage0_speech_lpc_listening_pack/v1/`
 - 听审包与听审结果当前已迁到正式目录：`artifacts/listening_review/`；`tmp/` 不再作为长期保留位点
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
@@ -73,13 +82,13 @@
 - 当前已有首版依赖锁定说明：`requirements-stage0-analysis.txt`
 
 ## 当前阶段
-阶段名：模块本体主观听审回收（临时回切）
+阶段名：表示层建模 pivot（由前置模块研究升级）
 
 当前目标：
-1. 暂时不把 `RVC` 串联结果当成人工主 gate，先只判断模块本体 `修正前 / 修正后` 的主观差异。
-2. 避免把 `RVC` 目标说话人性别对听感判断的干扰，误记成前置模块本身的有效性。
-3. 把现有共用听审 GUI 收口到模块优先口径，统一写回主观结论。
-4. 在模块本体结论稳定后，再决定是否恢复 `stage1 cascade` 作为下一轮正式 gate。
+1. 不再继续扩 `stage0` 轻量前置器同族变体，而是转向可解释表示层本身。
+2. 比较 `WORLD envelope / LPC envelope / cepstral proxy` 哪种表示更稳定承载性别相关 tract / resonance 信息。
+3. 先验证表示的分离度与时间连续性，再决定后续编辑与重建路线。
+4. 将项目目标从“VC 前置模块”升级为“可解释的人声表示与操控”。
 
 ## 当前结论
 - 本仓库适合采用“文档先行、脚本后补”的轻量起步方式。
@@ -190,6 +199,29 @@
 - 因此当前已启动新的 `formant-aware` pivot：
   - `artifacts/listening_review/stage0_speech_formant_listening_pack/v2/`
   - 目标是更明确地搬动局部共鸣结构，同时继续锁住相位与 `f0` 主体感
+- `stage0_speech_formant_listening_pack/v2` 听审后已确认：
+  - `8/8 audible_no`
+  - 未出现值得记录的伪影问题
+  - 说明即使升级到更强的三锚点 formant-aware 原型，当前实现仍未跨过可感知阈值
+- 因此到目前为止，`stage0` 轻量前置器族的最终收口可以写成：
+  - `static EQ / resonance tilt / formant anchor v1 / formant anchor v2`：`null_result`
+  - `WORLD-guided STFT delta`：`reject`
+  - `envelope warp`：`watch_with_risk`，但风险点是“更像整体音调/音色拉动，未击中核心共鸣目标”
+- 因此当前已正式转向表示层研究，不再把“前置模块小修正”作为主问题。
+- 表示层第一轮 probe 已在两组数据上跑通：
+  - fixed-eval pilot：`experiments/representation_layer/v1_fixed_eval_pilot/`
+  - clean-speech 子集：`experiments/representation_layer/v1_clean_speech_probe/`
+- 当前 probe 的第一版比较结果：
+  - `WORLD cheaptrick envelope`：分离度整体偏弱，不适合作为当前优先表示
+  - `LPC envelope`：在 `LibriTTS-R` 上分离度最强，`separation_ratio ≈ 7.29`
+  - `MFCC / cepstral proxy`：跨 `LibriTTS-R / VCTK` 的稳定性相对更均衡
+- 因此下一步最值得继续的两条表示候选是：
+  - `LPC / LSF` 路线
+  - `cepstral envelope` 路线
+- `LPC residual-preserving pole edit v1` 已完成第一版实现，并已导出正式听审包：
+  - `stage0_speech_lpc_listening_pack/v1`
+  - 当前机器侧先验显示 `feminine` 侧响应更强，但 `masculine` 侧方向不稳，且存在 `rms_drift` 风险
+  - 因此它当前是“已进入可听审状态的第一表示层编辑原型”，还不是已验证可行的方法
 
 ## 近期任务
 1. 以 `scripts/build_listening_review_rollup.py` 为标准汇总入口，后续不再要求把稀疏标注手工补成满表。
@@ -206,7 +238,15 @@
 6. 若 `v3 / v2` 仍只停留在 barely 可辨，则继续推进到更强的 `audibility stress test`，并在听审时不把轻微整体音色偏移直接记作伪影。
 7. 当前停止继续扩 `WORLD-guided STFT delta` 变体；后续若继续推进，只保留它作为被否定对照。
 8. 当前不再把 `envelope warp` 视为最终候选，而把它视为“可辨识上限参考”；下一步应转向更显式的共鸣/formant 结构修改，同时尽量锁住 `f0` 和谐波感。
-9. 当前优先完成 `stage0_speech_formant_listening_pack/v2` 的人工听审，再判断这条新 pivot 是否比 `envelope v5` 更接近真正目标机理。
+9. `stage0_speech_formant_listening_pack/v2` 已完成听审且归入 `null_result`，当前停止继续扩 `stage0` 轻量前置器。
+10. `envelope v5` 当前只保留为“可辨识上限参考”，不再作为继续扩展的编辑对象。
+11. 下一步已改为表示层路线：
+   - 基于 `representation_layer` probe 结果，优先推进 `LPC / LSF` 与 `cepstral envelope`
+   - `WORLD envelope` 只保留为对照，不再做优先主线
+12. 当前 `LPC v1` 听审包已就绪：
+   - 入口：`scripts/open_stage0_speech_lpc_review_gui.ps1 -PackVersion v1`
+   - 当前先做人工听审，判断它是否比 `envelope` 更接近 tract / resonance 编辑
+   - 若主观方向或保真仍不稳，则下一步优先转向 `cepstral envelope` 对照原型
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

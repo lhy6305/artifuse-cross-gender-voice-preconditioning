@@ -46,6 +46,39 @@
 - 比旧 `formant v1` 更强
 - 但还没有强到可以跳过人工听审
 
+## formant v2 人工听审结果
+
+当前 `artifacts/listening_review/stage0_speech_formant_listening_pack/v2/` 已完成一轮人工听审。
+
+人工结论非常明确：
+
+- `8/8 effect_audible = no`
+- 未出现值得记录的伪影问题
+
+这意味着：
+
+- 即使把 formant-aware 原型从保守双锚点升级到更强的三锚点局部搬移
+- 在当前实现下，它仍然没有跨过稳定可感知阈值
+
+## 阶段判断
+
+到这一轮为止，可以把主线判断进一步收紧为：
+
+1. `WORLD-guided STFT delta`：`reject`
+2. `envelope warp`：`watch_with_risk`
+   风险点不是伪影，而是更像整体音调/音色重心拉动，未击中核心共鸣目标
+3. `formant-aware anchor morph v2`：`null_result`
+
+因此当前不建议继续在 `stage0` 轻量前置器上新增同族变体。
+
+更合理的下一步是：
+
+- 把 `envelope v5` 仅作为“可辨识上限参考”
+- 停止继续扩 `formant / world / resonance / static EQ`
+- 转向：
+  - `安全归一化 + 下游模型承担主变换`
+  - 或更高层级的方法级 pivot，而不是继续做局部频谱小修正
+
 ## 启动命令
 
 PowerShell:

@@ -1,0 +1,163 @@
+{
+  "config_version": "stage0_speech_lpc_resonance_candidate_v1",
+  "source": "representation_layer_pivot_lpc_first_edit_reconstruction_probe",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "lpc_residual_preserving_pole_edit_probe_v1"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_lpc_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lpc_pole_edit_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_lpc_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lpc_residual_preserving_pole_edit",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 16,
+        "search_ranges_hz": [
+          [250.0, 900.0],
+          [900.0, 2500.0],
+          [2500.0, 4200.0]
+        ],
+        "shift_ratios": [1.18, 1.12, 1.08],
+        "blend": 0.82
+      },
+      "notes": "LPC feminine 侧：固定 residual，仅上移前三个正频极点代理峰，先验证是否比 envelope 更像共鸣编辑。"
+    },
+    {
+      "rule_id": "stage0_speech_lpc_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lpc_pole_edit_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_lpc_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lpc_residual_preserving_pole_edit",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 16,
+        "search_ranges_hz": [
+          [280.0, 1000.0],
+          [1000.0, 2700.0],
+          [2700.0, 4400.0]
+        ],
+        "shift_ratios": [1.15, 1.10, 1.06],
+        "blend": 0.78
+      },
+      "notes": "LPC feminine 侧：VCTK 稍收一档，避免直接滑向尖锐感。"
+    },
+    {
+      "rule_id": "stage0_speech_lpc_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lpc_pole_edit_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_lpc_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lpc_residual_preserving_pole_edit",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 16,
+        "search_ranges_hz": [
+          [250.0, 900.0],
+          [900.0, 2500.0],
+          [2500.0, 4200.0]
+        ],
+        "shift_ratios": [0.84, 0.89, 0.93],
+        "blend": 0.82
+      },
+      "notes": "LPC masculine 侧：下移前三个正频极点代理峰，目标是增加共鸣壳体感而非直接压低音调。"
+    },
+    {
+      "rule_id": "stage0_speech_lpc_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lpc_pole_edit_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_lpc_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lpc_residual_preserving_pole_edit",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 16,
+        "search_ranges_hz": [
+          [280.0, 1000.0],
+          [1000.0, 2700.0],
+          [2700.0, 4400.0]
+        ],
+        "shift_ratios": [0.87, 0.91, 0.95],
+        "blend": 0.78
+      },
+      "notes": "LPC masculine 侧：VCTK 稍宽一档，先优先确认是不是比 formant-anchor 更容易跨过可感知阈值。"
+    }
+  ]
+}

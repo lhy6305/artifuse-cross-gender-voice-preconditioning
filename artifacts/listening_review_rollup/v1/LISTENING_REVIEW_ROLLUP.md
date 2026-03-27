@@ -53,6 +53,17 @@
 - proposed disposition: `null_result`
 - implicit fills from audible=yes: `direction_yes=0` `artifact_no=0` `strength_ok=0` `keep_yes=0`
 
+### `stage0_speech_formant_listening_pack/v2`
+
+- reviewed: `8/8`
+- audible: `yes=0` `maybe=0` `no=8`
+- direction: `yes=0` `maybe=0` `no=0` `n/a=8`
+- artifact: `yes=0` `slight=0` `no=0` `n/a=8`
+- keep: `yes=0` `maybe=0` `no=0` `n/a=8`
+- strength: `ok=0` `too_weak=0` `too_strong=0` `n/a=8`
+- proposed disposition: `null_result`
+- implicit fills from audible=yes: `direction_yes=0` `artifact_no=0` `strength_ok=0` `keep_yes=0`
+
 ### `stage0_speech_listening_pack/v1`
 
 - reviewed: `8/8`

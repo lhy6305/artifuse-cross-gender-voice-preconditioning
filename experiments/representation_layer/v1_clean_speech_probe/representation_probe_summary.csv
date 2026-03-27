@@ -1,0 +1,7 @@
+dataset_name,representation,female_count,male_count,between_gender_cosine_distance,within_female_cosine_distance_mean,within_male_cosine_distance_mean,separation_ratio,female_continuity_l1_mean,male_continuity_l1_mean
+LibriTTS-R,world_mel,32,32,0.000721,0.000522,0.000514,1.391159,0.839862,0.695230
+LibriTTS-R,lpc_mel,32,32,0.048493,0.006663,0.006645,7.287961,0.272426,0.289652
+LibriTTS-R,mfcc,32,32,0.004340,0.002394,0.002059,1.949318,4.698849,4.636741
+VCTK Corpus 0.92,world_mel,32,32,0.001252,0.001127,0.001134,1.107496,0.805370,0.708817
+VCTK Corpus 0.92,lpc_mel,32,32,0.011574,0.014035,0.014513,0.810861,0.204318,0.217995
+VCTK Corpus 0.92,mfcc,32,32,0.005644,0.004105,0.004115,1.373142,3.504355,3.839261
