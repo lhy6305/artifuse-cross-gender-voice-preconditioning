@@ -1,0 +1,175 @@
+{
+  "config_version": "stage0_speech_conditional_envelope_transport_candidate_v1",
+  "source": "representation_layer_pivot_conditional_envelope_transport_probe_v1",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "conditional_envelope_transport_probe_v1"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_conditional_transport_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_conditional_envelope_transport_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_conditional_transport_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "conditional_envelope_transport",
+      "method_params": {
+        "keep_coeffs": 18,
+        "proxy_coeffs": 6,
+        "nearest_k": 3,
+        "transport_ratio": 0.62,
+        "blend": 0.82,
+        "max_envelope_gain_db": 5.0,
+        "max_frame_delta_l2": 1.85,
+        "time_smooth_frames": 9,
+        "reference_frame_stride": 6,
+        "f0_bucket_edges_hz": [
+          155.0,
+          235.0
+        ]
+      },
+      "notes": "Conditional envelope transport feminine v1：按 dataset x target_gender x f0桶 建参考库，再按低阶倒谱 proxy 最近邻搬运目标包络。"
+    },
+    {
+      "rule_id": "stage0_speech_conditional_transport_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_conditional_envelope_transport_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_conditional_transport_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "conditional_envelope_transport",
+      "method_params": {
+        "keep_coeffs": 16,
+        "proxy_coeffs": 6,
+        "nearest_k": 3,
+        "transport_ratio": 0.56,
+        "blend": 0.78,
+        "max_envelope_gain_db": 4.5,
+        "max_frame_delta_l2": 1.65,
+        "time_smooth_frames": 11,
+        "reference_frame_stride": 6,
+        "f0_bucket_edges_hz": [
+          155.0,
+          235.0
+        ]
+      },
+      "notes": "Conditional envelope transport feminine v1：VCTK 侧略保守，优先看是否能比 VTL 更少伪影地抬起 feminine 感。"
+    },
+    {
+      "rule_id": "stage0_speech_conditional_transport_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_conditional_envelope_transport_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_conditional_transport_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "conditional_envelope_transport",
+      "method_params": {
+        "keep_coeffs": 18,
+        "proxy_coeffs": 6,
+        "nearest_k": 3,
+        "transport_ratio": 0.58,
+        "blend": 0.82,
+        "max_envelope_gain_db": 5.0,
+        "max_frame_delta_l2": 1.75,
+        "time_smooth_frames": 9,
+        "reference_frame_stride": 6,
+        "f0_bucket_edges_hz": [
+          155.0,
+          235.0
+        ]
+      },
+      "notes": "Conditional envelope transport masculine v1：先看是否比 LSF / VTL 更像局部共鸣迁移，而不是整段变暗。"
+    },
+    {
+      "rule_id": "stage0_speech_conditional_transport_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_conditional_envelope_transport_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_conditional_transport_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "conditional_envelope_transport",
+      "method_params": {
+        "keep_coeffs": 16,
+        "proxy_coeffs": 6,
+        "nearest_k": 3,
+        "transport_ratio": 0.52,
+        "blend": 0.76,
+        "max_envelope_gain_db": 4.5,
+        "max_frame_delta_l2": 1.55,
+        "time_smooth_frames": 11,
+        "reference_frame_stride": 6,
+        "f0_bucket_edges_hz": [
+          155.0,
+          235.0
+        ]
+      },
+      "notes": "Conditional envelope transport masculine v1：VCTK masculine 仍按保守版起步，先避开 VTL v2 那种可辨但伪影偏多的失败方式。"
+    }
+  ]
+}

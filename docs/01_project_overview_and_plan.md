@@ -63,6 +63,7 @@
 - 已有 VTL warping 原型说明：`docs/42_representation_layer_vtl_warping_probe_v1.md`
 - 已有 VTL warping v2 原型说明：`docs/43_representation_layer_vtl_warping_probe_v2.md`
 - 已有经典 warp 路线收口断点：`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`
+- 已有 Conditional Envelope Transport 原型说明：`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`
 - 已有阶段 0 轻量前置修正 phase gate 文档：`docs/30_stage0_lightweight_preconditioning_phase_gate_v1.md`
 - 已有 speech source-filter / vocal-tract morph 原型与 GUI 入口：`scripts/build_stage0_speech_vocal_tract_listening_pack.py`、`scripts/open_stage0_speech_vocal_tract_review_gui.ps1`、`scripts/open_stage0_speech_vocal_tract_review_gui.cmd`
 - 已有 source-filter / vocal-tract morph 说明：`docs/31_stage0_source_filter_vocal_tract_morph_v1.md`
@@ -77,6 +78,7 @@
 - 已有 cepstral envelope 听审包构建与 GUI 入口：`scripts/build_stage0_speech_cepstral_listening_pack.py`、`scripts/open_stage0_speech_cepstral_review_gui.ps1`、`scripts/open_stage0_speech_cepstral_review_gui.cmd`
 - 已有 LSF 听审包构建与 GUI 入口：`scripts/build_stage0_speech_lsf_listening_pack.py`、`scripts/open_stage0_speech_lsf_review_gui.ps1`、`scripts/open_stage0_speech_lsf_review_gui.cmd`
 - 已有 VTL 听审包构建与 GUI 入口：`scripts/build_stage0_speech_vtl_warping_listening_pack.py`、`scripts/open_stage0_speech_vtl_review_gui.ps1`、`scripts/open_stage0_speech_vtl_review_gui.cmd`
+- 已有 Conditional Envelope Transport 听审包构建与 GUI 入口：`scripts/build_stage0_speech_conditional_envelope_transport_listening_pack.py`、`scripts/open_stage0_speech_conditional_envelope_transport_review_gui.ps1`、`scripts/open_stage0_speech_conditional_envelope_transport_review_gui.cmd`
 - 已有表示层 pilot 输出：
   - `experiments/representation_layer/v1_fixed_eval_pilot/`
   - `experiments/representation_layer/v1_clean_speech_probe/`
@@ -92,6 +94,8 @@
   - `artifacts/listening_review/stage0_speech_vtl_warping_listening_pack/v1/`
 - 已有 VTL v2 听审包输出：
   - `artifacts/listening_review/stage0_speech_vtl_warping_listening_pack/v2/`
+- 已有 Conditional Envelope Transport v1 听审包输出：
+  - `artifacts/listening_review/stage0_speech_conditional_envelope_transport_listening_pack/v1/`
 - 听审包与听审结果当前已迁到正式目录：`artifacts/listening_review/`；`tmp/` 不再作为长期保留位点
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
@@ -282,6 +286,12 @@
   - `LSF` 没有形成足够正证据
   - `VTL v1 / v2` 也没有形成足够正证据
   - 下一步不再继续抠 `LSF / VTL` 的局部参数
+- `conditional_envelope_transport v1` 已按上述约束落地为下一条高层表示路线：
+  - `stage0_speech_conditional_envelope_transport_listening_pack/v1`
+  - 当前实现不再施加固定几何 warp，而是按 `dataset x target_gender x f0桶` 建目标参考库，再按低阶倒谱 `content proxy` 做最近邻包络搬运
+  - 已完成正式包导出、量化队列生成与 GUI smoke
+  - 当前机器侧先验很弱：`avg auto_quant_score ≈ 31.76`、`avg auto_direction_score ≈ 1.43`、`avg auto_effect_score ≈ 4.44`、`fail=8`
+  - 因此这轮的首要目标不是先假设它有效，而是通过正式听审确认自动量化是否再次误杀
 - 当前表示层主线断点已明确固定：
   - 先试 `LSF`
   - 若 `LSF` 仍无正证据，再试 `VTL / tract-length warping`
@@ -351,6 +361,11 @@
 22. 当前主线新的强约束已经固定：
    - 不再继续抠经典 `LSF / VTL` warp
    - 下一步应升级到更高层表示路线
+23. 当前已按该约束新增 `conditional_envelope_transport v1`：
+   - 入口：`scripts/open_stage0_speech_conditional_envelope_transport_review_gui.ps1 -PackVersion v1`
+   - 当前正式包、量化队列与摘要都已生成
+   - 自动量化给出的结论是“保真正常但整体极弱”
+   - 因此默认下一步先做正式听审，再判断这条条件化路线是继续加力还是继续升级表示层
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。
