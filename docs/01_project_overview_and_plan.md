@@ -62,6 +62,7 @@
 - 已有 LSF 参数化原型说明：`docs/41_representation_layer_lsf_probe_v1.md`
 - 已有 VTL warping 原型说明：`docs/42_representation_layer_vtl_warping_probe_v1.md`
 - 已有 VTL warping v2 原型说明：`docs/43_representation_layer_vtl_warping_probe_v2.md`
+- 已有经典 warp 路线收口断点：`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`
 - 已有阶段 0 轻量前置修正 phase gate 文档：`docs/30_stage0_lightweight_preconditioning_phase_gate_v1.md`
 - 已有 speech source-filter / vocal-tract morph 原型与 GUI 入口：`scripts/build_stage0_speech_vocal_tract_listening_pack.py`、`scripts/open_stage0_speech_vocal_tract_review_gui.ps1`、`scripts/open_stage0_speech_vocal_tract_review_gui.cmd`
 - 已有 source-filter / vocal-tract morph 说明：`docs/31_stage0_source_filter_vocal_tract_morph_v1.md`
@@ -275,7 +276,12 @@
   - 把带内能量回平从 `100%` 改成部分回平
   - 已完成正式包导出、量化队列生成与 GUI smoke
   - 当前机器侧先验依然偏负：`avg auto_quant_score ≈ 39.26`、`avg auto_direction_score ≈ 0.10`、`fail=8`
-  - 因此当前默认下一轮正式听审对象已切到 `VTL v2`
+  - 主观听审结果：`effect_audible yes=5, maybe=2, no=1`，但 `slight artifact=5`、`too_weak=5`
+  - 因此这版虽然更常可辨，但仍未跨过“稳定、方向可信、伪影可控”的门槛
+- 当前经典 warp 路线已正式收口：
+  - `LSF` 没有形成足够正证据
+  - `VTL v1 / v2` 也没有形成足够正证据
+  - 下一步不再继续抠 `LSF / VTL` 的局部参数
 - 当前表示层主线断点已明确固定：
   - 先试 `LSF`
   - 若 `LSF` 仍无正证据，再试 `VTL / tract-length warping`
@@ -337,7 +343,14 @@
 20. `VTL v2` 已完成建包、量化与入口 smoke：
    - 入口：`scripts/open_stage0_speech_vtl_review_gui.ps1 -PackVersion v2`
    - 当前自动量化显示：`effect` 比 `v1` 更强，但 `direction` 进一步恶化
-   - 因此这轮听审的重点不是“有没有变化”，而是验证双声感和方向错误是否仍然成立
+   - 主观听审也已完成，结论是“仍偏弱且伪影偏多”，不再继续推常规 `VTL v3`
+21. 辅助试听按钮已改成更明确的语义：
+   - 现在是“全局变速/变调对齐 F0”
+   - 接受 `pitch` 与 `duration` 一起变化
+   - 仅作辅助排除整体音高偏移，不代表原处理音本体
+22. 当前主线新的强约束已经固定：
+   - 不再继续抠经典 `LSF / VTL` warp
+   - 下一步应升级到更高层表示路线
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

@@ -75,7 +75,8 @@ RUBRIC_TEXT = """主观听审口径
 建议流程：
 1. 先听源音频
 2. 再听修正后音频
-3. 若怀疑音调偏移影响判断，可试听“处理音(F0对齐原音)”
+3. 若怀疑音调偏移影响判断，可试听“处理音(全局变速对齐F0)”
+   这是对处理音再做一次全局变速/变调辅助试听，会改变时长，不代表原处理音本体
 4. 必要时反复 A/B
 5. 最后写主观判断
 """
@@ -219,7 +220,7 @@ class ReviewApp:
         self.original_button.pack(side=tk.LEFT, padx=(6, 0))
         self.processed_button = ttk.Button(playback_button_row, text="播放处理音", command=self.play_processed)
         self.processed_button.pack(side=tk.LEFT, padx=(6, 0))
-        self.aligned_button = ttk.Button(playback_button_row, text="播放处理音(F0对齐原音)", command=self.play_processed_f0_aligned)
+        self.aligned_button = ttk.Button(playback_button_row, text="播放处理音(全局变速对齐F0)", command=self.play_processed_f0_aligned)
         self.aligned_button.pack(side=tk.LEFT, padx=(6, 0))
         self.baseline_button = ttk.Button(playback_button_row, text="播放raw->RVC", command=self.play_baseline)
         self.baseline_button.pack(side=tk.LEFT, padx=(6, 0))
@@ -425,7 +426,7 @@ class ReviewApp:
             if self.baseline_button.winfo_manager():
                 self.baseline_button.pack_forget()
             self.processed_button.configure(text="播放处理音")
-            self.aligned_button.configure(text="播放处理音(F0对齐原音)")
+            self.aligned_button.configure(text="播放处理音(全局变速对齐F0)")
             self.path_text.set(
                 f"raw={row.get('input_audio', '')}\n"
                 f"processed={row.get('processed_audio', '')}"
@@ -522,11 +523,20 @@ class ReviewApp:
             return cached
 
         audio, sr = self.load_audio(processed_path)
-        n_steps = 12.0 * float(np.log2(source_f0 / processed_f0))
-        if abs(n_steps) < 0.05:
+        pitch_factor = float(source_f0 / processed_f0)
+        if abs(pitch_factor - 1.0) < 0.01:
             aligned = audio
         else:
-            aligned = librosa.effects.pitch_shift(audio.astype(np.float32), sr=sr, n_steps=n_steps)
+            # This helper intentionally accepts that pitch change and speed
+            # change are coupled: resample the processed waveform to a new
+            # length, then play it back at the original sample rate.
+            aligned_target_sr = max(float(sr) / max(pitch_factor, 1e-6), 1000.0)
+            aligned = librosa.resample(
+                audio.astype(np.float32),
+                orig_sr=float(sr),
+                target_sr=aligned_target_sr,
+                res_type="kaiser_best",
+            )
         result = (np.asarray(aligned, dtype=np.float32), sr)
         self.aligned_audio_cache[cache_key] = result
         return result
@@ -534,7 +544,7 @@ class ReviewApp:
     def play_processed_f0_aligned(self) -> None:
         aligned = self.pitch_aligned_processed_audio()
         if aligned is None:
-            messagebox.showwarning("无法对齐", "当前行缺少可用的原音/处理音 F0 中位数，无法做 F0 对齐试听。")
+            messagebox.showwarning("无法对齐", "当前行缺少可用的原音/处理音 F0 中位数，无法做全局变速对齐试听。")
             return
         audio, sr = aligned
         self.stop_audio()
