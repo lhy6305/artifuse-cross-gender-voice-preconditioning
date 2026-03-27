@@ -16,10 +16,10 @@ from build_stage0_speech_listening_pack import TARGET_DIRECTION_BY_SOURCE_GENDER
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_conditional_envelope_transport_candidate_v1.json"
+DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_low_rank_envelope_candidate_v1.json"
 DEFAULT_INPUT_CSV = ROOT / "experiments" / "fixed_eval" / "v1_2" / "fixed_eval_review_final_v1_2.csv"
 DEFAULT_REFERENCE_CSV = ROOT / "data" / "datasets" / "_meta" / "utterance_manifest_clean_speech_v1.csv"
-DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage0_speech_conditional_envelope_transport_listening_pack" / "v1"
+DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage0_speech_low_rank_envelope_listening_pack" / "v1"
 
 
 def parse_args() -> argparse.Namespace:
@@ -71,12 +71,6 @@ def stft_frame_centers_sec(frame_count: int, n_fft: int, hop_length: int, sample
     return (np.arange(frame_count, dtype=np.float64) * hop_length + n_fft / 2.0) / sample_rate
 
 
-def interpolate_track(frame_times_sec: np.ndarray, world_times_sec: np.ndarray, values: np.ndarray) -> np.ndarray:
-    if frame_times_sec.size == 0 or world_times_sec.size == 0 or values.size == 0:
-        return np.zeros(frame_times_sec.shape[0], dtype=np.float32)
-    return np.interp(frame_times_sec, world_times_sec, values, left=values[0], right=values[-1]).astype(np.float32)
-
-
 def interpolate_voiced_mask(frame_times_sec: np.ndarray, world_times_sec: np.ndarray, f0: np.ndarray) -> np.ndarray:
     if frame_times_sec.size == 0 or world_times_sec.size == 0 or f0.size == 0:
         return np.zeros(frame_times_sec.shape[0], dtype=np.float32)
@@ -116,13 +110,6 @@ def select_reference_rows(rows: list[dict[str, str]], samples_per_cell: int) -> 
     return selected
 
 
-def f0_bucket_name(f0_hz: float, edges_hz: list[float]) -> str:
-    for index, edge_hz in enumerate(edges_hz):
-        if f0_hz < edge_hz:
-            return f"b{index}"
-    return f"b{len(edges_hz)}"
-
-
 def build_smoothing_kernel(size: int) -> np.ndarray:
     if size <= 1:
         return np.ones(1, dtype=np.float32)
@@ -143,127 +130,100 @@ def smooth_along_time(values: np.ndarray, voiced_mask: np.ndarray, kernel: np.nd
     return output
 
 
-def extract_reference_frames(
+def extract_voiced_cepstral_frames(
     audio: np.ndarray,
     *,
     sample_rate: int,
     n_fft: int,
     hop_length: int,
     keep_coeffs: int,
-    proxy_coeffs: int,
     world_sr: int,
     frame_period_ms: float,
     frame_stride: int,
-    f0_bucket_edges_hz: list[float],
-) -> list[tuple[str, np.ndarray, np.ndarray]]:
+) -> np.ndarray | None:
     stft = librosa.stft(audio.astype(np.float32), n_fft=n_fft, hop_length=hop_length)
     magnitude = np.abs(stft).astype(np.float32)
     if magnitude.size == 0:
-        return []
+        return None
     log_mag = np.log(np.maximum(magnitude, 1e-7))
     cep = scipy.fft.dct(log_mag, type=2, axis=0, norm="ortho").astype(np.float32)
+    coeff_count = min(int(keep_coeffs), int(cep.shape[0] - 1))
+    if coeff_count <= 0:
+        return None
     f0, world_times_sec = analyze_f0(audio, sample_rate, world_sr, frame_period_ms)
     frame_times_sec = stft_frame_centers_sec(cep.shape[1], n_fft, hop_length, sample_rate)
     voiced_mask = interpolate_voiced_mask(frame_times_sec, world_times_sec, f0)
-    frame_f0 = interpolate_track(frame_times_sec, world_times_sec, f0)
-
-    coeff_count = min(int(keep_coeffs), int(cep.shape[0] - 1))
-    proxy_count = min(int(proxy_coeffs), coeff_count)
-    if coeff_count <= 0 or proxy_count <= 0:
-        return []
-
-    frames: list[tuple[str, np.ndarray, np.ndarray]] = []
+    voiced_frames = cep[1 : 1 + coeff_count, voiced_mask >= 0.5].T
+    if voiced_frames.size == 0:
+        return None
     stride = max(int(frame_stride), 1)
-    for frame_idx in range(0, cep.shape[1], stride):
-        if voiced_mask[frame_idx] < 0.5:
-            continue
-        current_f0 = float(frame_f0[frame_idx])
-        if current_f0 <= 0.0:
-            continue
-        full_vector = cep[1 : 1 + coeff_count, frame_idx].astype(np.float32, copy=True)
-        proxy_vector = full_vector[:proxy_count].astype(np.float32, copy=True)
-        frames.append((f0_bucket_name(current_f0, f0_bucket_edges_hz), proxy_vector, full_vector))
-    return frames
+    return voiced_frames[::stride].astype(np.float32, copy=True)
 
 
-def build_reference_bank(
+def clip_ratio(values: np.ndarray, low: float, high: float) -> np.ndarray:
+    return np.clip(values, low, high).astype(np.float32)
+
+
+def build_subspace_lookup(
     reference_rows: list[dict[str, str]],
     *,
     n_fft: int,
     hop_length: int,
     keep_coeffs: int,
-    proxy_coeffs: int,
+    latent_dims: int,
     world_sr: int,
     frame_period_ms: float,
     frame_stride: int,
-    f0_bucket_edges_hz: list[float],
-) -> dict[tuple[str, str, str], dict[str, np.ndarray]]:
-    bank: dict[tuple[str, str, str], dict[str, list[np.ndarray]]] = defaultdict(lambda: {"proxy": [], "full": []})
+) -> dict[str, dict[str, np.ndarray]]:
+    frames_by_dataset: dict[str, list[np.ndarray]] = defaultdict(list)
+    frames_by_dataset_gender: dict[tuple[str, str], list[np.ndarray]] = defaultdict(list)
     for row in reference_rows:
         audio, sample_rate = load_audio(resolve_path(row["path_raw"]))
-        frames = extract_reference_frames(
+        voiced_frames = extract_voiced_cepstral_frames(
             audio,
             sample_rate=sample_rate,
             n_fft=n_fft,
             hop_length=hop_length,
             keep_coeffs=keep_coeffs,
-            proxy_coeffs=proxy_coeffs,
             world_sr=world_sr,
             frame_period_ms=frame_period_ms,
             frame_stride=frame_stride,
-            f0_bucket_edges_hz=f0_bucket_edges_hz,
         )
-        for bucket, proxy_vector, full_vector in frames:
-            for key in (
-                (row["dataset_name"], row["gender"], bucket),
-                (row["dataset_name"], row["gender"], "all"),
-            ):
-                bank[key]["proxy"].append(proxy_vector)
-                bank[key]["full"].append(full_vector)
+        if voiced_frames is None:
+            continue
+        frames_by_dataset[row["dataset_name"]].append(voiced_frames)
+        frames_by_dataset_gender[(row["dataset_name"], row["gender"])].append(voiced_frames)
 
-    packed: dict[tuple[str, str, str], dict[str, np.ndarray]] = {}
-    for key, value in bank.items():
-        packed[key] = {
-            "proxy": np.stack(value["proxy"], axis=0).astype(np.float32),
-            "full": np.stack(value["full"], axis=0).astype(np.float32),
+    lookup: dict[str, dict[str, np.ndarray]] = {}
+    for dataset_name, dataset_frame_chunks in frames_by_dataset.items():
+        all_frames = np.concatenate(dataset_frame_chunks, axis=0).astype(np.float32)
+        if all_frames.shape[0] < 4:
+            continue
+        mean_vector = np.mean(all_frames, axis=0).astype(np.float32)
+        centered = all_frames - mean_vector[None, :]
+        _, _, vh = np.linalg.svd(centered.astype(np.float64), full_matrices=False)
+        used_latent_dims = min(int(latent_dims), int(vh.shape[0]), int(centered.shape[1]))
+        basis = vh[:used_latent_dims].astype(np.float32)
+        latent_stats: dict[str, np.ndarray] = {}
+        for gender in ("female", "male"):
+            gender_chunks = frames_by_dataset_gender.get((dataset_name, gender), [])
+            if not gender_chunks:
+                break
+            gender_frames = np.concatenate(gender_chunks, axis=0).astype(np.float32)
+            latents = (gender_frames - mean_vector[None, :]) @ basis.T
+            latent_stats[f"{gender}_centroid"] = np.mean(latents, axis=0).astype(np.float32)
+            latent_stats[f"{gender}_std"] = np.maximum(np.std(latents, axis=0), 1e-3).astype(np.float32)
+        if "female_centroid" not in latent_stats or "male_centroid" not in latent_stats:
+            continue
+        lookup[dataset_name] = {
+            "mean_vector": mean_vector,
+            "basis": basis,
+            **latent_stats,
         }
-    return packed
+    return lookup
 
 
-def nearest_reference_vector(
-    current_proxy: np.ndarray,
-    *,
-    dataset_name: str,
-    reference_gender: str,
-    bucket: str,
-    reference_bank: dict[tuple[str, str, str], dict[str, np.ndarray]],
-    nearest_k: int,
-) -> np.ndarray | None:
-    candidates = [
-        reference_bank.get((dataset_name, reference_gender, bucket)),
-        reference_bank.get((dataset_name, reference_gender, "all")),
-    ]
-    bank = next((item for item in candidates if item is not None), None)
-    if bank is None:
-        return None
-    proxy_matrix = bank["proxy"]
-    full_matrix = bank["full"]
-    if proxy_matrix.size == 0 or full_matrix.size == 0:
-        return None
-
-    distances = np.sum(np.square(proxy_matrix - current_proxy[None, :]), axis=1)
-    k = max(1, min(int(nearest_k), int(distances.shape[0])))
-    nearest_indices = np.argpartition(distances, kth=k - 1)[:k]
-    target_vectors = full_matrix[nearest_indices]
-    if k == 1:
-        return target_vectors[0].astype(np.float32, copy=True)
-
-    weights = 1.0 / np.maximum(distances[nearest_indices], 1e-4)
-    weights = weights / np.sum(weights)
-    return np.sum(target_vectors * weights[:, None], axis=0).astype(np.float32)
-
-
-def apply_conditional_envelope_transport(
+def apply_low_rank_envelope_shift(
     audio: np.ndarray,
     *,
     sample_rate: int,
@@ -272,21 +232,18 @@ def apply_conditional_envelope_transport(
     peak_limit: float,
     world_sr: int,
     frame_period_ms: float,
-    dataset_name: str,
+    subspace: dict[str, np.ndarray],
     source_gender: str,
     target_gender: str,
-    reference_bank: dict[tuple[str, str, str], dict[str, np.ndarray]],
     keep_coeffs: int,
-    proxy_coeffs: int,
-    nearest_k: int,
-    delta_mode: str,
-    transport_ratio: float,
-    source_anchor_weight: float,
+    latent_mix: float,
+    variance_mix: float,
+    variance_ratio_min: float,
+    variance_ratio_max: float,
     blend: float,
     max_envelope_gain_db: float,
     max_frame_delta_l2: float,
     time_smooth_frames: int,
-    f0_bucket_edges_hz: list[float],
 ) -> np.ndarray:
     stft = librosa.stft(audio.astype(np.float32), n_fft=n_fft, hop_length=hop_length)
     magnitude = np.abs(stft).astype(np.float32)
@@ -296,51 +253,36 @@ def apply_conditional_envelope_transport(
 
     log_mag = np.log(np.maximum(magnitude, 1e-7))
     cep = scipy.fft.dct(log_mag, type=2, axis=0, norm="ortho").astype(np.float32)
+    full_coeff_count = min(int(cep.shape[0] - 1), int(subspace["mean_vector"].shape[0]), int(subspace["basis"].shape[1]))
+    active_coeff_count = min(int(keep_coeffs), full_coeff_count)
+    if full_coeff_count <= 0 or active_coeff_count <= 0:
+        return audio.astype(np.float32)
+
+    basis = subspace["basis"][:, :full_coeff_count].astype(np.float32)
+    mean_vector = subspace["mean_vector"][:full_coeff_count].astype(np.float32)
+    source_centroid = subspace[f"{source_gender}_centroid"].astype(np.float32)
+    target_centroid = subspace[f"{target_gender}_centroid"].astype(np.float32)
+    source_std = subspace[f"{source_gender}_std"].astype(np.float32)
+    target_std = subspace[f"{target_gender}_std"].astype(np.float32)
+    ratio = clip_ratio(target_std / np.maximum(source_std, 1e-3), float(variance_ratio_min), float(variance_ratio_max))
+
     f0, world_times_sec = analyze_f0(audio, sample_rate, world_sr, frame_period_ms)
     frame_times_sec = stft_frame_centers_sec(cep.shape[1], n_fft, hop_length, sample_rate)
     voiced_mask = interpolate_voiced_mask(frame_times_sec, world_times_sec, f0)
-    frame_f0 = interpolate_track(frame_times_sec, world_times_sec, f0)
 
-    coeff_count = min(int(keep_coeffs), int(cep.shape[0] - 1))
-    proxy_count = min(int(proxy_coeffs), coeff_count)
-    if coeff_count <= 0 or proxy_count <= 0:
-        return audio.astype(np.float32)
-
-    frame_delta = np.zeros((coeff_count, cep.shape[1]), dtype=np.float32)
+    frame_delta = np.zeros((full_coeff_count, cep.shape[1]), dtype=np.float32)
     voiced_binary = np.zeros(cep.shape[1], dtype=np.float32)
     for frame_idx in range(cep.shape[1]):
         if voiced_mask[frame_idx] < 0.5:
             continue
-        current_f0 = float(frame_f0[frame_idx])
-        if current_f0 <= 0.0:
-            continue
-        current_full = cep[1 : 1 + coeff_count, frame_idx].astype(np.float32, copy=False)
-        bucket = f0_bucket_name(current_f0, f0_bucket_edges_hz)
-        target_full = nearest_reference_vector(
-            current_full[:proxy_count],
-            dataset_name=dataset_name,
-            reference_gender=target_gender,
-            bucket=bucket,
-            reference_bank=reference_bank,
-            nearest_k=nearest_k,
-        )
-        if target_full is None:
-            continue
-        if delta_mode == "contrastive_anchor":
-            source_full = nearest_reference_vector(
-                current_full[:proxy_count],
-                dataset_name=dataset_name,
-                reference_gender=source_gender,
-                bucket=bucket,
-                reference_bank=reference_bank,
-                nearest_k=nearest_k,
-            )
-            if source_full is None:
-                continue
-            anchor = float(source_anchor_weight) * source_full[:coeff_count] + (1.0 - float(source_anchor_weight)) * current_full
-            delta = (target_full[:coeff_count] - anchor) * float(transport_ratio)
-        else:
-            delta = (target_full[:coeff_count] - current_full) * float(transport_ratio)
+        current_full = cep[1 : 1 + full_coeff_count, frame_idx].astype(np.float32, copy=False)
+        centered = current_full - mean_vector
+        latent = basis @ centered
+        target_like = target_centroid + (1.0 - float(variance_mix)) * (latent - source_centroid) + float(variance_mix) * (ratio * (latent - source_centroid))
+        latent_delta = (target_like - latent) * float(latent_mix)
+        delta = basis.T @ latent_delta
+        if active_coeff_count < full_coeff_count:
+            delta[active_coeff_count:] = 0.0
         delta_norm = float(np.linalg.norm(delta))
         if delta_norm > max_frame_delta_l2 > 0.0:
             delta = delta * (max_frame_delta_l2 / delta_norm)
@@ -349,7 +291,7 @@ def apply_conditional_envelope_transport(
 
     smoothed_delta = smooth_along_time(frame_delta, voiced_binary, build_smoothing_kernel(int(time_smooth_frames)))
     output_cep = np.array(cep, dtype=np.float32, copy=True)
-    output_cep[1 : 1 + coeff_count, :] += smoothed_delta * voiced_mask[None, :]
+    output_cep[1 : 1 + full_coeff_count, :] += smoothed_delta * voiced_mask[None, :]
 
     modified_log_mag = scipy.fft.idct(output_cep, type=2, axis=0, norm="ortho").astype(np.float32)
     max_delta_ln = max_envelope_gain_db / 20.0 * math.log(10.0)
@@ -411,15 +353,15 @@ def write_readme(path: Path, rows: list[dict[str, str]], *, rule_config_path: Pa
     queue_rel = (pack_dir / "listening_review_queue.csv").relative_to(ROOT).as_posix()
     summary_md_rel = (pack_dir / "listening_review_quant_summary.md").relative_to(ROOT).as_posix()
     lines = [
-        f"# Stage0 Speech Conditional Envelope Transport Listening Pack {pack_version}",
+        f"# Stage0 Speech Low-Rank Envelope Listening Pack {pack_version}",
         "",
-        "- purpose: `content-and-f0-conditioned reference envelope transport probe`",
+        "- purpose: `learned low-rank envelope subspace probe`",
         f"- rows: `{len(rows)}`",
         "",
         "## Rebuild",
         "",
         "```powershell",
-        ".\\python.exe .\\scripts\\build_stage0_speech_conditional_envelope_transport_listening_pack.py",
+        ".\\python.exe .\\scripts\\build_stage0_speech_low_rank_envelope_listening_pack.py",
         ".\\python.exe .\\scripts\\build_stage0_rule_review_queue.py `",
         f"  --rule-config {rule_config_rel} `",
         f"  --summary-csv {summary_rel} `",
@@ -440,24 +382,22 @@ def main() -> None:
 
     enabled_rules = [rule for rule in rule_config["rules"] if rule.get("enabled", False)]
     max_keep_coeffs = max(int(rule["method_params"]["keep_coeffs"]) for rule in enabled_rules)
-    max_proxy_coeffs = max(int(rule["method_params"]["proxy_coeffs"]) for rule in enabled_rules)
+    max_latent_dims = max(int(rule["method_params"]["latent_dims"]) for rule in enabled_rules)
     max_reference_stride = max(int(rule["method_params"].get("reference_frame_stride", 1)) for rule in enabled_rules)
-    f0_bucket_edges_hz = [float(value) for value in enabled_rules[0]["method_params"]["f0_bucket_edges_hz"]]
 
     reference_rows = select_reference_rows(
         read_reference_rows(resolve_path(args.reference_csv)),
         samples_per_cell=args.reference_samples_per_cell,
     )
-    reference_bank = build_reference_bank(
+    subspace_lookup = build_subspace_lookup(
         reference_rows,
         n_fft=args.n_fft,
         hop_length=args.hop_length,
         keep_coeffs=max_keep_coeffs,
-        proxy_coeffs=max_proxy_coeffs,
+        latent_dims=max_latent_dims,
         world_sr=args.world_sr,
         frame_period_ms=args.frame_period_ms,
         frame_stride=max_reference_stride,
-        f0_bucket_edges_hz=f0_bucket_edges_hz,
     )
 
     output_dir = resolve_path(args.output_dir)
@@ -467,20 +407,22 @@ def main() -> None:
 
     for row in selected_rows:
         target_direction = TARGET_DIRECTION_BY_SOURCE_GENDER[row["gender"]]
-        source_gender = row["gender"]
         target_gender = "female" if target_direction == "feminine" else "male"
         rule = rule_lookup[(row["dataset_name"], target_direction)]
         params = rule["method_params"]
+        subspace = subspace_lookup.get(row["dataset_name"])
+        if subspace is None:
+            raise ValueError(f"Missing low-rank envelope subspace for {row['dataset_name']}")
 
         input_audio = resolve_path(row["path_raw"])
         dataset_slug = "libritts_r" if row["dataset_name"] == "LibriTTS-R" else "vctk"
-        stem = f"{dataset_slug}__{row['gender']}__{target_direction}__cet__{row['utt_id']}"
+        stem = f"{dataset_slug}__{row['gender']}__{target_direction}__lrank__{row['utt_id']}"
         original_copy = originals_dir / f"{stem}.{args.audio_format}"
         processed_audio = processed_dir / f"{stem}.{args.audio_format}"
 
         audio, sample_rate = load_audio(input_audio)
         save_audio(original_copy, audio, sample_rate)
-        out = apply_conditional_envelope_transport(
+        out = apply_low_rank_envelope_shift(
             audio,
             sample_rate=sample_rate,
             n_fft=args.n_fft,
@@ -488,21 +430,18 @@ def main() -> None:
             peak_limit=args.peak_limit,
             world_sr=args.world_sr,
             frame_period_ms=args.frame_period_ms,
-            dataset_name=row["dataset_name"],
-            source_gender=source_gender,
+            subspace=subspace,
+            source_gender=row["gender"],
             target_gender=target_gender,
-            reference_bank=reference_bank,
             keep_coeffs=int(params["keep_coeffs"]),
-            proxy_coeffs=int(params["proxy_coeffs"]),
-            nearest_k=int(params["nearest_k"]),
-            delta_mode=str(params.get("delta_mode", "target_pull")),
-            transport_ratio=float(params["transport_ratio"]),
-            source_anchor_weight=float(params.get("source_anchor_weight", 1.0)),
+            latent_mix=float(params["latent_mix"]),
+            variance_mix=float(params["variance_mix"]),
+            variance_ratio_min=float(params["variance_ratio_min"]),
+            variance_ratio_max=float(params["variance_ratio_max"]),
             blend=float(params["blend"]),
             max_envelope_gain_db=float(params["max_envelope_gain_db"]),
             max_frame_delta_l2=float(params["max_frame_delta_l2"]),
             time_smooth_frames=int(params["time_smooth_frames"]),
-            f0_bucket_edges_hz=[float(value) for value in params["f0_bucket_edges_hz"]],
         )
         save_audio(processed_audio, out, sample_rate)
 
@@ -538,7 +477,7 @@ def main() -> None:
     write_readme(output_dir / "README.md", summary_rows, rule_config_path=rule_config_path)
     print(f"Wrote {summary_path}")
     print(f"Reference rows: {len(reference_rows)}")
-    print(f"Reference banks: {len(reference_bank)}")
+    print(f"Subspaces: {len(subspace_lookup)}")
     print(f"Selected rows: {len(summary_rows)}")
     print(f"Output dir: {output_dir}")
 

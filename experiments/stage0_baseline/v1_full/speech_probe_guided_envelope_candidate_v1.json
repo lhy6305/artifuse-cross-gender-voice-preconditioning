@@ -1,0 +1,183 @@
+{
+  "config_version": "stage0_speech_probe_guided_envelope_candidate_v1",
+  "source": "representation_layer_probe_guided_envelope_probe_v1",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "probe_guided_envelope_probe_v1"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_probe_guided_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_probe_guided_envelope_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_probe_guided_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "probe_guided_envelope_residual",
+      "method_params": {
+        "keep_coeffs": 20,
+        "hidden_dims": [48, 24],
+        "train_epochs": 220,
+        "train_batch_size": 256,
+        "learning_rate": 0.0025,
+        "weight_decay": 0.0001,
+        "probe_opt_steps": 18,
+        "probe_step_size": 0.060,
+        "lambda_l2": 0.22,
+        "lambda_l1": 0.02,
+        "blend": 0.95,
+        "max_envelope_gain_db": 7.0,
+        "max_frame_delta_l2": 2.80,
+        "time_smooth_frames": 7,
+        "reference_frame_stride": 4
+      },
+      "notes": "Probe-guided envelope v1：训练 gender probe，再直接优化当前帧包络去推目标方向，验证 discriminative objective 是否终于能跨过可辨阈值。"
+    },
+    {
+      "rule_id": "stage0_speech_probe_guided_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_probe_guided_envelope_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_probe_guided_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "probe_guided_envelope_residual",
+      "method_params": {
+        "keep_coeffs": 18,
+        "hidden_dims": [48, 24],
+        "train_epochs": 220,
+        "train_batch_size": 256,
+        "learning_rate": 0.0025,
+        "weight_decay": 0.0001,
+        "probe_opt_steps": 16,
+        "probe_step_size": 0.055,
+        "lambda_l2": 0.24,
+        "lambda_l1": 0.02,
+        "blend": 0.90,
+        "max_envelope_gain_db": 6.2,
+        "max_frame_delta_l2": 2.30,
+        "time_smooth_frames": 9,
+        "reference_frame_stride": 4
+      },
+      "notes": "Probe-guided envelope v1：VCTK feminine 侧仍保守一点，避免把整体亮化误当成结构性正证据。"
+    },
+    {
+      "rule_id": "stage0_speech_probe_guided_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_probe_guided_envelope_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_probe_guided_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "probe_guided_envelope_residual",
+      "method_params": {
+        "keep_coeffs": 20,
+        "hidden_dims": [48, 24],
+        "train_epochs": 220,
+        "train_batch_size": 256,
+        "learning_rate": 0.0025,
+        "weight_decay": 0.0001,
+        "probe_opt_steps": 18,
+        "probe_step_size": 0.060,
+        "lambda_l2": 0.22,
+        "lambda_l1": 0.02,
+        "blend": 0.95,
+        "max_envelope_gain_db": 7.0,
+        "max_frame_delta_l2": 2.75,
+        "time_smooth_frames": 7,
+        "reference_frame_stride": 4
+      },
+      "notes": "Probe-guided envelope v1：重点看 masculine 侧是否终于不再只是整体变暗，而是能被 probe 直接推到更像结构性共鸣重排。"
+    },
+    {
+      "rule_id": "stage0_speech_probe_guided_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_probe_guided_envelope_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_probe_guided_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "probe_guided_envelope_residual",
+      "method_params": {
+        "keep_coeffs": 18,
+        "hidden_dims": [48, 24],
+        "train_epochs": 220,
+        "train_batch_size": 256,
+        "learning_rate": 0.0025,
+        "weight_decay": 0.0001,
+        "probe_opt_steps": 16,
+        "probe_step_size": 0.055,
+        "lambda_l2": 0.24,
+        "lambda_l1": 0.02,
+        "blend": 0.88,
+        "max_envelope_gain_db": 6.0,
+        "max_frame_delta_l2": 2.20,
+        "time_smooth_frames": 9,
+        "reference_frame_stride": 4
+      },
+      "notes": "Probe-guided envelope v1：VCTK masculine 仍按保守版起步，先验证 discriminative objective 是否至少比前面几条 mapping 线更容易跨过可辨阈值。"
+    }
+  ]
+}

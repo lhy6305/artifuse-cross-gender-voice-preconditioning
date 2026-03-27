@@ -1,0 +1,167 @@
+{
+  "config_version": "stage0_speech_low_rank_envelope_candidate_v1",
+  "source": "representation_layer_pivot_low_rank_envelope_subspace_probe_v1",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "low_rank_envelope_subspace_probe_v1"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_low_rank_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_low_rank_envelope_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_low_rank_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "low_rank_envelope_subspace",
+      "method_params": {
+        "keep_coeffs": 20,
+        "latent_dims": 8,
+        "latent_mix": 0.95,
+        "variance_mix": 0.55,
+        "variance_ratio_min": 0.78,
+        "variance_ratio_max": 1.35,
+        "blend": 0.86,
+        "max_envelope_gain_db": 6.0,
+        "max_frame_delta_l2": 2.20,
+        "time_smooth_frames": 7,
+        "reference_frame_stride": 4
+      },
+      "notes": "Low-rank envelope v1：在共享低秩子空间里做 source->target latent affine 映射，先验证 learned basis 是否比 reference transport 更容易跨过可辨阈值。"
+    },
+    {
+      "rule_id": "stage0_speech_low_rank_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_low_rank_envelope_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_low_rank_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "low_rank_envelope_subspace",
+      "method_params": {
+        "keep_coeffs": 18,
+        "latent_dims": 8,
+        "latent_mix": 0.88,
+        "variance_mix": 0.50,
+        "variance_ratio_min": 0.80,
+        "variance_ratio_max": 1.30,
+        "blend": 0.82,
+        "max_envelope_gain_db": 5.5,
+        "max_frame_delta_l2": 1.90,
+        "time_smooth_frames": 9,
+        "reference_frame_stride": 4
+      },
+      "notes": "Low-rank envelope v1：VCTK 侧先保守一点，优先看 learned latent affine 是否至少比条件 reference 搬运更可辨。"
+    },
+    {
+      "rule_id": "stage0_speech_low_rank_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_low_rank_envelope_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_low_rank_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "low_rank_envelope_subspace",
+      "method_params": {
+        "keep_coeffs": 20,
+        "latent_dims": 8,
+        "latent_mix": 0.90,
+        "variance_mix": 0.55,
+        "variance_ratio_min": 0.76,
+        "variance_ratio_max": 1.32,
+        "blend": 0.86,
+        "max_envelope_gain_db": 6.0,
+        "max_frame_delta_l2": 2.10,
+        "time_smooth_frames": 7,
+        "reference_frame_stride": 4
+      },
+      "notes": "Low-rank envelope v1：重点看 masculine 侧是否终于不再只是整体变暗，而是能给出更像 tract/resonance 的结构变化。"
+    },
+    {
+      "rule_id": "stage0_speech_low_rank_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_low_rank_envelope_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_low_rank_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "low_rank_envelope_subspace",
+      "method_params": {
+        "keep_coeffs": 18,
+        "latent_dims": 8,
+        "latent_mix": 0.84,
+        "variance_mix": 0.50,
+        "variance_ratio_min": 0.78,
+        "variance_ratio_max": 1.28,
+        "blend": 0.80,
+        "max_envelope_gain_db": 5.2,
+        "max_frame_delta_l2": 1.80,
+        "time_smooth_frames": 9,
+        "reference_frame_stride": 4
+      },
+      "notes": "Low-rank envelope v1：VCTK masculine 仍按相对保守版起步，先看 learned subspace 能否至少摆脱 8/8 no audible。"
+    }
+  ]
+}

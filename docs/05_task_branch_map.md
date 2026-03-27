@@ -17,7 +17,7 @@
 | 人工巡检工具链 | 用最少操作完成 fixed eval 听审与记录 | 已完成首轮 | `scripts/open_fixed_eval_review_gui.ps1`、`scripts/fixed_eval_review_gui.py`、`experiments/fixed_eval/v1/review_pack/` |
 | clean analysis subsets | 生成保守可复现的 speech / singing 主分析子集 | 已完成首轮 | `scripts/build_clean_analysis_subsets.py`、`data/datasets/_meta/utterance_manifest_clean_*.csv`、`docs/14_clean_analysis_subsets_v1.md` |
 | 分析脚本落地 | 实现阶段 0/1 所需预处理与统计脚本 | 已完成首轮 | `scripts/run_stage0_baseline_analysis.py`、`docs/16_stage0_baseline_analysis_v1.md`、`experiments/stage0_baseline/` |
-| 表示层升级主线 | 在已否定 `pole edit / cepstral delta`、`LSF` 与 `VTL` 后，升级到条件化参考包络搬运路线 | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md`、`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`、`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md` |
+| 表示层升级主线 | 在已否定 `pole edit / cepstral delta`、`LSF`、`VTL`、`reference envelope transport`、`linear low-rank envelope subspace`、`static neural latent mapping` 与 `conditioned predictor mapping` 后，已切到 `probe-guided direct residual v1`，当前待正式听审 | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md`、`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`、`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`、`docs/46_representation_layer_conditional_envelope_transport_probe_v2.md`、`docs/47_post_conditional_transport_checkpoint_move_beyond_reference_envelope_v1.md`、`docs/48_representation_layer_low_rank_envelope_subspace_probe_v1.md`、`docs/49_post_low_rank_checkpoint_move_beyond_linear_subspace_v1.md`、`docs/50_representation_layer_neural_envelope_latent_probe_v1.md`、`docs/51_post_neural_checkpoint_move_beyond_static_latent_mapping_v1.md`、`docs/52_representation_layer_conditioned_neural_envelope_probe_v1.md`、`docs/53_post_conditioned_predictor_checkpoint_move_beyond_mapping_family_v1.md`、`docs/54_representation_layer_probe_guided_envelope_probe_v1.md` |
 
 ## 当前显式断点
 - 当前主线接班断点已固定在：`docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`
@@ -52,7 +52,42 @@
   - 入口：`scripts/open_stage0_speech_conditional_envelope_transport_review_gui.ps1 -PackVersion v1`
   - 正式包：`artifacts/listening_review/stage0_speech_conditional_envelope_transport_listening_pack/v1/`
   - 当前机器侧先验：`avg auto_quant_score ≈ 31.76`、`avg auto_effect_score ≈ 4.44`、`fail=8/8`
-  - 当前判断：自动量化认为整体极弱，因此下一步应先做正式听审，确认是否再次出现“机器误杀”
+  - 主观结果：`8/8 reviewed`、`effect_audible no=8`
+  - 当前判断：`v1` 已可收口为 `null_result`
+- `conditional_envelope_transport v2` 已进入可听审状态：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_conditional_envelope_transport_candidate_v2.json`
+  - 入口：`scripts/open_stage0_speech_conditional_envelope_transport_review_gui.ps1 -PackVersion v2`
+  - 正式包：`artifacts/listening_review/stage0_speech_conditional_envelope_transport_listening_pack/v2/`
+  - 当前机器侧先验：`avg auto_quant_score ≈ 35.64`、`avg auto_effect_score ≈ 9.63`、`fail=8/8`
+  - 主观结果：`8/8 reviewed`、`effect_audible no=8`
+  - 当前判断：reference-based conditional transport 到此已给出足够负证据，下一步不再继续出 `v3`
+- `low-rank envelope subspace v1` 已进入可听审状态：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_low_rank_envelope_candidate_v1.json`
+  - 入口：`scripts/open_stage0_speech_low_rank_envelope_review_gui.ps1 -PackVersion v1`
+  - 正式包：`artifacts/listening_review/stage0_speech_low_rank_envelope_listening_pack/v1/`
+  - 当前机器侧先验：`avg auto_quant_score ≈ 52.72`、`avg auto_direction_score ≈ 31.09`、`avg auto_effect_score ≈ 34.92`、`borderline=2`、`fail=6`
+  - 主观结果：`8/8 reviewed`、`effect_audible no=8`
+  - 当前判断：这条 learned latent 线虽强于 `conditional transport`，但最终仍不可辨识；下一步不再继续出常规 `v2`
+- `neural envelope latent v1` 已进入可听审状态：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_neural_envelope_candidate_v1.json`
+  - 入口：`scripts/open_stage0_speech_neural_envelope_review_gui.ps1 -PackVersion v1`
+  - 正式包：`artifacts/listening_review/stage0_speech_neural_envelope_listening_pack/v1/`
+  - 当前机器侧先验：`avg auto_quant_score ≈ 49.44`、`avg auto_direction_score ≈ 27.06`、`avg auto_effect_score ≈ 29.05`、`borderline=2`、`fail=6`
+  - 主观结果：`8/8 reviewed`、`effect_audible no=8`
+  - 当前判断：这条 nonlinear latent 线虽然已跑通，但最终仍不可辨识；下一步不再继续出常规 `v2`
+- `conditioned neural envelope v1` 已进入可听审状态：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_conditioned_neural_envelope_candidate_v1.json`
+  - 入口：`scripts/open_stage0_speech_conditioned_neural_envelope_review_gui.ps1 -PackVersion v1`
+  - 正式包：`artifacts/listening_review/stage0_speech_conditioned_neural_envelope_listening_pack/v1/`
+  - 当前机器侧先验：`avg auto_quant_score ≈ 38.48`、`avg auto_direction_score ≈ 11.45`、`avg auto_effect_score ≈ 13.29`、`fail=8`
+  - 主观结果：`8/8 reviewed`、`effect_audible no=8`
+  - 当前判断：这条 conditioned predictor 线方法层级更高，但最终仍不可辨识；下一步不再继续出常规 `v2`
+- `probe-guided envelope v1` 已进入可听审状态：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_probe_guided_envelope_candidate_v1.json`
+  - 入口：`scripts/open_stage0_speech_probe_guided_envelope_review_gui.ps1 -PackVersion v1`
+  - 正式包：`artifacts/listening_review/stage0_speech_probe_guided_envelope_listening_pack/v1/`
+  - 当前机器侧先验：`avg auto_quant_score ≈ 41.62`、`avg auto_direction_score ≈ 15.91`、`avg auto_effect_score ≈ 17.86`、`fail=8`
+  - 当前判断：这条 direct residual 线方法层级更激进，但机器侧仍偏负；下一步应直接进入正式听审
 
 ## 分支建议
 - 如果后续开始多人或多任务并行，优先按任务边界拆分，而不是按文件类型拆分。

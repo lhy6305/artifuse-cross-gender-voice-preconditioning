@@ -98,8 +98,21 @@
 
 - `scripts/open_stage0_speech_conditional_envelope_transport_review_gui.ps1 -PackVersion v1`
 
+随后已完成正式听审，当前主观结果是：
+
+- `8/8 reviewed`
+- `effect_audible: no=8`
+
+这轮结论没有歧义：
+
+- 不是“可辨但方向不稳”
+- 也不是“可辨但伪影太多”
+- 而是整体直接不可分辨
+
+因此这版应视为当前条件化路线的 `null result`。
+
 因此下一步非常明确：
 
-1. 直接进入正式听审；
-2. 重点判断“自动量化是否再次误杀局部可辨的 tract / resonance 变化”；
-3. 如果主观上也确认整体极弱，再决定是继续保留这条条件化路线并加力，还是继续升级表示层。
+1. 不继续保留 `v1` 的 `target pull` 语义；
+2. 直接改成更强的 `source-anchor -> target-anchor` 局部对比 delta；
+3. 以 `v2` 继续验证这条条件化路线是否还能被救活。
