@@ -1,0 +1,175 @@
+{
+  "config_version": "stage0_speech_formant_anchor_candidate_v2",
+  "source": "post_envelope_v5_pivot_stronger_formant_structure_morph_with_f0_harmonic_lock",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "voiced_explicit_formant_structure_probe_v2"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_formant_libritts_feminine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_formant_anchor_probe_v2",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_formant_anchor_v2",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 84,
+      "method_family": "voiced_formant_anchor_morph",
+      "method_params": {
+        "anchor_ranges_hz": [
+          [260.0, 950.0],
+          [950.0, 2500.0],
+          [2500.0, 4200.0]
+        ],
+        "shift_ratio": 1.18,
+        "boost_db": 4.8,
+        "cut_db": -2.6,
+        "width_oct": 0.65,
+        "blend": 1.00,
+        "voiced_rms_gate_db": 36.0,
+        "smooth_bins": 31,
+        "max_total_gain_db": 7.0
+      },
+      "notes": "v2: feminine 侧使用三锚点局部共鸣上移，明显强于 v1，但仍保留原始相位与谐波细节，不做整体 envelope 拉伸。"
+    },
+    {
+      "rule_id": "stage0_speech_formant_vctk_feminine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_formant_anchor_probe_v2",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_formant_anchor_v2",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 83,
+      "method_family": "voiced_formant_anchor_morph",
+      "method_params": {
+        "anchor_ranges_hz": [
+          [280.0, 1050.0],
+          [1050.0, 2700.0],
+          [2700.0, 4400.0]
+        ],
+        "shift_ratio": 1.15,
+        "boost_db": 4.2,
+        "cut_db": -2.3,
+        "width_oct": 0.68,
+        "blend": 0.97,
+        "voiced_rms_gate_db": 36.0,
+        "smooth_bins": 31,
+        "max_total_gain_db": 6.4
+      },
+      "notes": "v2: VCTK feminine 侧同步改成三锚点上移，但略收一档，避免直接滑向尖锐感。"
+    },
+    {
+      "rule_id": "stage0_speech_formant_libritts_masculine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_formant_anchor_probe_v2",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_formant_anchor_v2",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 84,
+      "method_family": "voiced_formant_anchor_morph",
+      "method_params": {
+        "anchor_ranges_hz": [
+          [260.0, 950.0],
+          [950.0, 2500.0],
+          [2500.0, 4200.0]
+        ],
+        "shift_ratio": 0.86,
+        "boost_db": 4.6,
+        "cut_db": -2.4,
+        "width_oct": 0.67,
+        "blend": 1.00,
+        "voiced_rms_gate_db": 36.0,
+        "smooth_bins": 31,
+        "max_total_gain_db": 7.0
+      },
+      "notes": "v2: masculine 侧改成更显式的三锚点下移，目标是增加胸腔/咽腔感，而不是把整体音调感拉低。"
+    },
+    {
+      "rule_id": "stage0_speech_formant_vctk_masculine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_formant_anchor_probe_v2",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_formant_anchor_v2",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 83,
+      "method_family": "voiced_formant_anchor_morph",
+      "method_params": {
+        "anchor_ranges_hz": [
+          [280.0, 1050.0],
+          [1050.0, 2700.0],
+          [2700.0, 4400.0]
+        ],
+        "shift_ratio": 0.89,
+        "boost_db": 4.0,
+        "cut_db": -2.1,
+        "width_oct": 0.70,
+        "blend": 0.97,
+        "voiced_rms_gate_db": 36.0,
+        "smooth_bins": 31,
+        "max_total_gain_db": 6.4
+      },
+      "notes": "v2: VCTK masculine 侧同步加强，但保留略宽带宽，减少机械尖峰感。"
+    }
+  ]
+}

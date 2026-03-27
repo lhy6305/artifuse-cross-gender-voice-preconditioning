@@ -160,9 +160,18 @@ def write_summary(path: Path, rows: list[dict[str, str]]) -> None:
         writer.writerows(rows)
 
 
-def write_readme(path: Path, rows: list[dict[str, str]]) -> None:
+def write_readme(path: Path, rows: list[dict[str, str]], *, rule_config_path: Path) -> None:
+    pack_dir = path.parent
+    pack_version = pack_dir.name
+    try:
+        rule_config_rel = rule_config_path.relative_to(ROOT).as_posix()
+    except ValueError:
+        rule_config_rel = str(rule_config_path)
+    summary_rel = (pack_dir / "listening_pack_summary.csv").relative_to(ROOT).as_posix()
+    queue_rel = (pack_dir / "listening_review_queue.csv").relative_to(ROOT).as_posix()
+    summary_md_rel = (pack_dir / "listening_review_quant_summary.md").relative_to(ROOT).as_posix()
     lines = [
-        "# Stage0 Speech Formant Listening Pack v1",
+        f"# Stage0 Speech Formant Listening Pack {pack_version}",
         "",
         "- purpose: `voiced adaptive formant-anchor morph after resonance tilt null result`",
         f"- rows: `{len(rows)}`",
@@ -172,10 +181,10 @@ def write_readme(path: Path, rows: list[dict[str, str]]) -> None:
         "```powershell",
         ".\\python.exe .\\scripts\\build_stage0_speech_formant_listening_pack.py",
         ".\\python.exe .\\scripts\\build_stage0_rule_review_queue.py `",
-        "  --rule-config experiments/stage0_baseline/v1_full/speech_formant_anchor_candidate_v1.json `",
-        "  --summary-csv tmp/stage0_speech_formant_listening_pack/v1/listening_pack_summary.csv `",
-        "  --output-csv tmp/stage0_speech_formant_listening_pack/v1/listening_review_queue.csv `",
-        "  --summary-md tmp/stage0_speech_formant_listening_pack/v1/listening_review_quant_summary.md",
+        f"  --rule-config {rule_config_rel} `",
+        f"  --summary-csv {summary_rel} `",
+        f"  --output-csv {queue_rel} `",
+        f"  --summary-md {summary_md_rel}",
         "```",
         "",
     ]
@@ -184,7 +193,8 @@ def write_readme(path: Path, rows: list[dict[str, str]]) -> None:
 
 def main() -> None:
     args = parse_args()
-    rule_config = load_json(resolve_path(args.rule_config))
+    rule_config_path = resolve_path(args.rule_config)
+    rule_config = load_json(rule_config_path)
     rule_lookup = build_rule_lookup(rule_config)
     selected_rows = select_rows(load_source_rows(resolve_path(args.input_csv)), samples_per_cell=args.samples_per_cell)
     output_dir = resolve_path(args.output_dir)
@@ -251,7 +261,7 @@ def main() -> None:
 
     summary_path = output_dir / "listening_pack_summary.csv"
     write_summary(summary_path, summary_rows)
-    write_readme(output_dir / "README.md", summary_rows)
+    write_readme(output_dir / "README.md", summary_rows, rule_config_path=rule_config_path)
     print(f"Wrote {summary_path}")
     print(f"Selected rows: {len(summary_rows)}")
     print(f"Output dir: {output_dir}")

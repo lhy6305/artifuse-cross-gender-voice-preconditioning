@@ -53,6 +53,7 @@
 - 已有 envelope warp 听审反馈与 resonance tilt pivot 说明：`docs/28_stage0_envelope_warp_feedback_and_resonance_tilt_pivot_v1.md`
 - 已有 speech formant anchor 原型与 GUI 入口：`scripts/build_stage0_speech_formant_listening_pack.py`、`scripts/open_stage0_speech_formant_review_gui.ps1`、`scripts/open_stage0_speech_formant_review_gui.cmd`
 - 已有 resonance tilt 听审反馈与 formant anchor pivot 说明：`docs/29_stage0_resonance_tilt_feedback_and_formant_anchor_pivot_v1.md`
+- 已有 post-envelope/world 的新 formant-aware pivot 说明：`docs/35_stage0_post_envelope_world_formant_pivot_v1.md`
 - 已有阶段 0 轻量前置修正 phase gate 文档：`docs/30_stage0_lightweight_preconditioning_phase_gate_v1.md`
 - 已有 speech source-filter / vocal-tract morph 原型与 GUI 入口：`scripts/build_stage0_speech_vocal_tract_listening_pack.py`、`scripts/open_stage0_speech_vocal_tract_review_gui.ps1`、`scripts/open_stage0_speech_vocal_tract_review_gui.cmd`
 - 已有 source-filter / vocal-tract morph 说明：`docs/31_stage0_source_filter_vocal_tract_morph_v1.md`
@@ -169,6 +170,26 @@
     - `artifacts/listening_review/stage0_speech_envelope_listening_pack/v5/`
     - `artifacts/listening_review/stage0_speech_world_stft_delta_listening_pack/v4/`
 - 当前阶段自动量化里的 `direction` 指标只保留为弱参考；主观听审已优先于该指标，特别是在 `envelope / world_stft_delta` 两条线上。
+- `stage0_speech_envelope_listening_pack/v5` 听审后已确认：
+  - `5/8 audible_yes`
+  - `0/8 audible_maybe`
+  - `3/8 audible_no`
+  - 主观方向已纠正回来，且整体几乎无明显伪影
+  - 但听感更接近“直接拉伸音调/音色重心”，关键共鸣结构改变仍不够强
+  - 因此这条线可保留为 `watch_with_risk`，但风险不再是伪影，而是“作用机理偏离目标”
+- `stage0_speech_world_stft_delta_listening_pack/v4` 听审后已确认：
+  - `4/8 audible_yes`
+  - `4/8 audible_maybe`
+  - `0/8 audible_no`
+  - 但伪影统计已显著升高：`artifact_yes=4`、`artifact_slight=4`
+  - 同时主观上性别改变程度仍不高
+  - 因此这条线当前应从 `watch` 下调为 `reject`
+- 到这一轮为止，主线判断已进一步收敛：
+  - `envelope warp` 证明“可通过较强整体音色/音调感变化影响性别感知”，但未击中核心共鸣目标
+  - `WORLD-guided STFT delta` 证明“继续加差分会先带来伪影，再带来有限收益”，不适合继续做主线
+- 因此当前已启动新的 `formant-aware` pivot：
+  - `artifacts/listening_review/stage0_speech_formant_listening_pack/v2/`
+  - 目标是更明确地搬动局部共鸣结构，同时继续锁住相位与 `f0` 主体感
 
 ## 近期任务
 1. 以 `scripts/build_listening_review_rollup.py` 为标准汇总入口，后续不再要求把稀疏标注手工补成满表。
@@ -183,6 +204,9 @@
    - `envelope warp v3`
    - `WORLD-guided STFT delta v2`
 6. 若 `v3 / v2` 仍只停留在 barely 可辨，则继续推进到更强的 `audibility stress test`，并在听审时不把轻微整体音色偏移直接记作伪影。
+7. 当前停止继续扩 `WORLD-guided STFT delta` 变体；后续若继续推进，只保留它作为被否定对照。
+8. 当前不再把 `envelope warp` 视为最终候选，而把它视为“可辨识上限参考”；下一步应转向更显式的共鸣/formant 结构修改，同时尽量锁住 `f0` 和谐波感。
+9. 当前优先完成 `stage0_speech_formant_listening_pack/v2` 的人工听审，再判断这条新 pivot 是否比 `envelope v5` 更接近真正目标机理。
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

@@ -8,16 +8,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review_rollup" / "v1"
-DEFAULT_INPUTS = [
-    ROOT / "artifacts" / "listening_review" / "stage0_speech_listening_pack" / "v1" / "listening_review_queue.csv",
-    ROOT / "artifacts" / "listening_review" / "stage0_speech_envelope_listening_pack" / "v1" / "listening_review_queue.csv",
-    ROOT / "artifacts" / "listening_review" / "stage0_speech_envelope_listening_pack" / "v2" / "listening_review_queue.csv",
-    ROOT / "artifacts" / "listening_review" / "stage0_speech_resonance_listening_pack" / "v1" / "listening_review_queue.csv",
-    ROOT / "artifacts" / "listening_review" / "stage0_speech_formant_listening_pack" / "v1" / "listening_review_queue.csv",
-    ROOT / "artifacts" / "listening_review" / "stage0_speech_vocal_tract_listening_pack" / "v1" / "listening_review_queue.csv",
-    ROOT / "artifacts" / "listening_review" / "stage0_speech_world_stft_delta_listening_pack" / "v1" / "listening_review_queue.csv",
-    ROOT / "artifacts" / "listening_review" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_review_queue.csv",
-]
+DEFAULT_LISTENING_REVIEW_ROOT = ROOT / "artifacts" / "listening_review"
+DEFAULT_STAGE1_ROOT = ROOT / "artifacts" / "stage1_rvc_cascade_eval"
 
 
 def parse_args() -> argparse.Namespace:
@@ -32,6 +24,15 @@ def resolve_path(value: str) -> Path:
     if path.is_absolute():
         return path
     return ROOT / path
+
+
+def discover_default_inputs() -> list[Path]:
+    paths: list[Path] = []
+    if DEFAULT_LISTENING_REVIEW_ROOT.exists():
+        paths.extend(sorted(DEFAULT_LISTENING_REVIEW_ROOT.rglob("listening_review_queue.csv")))
+    if DEFAULT_STAGE1_ROOT.exists():
+        paths.extend(sorted(DEFAULT_STAGE1_ROOT.rglob("rvc_cascade_review_queue.csv")))
+    return paths
 
 
 def read_rows(path: Path) -> list[dict[str, str]]:
@@ -259,7 +260,7 @@ def build_summary_markdown(pack_rows: list[dict[str, str]]) -> str:
 def main() -> None:
     args = parse_args()
     output_dir = resolve_path(args.output_dir)
-    input_paths = [resolve_path(value) for value in args.input_csv] if args.input_csv else DEFAULT_INPUTS
+    input_paths = [resolve_path(value) for value in args.input_csv] if args.input_csv else discover_default_inputs()
     existing_paths = [path for path in input_paths if path.exists()]
     if not existing_paths:
         raise FileNotFoundError("No review queues found.")
