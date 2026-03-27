@@ -1,0 +1,179 @@
+{
+  "config_version": "stage0_speech_vtl_warping_candidate_v2",
+  "source": "representation_layer_vtl_v2_fix_localized_audibility_and_double_voice_after_subjective_review",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "vtl_warping_probe_v2_targeted_fix"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_vtl_libritts_feminine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_vtl_warping_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_vtl_v2",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "vtl_warped_world_envelope_stft",
+      "method_params": {
+        "warp_ratio": 1.18,
+        "blend": 0.94,
+        "wet_mix": 1.0,
+        "max_gain_db": 5.6,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 6,
+        "freq_smooth_bins": 11,
+        "active_until_hz": 4800.0,
+        "taper_end_hz": 7000.0,
+        "preserve_band_energy": true,
+        "energy_rebalance_ratio": 0.55
+      },
+      "notes": "VTL v2：去掉干湿叠加，放宽 tract band 并改为部分带内回平，优先消掉双声感和局部低f0才可辨的问题。"
+    },
+    {
+      "rule_id": "stage0_speech_vtl_vctk_feminine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_vtl_warping_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_vtl_v2",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "vtl_warped_world_envelope_stft",
+      "method_params": {
+        "warp_ratio": 1.14,
+        "blend": 0.90,
+        "wet_mix": 1.0,
+        "max_gain_db": 5.2,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 6,
+        "freq_smooth_bins": 11,
+        "active_until_hz": 5000.0,
+        "taper_end_hz": 7400.0,
+        "preserve_band_energy": true,
+        "energy_rebalance_ratio": 0.50
+      },
+      "notes": "VTL v2：VCTK feminine 侧保持保守 warp，但同样切到 full wet + 更平滑的 tract band。"
+    },
+    {
+      "rule_id": "stage0_speech_vtl_libritts_masculine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_vtl_warping_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_vtl_v2",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "vtl_warped_world_envelope_stft",
+      "method_params": {
+        "warp_ratio": 0.86,
+        "blend": 0.94,
+        "wet_mix": 1.0,
+        "max_gain_db": 5.6,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 6,
+        "freq_smooth_bins": 11,
+        "active_until_hz": 4800.0,
+        "taper_end_hz": 7000.0,
+        "preserve_band_energy": true,
+        "energy_rebalance_ratio": 0.55
+      },
+      "notes": "VTL v2：LibriTTS masculine 侧优先消掉 dry/wet 叠加导致的双声感，再观察瓶中感是否减轻。"
+    },
+    {
+      "rule_id": "stage0_speech_vtl_vctk_masculine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_vtl_warping_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_vtl_v2",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "vtl_warped_world_envelope_stft",
+      "method_params": {
+        "warp_ratio": 0.89,
+        "blend": 0.90,
+        "wet_mix": 1.0,
+        "max_gain_db": 5.2,
+        "sp_floor_db": -65.0,
+        "f0_floor_hz": 71.0,
+        "f0_ceil_hz": 800.0,
+        "frame_period_ms": 5.0,
+        "voiced_smooth_frames": 6,
+        "freq_smooth_bins": 11,
+        "active_until_hz": 5000.0,
+        "taper_end_hz": 7400.0,
+        "preserve_band_energy": true,
+        "energy_rebalance_ratio": 0.50
+      },
+      "notes": "VTL v2：VCTK masculine 侧继续保守，但把频段覆盖和时间平滑拉齐，优先提高整段一致性。"
+    }
+  ]
+}

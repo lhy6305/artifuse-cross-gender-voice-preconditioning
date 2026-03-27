@@ -9,6 +9,17 @@
 
 ## Pack Summary
 
+### `stage0_speech_cepstral_listening_pack/v1`
+
+- reviewed: `8/8`
+- audible: `yes=1` `maybe=4` `no=3`
+- direction: `yes=0` `maybe=4` `no=0` `n/a=4`
+- artifact: `yes=0` `slight=3` `no=1` `n/a=4`
+- keep: `yes=1` `maybe=0` `no=0` `n/a=7`
+- strength: `ok=0` `too_weak=4` `too_strong=0` `n/a=4`
+- proposed disposition: `watch_with_risk`
+- implicit fills from audible=yes: `direction_yes=0` `artifact_no=1` `strength_ok=0` `keep_yes=1`
+
 ### `stage0_speech_envelope_listening_pack/v3`
 
 - reviewed: `8/8`
@@ -74,6 +85,28 @@
 - strength: `ok=0` `too_weak=0` `too_strong=0` `n/a=8`
 - proposed disposition: `null_result`
 - implicit fills from audible=yes: `direction_yes=0` `artifact_no=0` `strength_ok=0` `keep_yes=0`
+
+### `stage0_speech_lpc_listening_pack/v1`
+
+- reviewed: `8/8`
+- audible: `yes=0` `maybe=4` `no=4`
+- direction: `yes=0` `maybe=2` `no=0` `n/a=6`
+- artifact: `yes=0` `slight=0` `no=0` `n/a=8`
+- keep: `yes=0` `maybe=0` `no=0` `n/a=8`
+- strength: `ok=0` `too_weak=8` `too_strong=0` `n/a=0`
+- proposed disposition: `watch`
+- implicit fills from audible=yes: `direction_yes=0` `artifact_no=0` `strength_ok=0` `keep_yes=0`
+
+### `stage0_speech_lpc_listening_pack/v2`
+
+- reviewed: `8/8`
+- audible: `yes=5` `maybe=2` `no=1`
+- direction: `yes=0` `maybe=5` `no=0` `n/a=3`
+- artifact: `yes=1` `slight=5` `no=0` `n/a=2`
+- keep: `yes=0` `maybe=0` `no=0` `n/a=8`
+- strength: `ok=5` `too_weak=0` `too_strong=0` `n/a=3`
+- proposed disposition: `reject`
+- implicit fills from audible=yes: `direction_yes=0` `artifact_no=0` `strength_ok=5` `keep_yes=0`
 
 ### `stage0_speech_resonance_listening_pack/v1`
 

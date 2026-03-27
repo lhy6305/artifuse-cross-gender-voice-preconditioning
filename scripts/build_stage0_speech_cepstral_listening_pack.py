@@ -4,29 +4,35 @@ import argparse
 import csv
 import json
 import math
+from collections import defaultdict
 from pathlib import Path
 
 import librosa
 import numpy as np
-import scipy.signal
+import scipy.fft
 
 from apply_stage0_rule_preconditioner import load_audio, resolve_path, save_audio
 from build_stage0_speech_listening_pack import TARGET_DIRECTION_BY_SOURCE_GENDER, load_source_rows, select_rows
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_lpc_resonance_candidate_v1.json"
+DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_cepstral_envelope_candidate_v1.json"
 DEFAULT_INPUT_CSV = ROOT / "experiments" / "fixed_eval" / "v1_2" / "fixed_eval_review_final_v1_2.csv"
-DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage0_speech_lpc_listening_pack" / "v1"
+DEFAULT_REFERENCE_CSV = ROOT / "data" / "datasets" / "_meta" / "utterance_manifest_clean_speech_v1.csv"
+DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage0_speech_cepstral_listening_pack" / "v1"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--rule-config", default=str(DEFAULT_RULE_CONFIG))
     parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
+    parser.add_argument("--reference-csv", default=str(DEFAULT_REFERENCE_CSV))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     parser.add_argument("--samples-per-cell", type=int, default=2)
+    parser.add_argument("--reference-samples-per-cell", type=int, default=24)
     parser.add_argument("--audio-format", choices=["wav", "flac"], default="wav")
+    parser.add_argument("--n-fft", type=int, default=2048)
+    parser.add_argument("--hop-length", type=int, default=256)
     parser.add_argument("--peak-limit", type=float, default=0.98)
     parser.add_argument("--world-sr", type=int, default=16000)
     parser.add_argument("--frame-period-ms", type=float, default=10.0)
@@ -45,6 +51,10 @@ def build_rule_lookup(rule_config: dict) -> dict[tuple[str, str], dict]:
     }
 
 
+def safe_rms(audio: np.ndarray) -> float:
+    return float(np.sqrt(np.mean(np.square(audio.astype(np.float64))))) if audio.size else 0.0
+
+
 def analyze_f0(audio: np.ndarray, sample_rate: int, world_sr: int, frame_period_ms: float) -> tuple[np.ndarray, np.ndarray]:
     if sample_rate != world_sr:
         audio_world = librosa.resample(audio.astype(np.float32), orig_sr=sample_rate, target_sr=world_sr).astype(np.float64)
@@ -57,8 +67,8 @@ def analyze_f0(audio: np.ndarray, sample_rate: int, world_sr: int, frame_period_
     return f0, time_axis
 
 
-def frame_centers_sec(frame_count: int, frame_length: int, hop_length: int, sample_rate: int) -> np.ndarray:
-    return (np.arange(frame_count, dtype=np.float64) * hop_length + frame_length / 2.0) / sample_rate
+def stft_frame_centers_sec(frame_count: int, n_fft: int, hop_length: int, sample_rate: int) -> np.ndarray:
+    return (np.arange(frame_count, dtype=np.float64) * hop_length + n_fft / 2.0) / sample_rate
 
 
 def interpolate_voiced_mask(frame_times_sec: np.ndarray, world_times_sec: np.ndarray, f0: np.ndarray) -> np.ndarray:
@@ -71,183 +81,144 @@ def interpolate_voiced_mask(frame_times_sec: np.ndarray, world_times_sec: np.nda
     return np.clip(interpolated.astype(np.float32), 0.0, 1.0)
 
 
-def safe_rms(audio: np.ndarray) -> float:
-    return float(np.sqrt(np.mean(np.square(audio.astype(np.float64))))) if audio.size else 0.0
-
-
-def stable_lpc(frame: np.ndarray, order: int) -> np.ndarray | None:
-    try:
-        coeffs = librosa.lpc(frame.astype(np.float64), order=order)
-    except Exception:
-        return None
-    coeffs = np.asarray(coeffs, dtype=np.float64)
-    if not np.all(np.isfinite(coeffs)):
-        return None
-    roots = np.roots(coeffs)
-    if roots.size == 0:
-        return None
-    clipped_roots = []
-    for root in roots:
-        radius = abs(root)
-        angle = np.angle(root)
-        if radius >= 0.995:
-            radius = 0.995
-        clipped_roots.append(radius * np.exp(1j * angle))
-    stabilized = np.poly(np.array(clipped_roots, dtype=np.complex128)).real.astype(np.float64)
-    if abs(stabilized[0]) <= 1e-8:
-        return None
-    stabilized = stabilized / stabilized[0]
-    return stabilized
-
-
-def select_positive_roots(roots: np.ndarray) -> list[tuple[int, float, float]]:
-    selected: list[tuple[int, float, float]] = []
-    for idx, root in enumerate(roots):
-        if np.imag(root) <= 1e-6:
+def read_reference_rows(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    output: list[dict[str, str]] = []
+    for row in rows:
+        if row.get("domain") != "speech":
             continue
-        selected.append((idx, abs(root), float(np.angle(root))))
-    selected.sort(key=lambda item: item[2])
+        if row.get("gender") not in {"female", "male"}:
+            continue
+        if not row.get("path_raw"):
+            continue
+        output.append(row)
+    return output
+
+
+def select_reference_rows(rows: list[dict[str, str]], samples_per_cell: int) -> list[dict[str, str]]:
+    grouped: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
+    for row in rows:
+        grouped[(row["dataset_name"], row["gender"])].append(row)
+    selected: list[dict[str, str]] = []
+    for key in sorted(grouped):
+        group_rows = sorted(grouped[key], key=lambda row: row.get("utt_id", ""))
+        if samples_per_cell > 0:
+            selected.extend(group_rows[:samples_per_cell])
+        else:
+            selected.extend(group_rows)
     return selected
 
 
-def find_conjugate_index(roots: np.ndarray, target_idx: int) -> int | None:
-    target = np.conjugate(roots[target_idx])
-    best_idx = None
-    best_dist = float("inf")
-    for idx, root in enumerate(roots):
-        if idx == target_idx:
-            continue
-        dist = abs(root - target)
-        if dist < best_dist:
-            best_dist = dist
-            best_idx = idx
-    return best_idx if best_dist < 1e-3 else None
-
-
-def edit_lpc_roots(
-    coeffs: np.ndarray,
-    *,
-    sample_rate: int,
-    search_ranges_hz: list[list[float]],
-    shift_ratios: list[float],
-) -> np.ndarray | None:
-    roots = np.roots(coeffs)
-    if roots.size == 0:
-        return None
-    edited = roots.astype(np.complex128).copy()
-    positive_roots = select_positive_roots(roots)
-    nyquist_hz = sample_rate / 2.0
-
-    for search_range_hz, shift_ratio in zip(search_ranges_hz, shift_ratios):
-        low_hz, high_hz = float(search_range_hz[0]), float(search_range_hz[1])
-        candidate = None
-        for idx, radius, angle in positive_roots:
-            freq_hz = angle * sample_rate / (2.0 * math.pi)
-            if low_hz <= freq_hz <= high_hz:
-                candidate = (idx, radius, angle, freq_hz)
-                break
-        if candidate is None:
-            continue
-        idx, radius, angle, freq_hz = candidate
-        target_hz = min(max(freq_hz * float(shift_ratio), low_hz), min(high_hz * 1.35, nyquist_hz * 0.94))
-        target_angle = target_hz * 2.0 * math.pi / sample_rate
-        edited[idx] = radius * np.exp(1j * target_angle)
-        conj_idx = find_conjugate_index(roots, idx)
-        if conj_idx is not None:
-            edited[conj_idx] = np.conjugate(edited[idx])
-
-    new_coeffs = np.poly(edited).real.astype(np.float64)
-    if abs(new_coeffs[0]) <= 1e-8:
-        return None
-    new_coeffs = new_coeffs / new_coeffs[0]
-    new_roots = np.roots(new_coeffs)
-    if np.any(np.abs(new_roots) >= 0.999):
-        clipped = []
-        for root in new_roots:
-            radius = min(abs(root), 0.995)
-            clipped.append(radius * np.exp(1j * np.angle(root)))
-        new_coeffs = np.poly(np.array(clipped, dtype=np.complex128)).real.astype(np.float64)
-        new_coeffs = new_coeffs / new_coeffs[0]
-    return new_coeffs
-
-
-def overlap_add(frames: list[np.ndarray], frame_length: int, hop_length: int, output_length: int) -> np.ndarray:
-    if not frames:
-        return np.zeros(output_length, dtype=np.float32)
-    total_length = max(output_length, (len(frames) - 1) * hop_length + frame_length)
-    output = np.zeros(total_length, dtype=np.float64)
-    weight = np.zeros(total_length, dtype=np.float64)
-    # The reconstructed frames are full-amplitude time-domain frames, not
-    # analysis-windowed STFT slices. Use a standard synthesis window and
-    # normalize by the accumulated window, otherwise the signal is
-    # systematically attenuated and can develop edge spikes.
-    window = np.hanning(frame_length).astype(np.float64)
-    for frame_idx, frame in enumerate(frames):
-        start = frame_idx * hop_length
-        output[start : start + frame_length] += frame.astype(np.float64) * window
-        weight[start : start + frame_length] += window
-    output = output / np.maximum(weight, 1e-8)
-    return output[:output_length].astype(np.float32)
-
-
-def apply_lpc_resonance_shift(
+def extract_cepstral_centroid(
     audio: np.ndarray,
     *,
     sample_rate: int,
+    n_fft: int,
+    hop_length: int,
+    keep_coeffs: int,
+    world_sr: int,
+    frame_period_ms: float,
+) -> np.ndarray | None:
+    stft = librosa.stft(audio.astype(np.float32), n_fft=n_fft, hop_length=hop_length)
+    magnitude = np.abs(stft).astype(np.float32)
+    if magnitude.size == 0:
+        return None
+    log_mag = np.log(np.maximum(magnitude, 1e-7))
+    cep = scipy.fft.dct(log_mag, type=2, axis=0, norm="ortho")
+    f0, world_times_sec = analyze_f0(audio, sample_rate, world_sr, frame_period_ms)
+    frame_times_sec = stft_frame_centers_sec(cep.shape[1], n_fft, hop_length, sample_rate)
+    voiced_mask = interpolate_voiced_mask(frame_times_sec, world_times_sec, f0)
+    voiced_frames = cep[1 : 1 + keep_coeffs, voiced_mask >= 0.5]
+    if voiced_frames.size == 0:
+        return None
+    return np.mean(voiced_frames, axis=1).astype(np.float32)
+
+
+def build_reference_delta_lookup(
+    reference_rows: list[dict[str, str]],
+    *,
+    n_fft: int,
+    hop_length: int,
+    keep_coeffs: int,
+    world_sr: int,
+    frame_period_ms: float,
+) -> dict[tuple[str, str], np.ndarray]:
+    centroids_by_group: dict[tuple[str, str], list[np.ndarray]] = defaultdict(list)
+    for row in reference_rows:
+        audio, sample_rate = load_audio(resolve_path(row["path_raw"]))
+        centroid = extract_cepstral_centroid(
+            audio,
+            sample_rate=sample_rate,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            keep_coeffs=keep_coeffs,
+            world_sr=world_sr,
+            frame_period_ms=frame_period_ms,
+        )
+        if centroid is None:
+            continue
+        centroids_by_group[(row["dataset_name"], row["gender"])].append(centroid)
+
+    output: dict[tuple[str, str], np.ndarray] = {}
+    for dataset_name in sorted({key[0] for key in centroids_by_group}):
+        female_vectors = centroids_by_group.get((dataset_name, "female"), [])
+        male_vectors = centroids_by_group.get((dataset_name, "male"), [])
+        if not female_vectors or not male_vectors:
+            continue
+        female_mean = np.mean(np.stack(female_vectors, axis=0), axis=0)
+        male_mean = np.mean(np.stack(male_vectors, axis=0), axis=0)
+        output[(dataset_name, "feminine")] = (female_mean - male_mean).astype(np.float32)
+        output[(dataset_name, "masculine")] = (male_mean - female_mean).astype(np.float32)
+    return output
+
+
+def apply_cepstral_envelope_shift(
+    audio: np.ndarray,
+    *,
+    sample_rate: int,
+    n_fft: int,
+    hop_length: int,
     peak_limit: float,
     world_sr: int,
     frame_period_ms: float,
-    frame_length: int,
-    hop_length: int,
-    lpc_order: int,
-    search_ranges_hz: list[list[float]],
-    shift_ratios: list[float],
+    cepstral_delta: np.ndarray,
+    keep_coeffs: int,
+    delta_scale: float,
     blend: float,
+    max_envelope_gain_db: float,
 ) -> np.ndarray:
-    if audio.size < frame_length:
-        padded = np.pad(audio.astype(np.float32), (0, frame_length - int(audio.size)))
-    else:
-        padded = audio.astype(np.float32)
-    frames = librosa.util.frame(padded, frame_length=frame_length, hop_length=hop_length).T
+    stft = librosa.stft(audio.astype(np.float32), n_fft=n_fft, hop_length=hop_length)
+    magnitude = np.abs(stft).astype(np.float32)
+    phase = np.angle(stft)
+    if magnitude.size == 0:
+        return audio.astype(np.float32)
+
+    log_mag = np.log(np.maximum(magnitude, 1e-7))
+    cep = scipy.fft.dct(log_mag, type=2, axis=0, norm="ortho")
     f0, world_times_sec = analyze_f0(audio, sample_rate, world_sr, frame_period_ms)
-    frame_times = frame_centers_sec(frames.shape[0], frame_length, hop_length, sample_rate)
-    voiced_mask = interpolate_voiced_mask(frame_times, world_times_sec, f0)
+    frame_times_sec = stft_frame_centers_sec(cep.shape[1], n_fft, hop_length, sample_rate)
+    voiced_mask = interpolate_voiced_mask(frame_times_sec, world_times_sec, f0)
 
-    analysis_window = np.hanning(frame_length).astype(np.float32)
-    out_frames: list[np.ndarray] = []
-    for frame, voiced_value in zip(frames, voiced_mask, strict=False):
-        if voiced_value < 0.5:
-            out_frames.append(frame.astype(np.float32))
-            continue
-        frame_for_analysis = frame.astype(np.float32) * analysis_window
-        coeffs = stable_lpc(frame_for_analysis, lpc_order)
-        if coeffs is None:
-            out_frames.append(frame.astype(np.float32))
-            continue
-        edited_coeffs = edit_lpc_roots(
-            coeffs,
-            sample_rate=sample_rate,
-            search_ranges_hz=search_ranges_hz,
-            shift_ratios=shift_ratios,
-        )
-        if edited_coeffs is None:
-            out_frames.append(frame.astype(np.float32))
-            continue
+    output_cep = np.array(cep, dtype=np.float32, copy=True)
+    coeff_count = min(int(keep_coeffs), int(cepstral_delta.shape[0]), int(output_cep.shape[0] - 1))
+    if coeff_count <= 0:
+        return audio.astype(np.float32)
 
-        residual = scipy.signal.lfilter(coeffs, [1.0], frame.astype(np.float64))
-        synthesized = scipy.signal.lfilter([1.0], edited_coeffs, residual).astype(np.float32)
-        synth_rms = safe_rms(synthesized)
-        frame_rms = safe_rms(frame)
-        if synth_rms > 1e-8 and frame_rms > 1e-8:
-            synthesized = synthesized * (frame_rms / synth_rms)
-        blended = (1.0 - blend) * frame.astype(np.float32) + blend * synthesized
-        out_frames.append(blended.astype(np.float32))
+    output_cep[1 : 1 + coeff_count, :] += (
+        float(delta_scale) * cepstral_delta[:coeff_count, None] * voiced_mask[None, :]
+    )
+    modified_log_mag = scipy.fft.idct(output_cep, type=2, axis=0, norm="ortho").astype(np.float32)
+    max_delta_ln = max_envelope_gain_db / 20.0 * math.log(10.0)
+    delta_log_mag = np.clip(modified_log_mag - log_mag, -max_delta_ln, max_delta_ln)
+    adjusted_mag = magnitude * np.exp(float(blend) * delta_log_mag)
+    out = librosa.istft(adjusted_mag * np.exp(1j * phase), hop_length=hop_length, length=len(audio))
 
-    out = overlap_add(out_frames, frame_length, hop_length, len(audio))
     in_rms = safe_rms(audio)
     out_rms = safe_rms(out)
     if in_rms > 1e-8 and out_rms > 1e-8:
         out = out * (in_rms / out_rms)
+
     peak = float(np.max(np.abs(out))) if out.size else 0.0
     if peak > peak_limit and peak > 0:
         out = out * (peak_limit / peak)
@@ -297,15 +268,15 @@ def write_readme(path: Path, rows: list[dict[str, str]], *, rule_config_path: Pa
     queue_rel = (pack_dir / "listening_review_queue.csv").relative_to(ROOT).as_posix()
     summary_md_rel = (pack_dir / "listening_review_quant_summary.md").relative_to(ROOT).as_posix()
     lines = [
-        f"# Stage0 Speech LPC Listening Pack {pack_version}",
+        f"# Stage0 Speech Cepstral Listening Pack {pack_version}",
         "",
-        "- purpose: `lpc residual-preserving pole edit probe after representation-layer pivot`",
+        "- purpose: `low-order cepstral envelope edit probe after LPC pole-edit rejection`",
         f"- rows: `{len(rows)}`",
         "",
         "## Rebuild",
         "",
         "```powershell",
-        ".\\python.exe .\\scripts\\build_stage0_speech_lpc_listening_pack.py",
+        ".\\python.exe .\\scripts\\build_stage0_speech_cepstral_listening_pack.py",
         ".\\python.exe .\\scripts\\build_stage0_rule_review_queue.py `",
         f"  --rule-config {rule_config_rel} `",
         f"  --summary-csv {summary_rel} `",
@@ -323,6 +294,21 @@ def main() -> None:
     rule_config = load_json(rule_config_path)
     rule_lookup = build_rule_lookup(rule_config)
     selected_rows = select_rows(load_source_rows(resolve_path(args.input_csv)), samples_per_cell=args.samples_per_cell)
+
+    reference_rows = select_reference_rows(
+        read_reference_rows(resolve_path(args.reference_csv)),
+        samples_per_cell=args.reference_samples_per_cell,
+    )
+    max_keep_coeffs = max(int(rule["method_params"]["keep_coeffs"]) for rule in rule_config["rules"] if rule.get("enabled", False))
+    reference_delta_lookup = build_reference_delta_lookup(
+        reference_rows,
+        n_fft=args.n_fft,
+        hop_length=args.hop_length,
+        keep_coeffs=max_keep_coeffs,
+        world_sr=args.world_sr,
+        frame_period_ms=args.frame_period_ms,
+    )
+
     output_dir = resolve_path(args.output_dir)
     originals_dir = output_dir / "original"
     processed_dir = output_dir / "processed"
@@ -332,26 +318,31 @@ def main() -> None:
         target_direction = TARGET_DIRECTION_BY_SOURCE_GENDER[row["gender"]]
         rule = rule_lookup[(row["dataset_name"], target_direction)]
         params = rule["method_params"]
+        cepstral_delta = reference_delta_lookup.get((row["dataset_name"], target_direction))
+        if cepstral_delta is None:
+            raise ValueError(f"Missing cepstral reference delta for {(row['dataset_name'], target_direction)}")
+
         input_audio = resolve_path(row["path_raw"])
         dataset_slug = "libritts_r" if row["dataset_name"] == "LibriTTS-R" else "vctk"
-        stem = f"{dataset_slug}__{row['gender']}__{target_direction}__lpc__{row['utt_id']}"
+        stem = f"{dataset_slug}__{row['gender']}__{target_direction}__cep__{row['utt_id']}"
         original_copy = originals_dir / f"{stem}.{args.audio_format}"
         processed_audio = processed_dir / f"{stem}.{args.audio_format}"
 
         audio, sample_rate = load_audio(input_audio)
         save_audio(original_copy, audio, sample_rate)
-        out = apply_lpc_resonance_shift(
+        out = apply_cepstral_envelope_shift(
             audio,
             sample_rate=sample_rate,
+            n_fft=args.n_fft,
+            hop_length=args.hop_length,
             peak_limit=args.peak_limit,
             world_sr=args.world_sr,
             frame_period_ms=args.frame_period_ms,
-            frame_length=int(params["frame_length"]),
-            hop_length=int(params["hop_length"]),
-            lpc_order=int(params["lpc_order"]),
-            search_ranges_hz=params["search_ranges_hz"],
-            shift_ratios=[float(value) for value in params["shift_ratios"]],
+            cepstral_delta=cepstral_delta,
+            keep_coeffs=int(params["keep_coeffs"]),
+            delta_scale=float(params["delta_scale"]),
             blend=float(params["blend"]),
+            max_envelope_gain_db=float(params["max_envelope_gain_db"]),
         )
         save_audio(processed_audio, out, sample_rate)
 
@@ -386,6 +377,7 @@ def main() -> None:
     write_summary(summary_path, summary_rows)
     write_readme(output_dir / "README.md", summary_rows, rule_config_path=rule_config_path)
     print(f"Wrote {summary_path}")
+    print(f"Reference rows: {len(reference_rows)}")
     print(f"Selected rows: {len(summary_rows)}")
     print(f"Output dir: {output_dir}")
 

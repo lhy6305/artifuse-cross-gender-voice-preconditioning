@@ -6,6 +6,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+import librosa
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
@@ -74,8 +75,9 @@ RUBRIC_TEXT = """主观听审口径
 建议流程：
 1. 先听源音频
 2. 再听修正后音频
-3. 必要时反复 A/B
-4. 最后写主观判断
+3. 若怀疑音调偏移影响判断，可试听“处理音(F0对齐原音)”
+4. 必要时反复 A/B
+5. 最后写主观判断
 """
 
 
@@ -103,6 +105,15 @@ ISSUE_VALUES = invert_mapping(ISSUE_LABELS)
 STRENGTH_VALUES = invert_mapping(STRENGTH_LABELS)
 
 
+def parse_float(value: str | float | int | None) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 class ReviewApp:
     def __init__(self, root: tk.Tk, csv_path: Path) -> None:
         self.root = root
@@ -113,6 +124,7 @@ class ReviewApp:
 
         self.current_audio: np.ndarray | None = None
         self.current_sr: int | None = None
+        self.aligned_audio_cache: dict[tuple[str, int], tuple[np.ndarray, int]] = {}
 
         self.status_text = tk.StringVar()
         self.identity_text = tk.StringVar()
@@ -128,11 +140,10 @@ class ReviewApp:
         self.artifact_issue_var = tk.StringVar()
         self.strength_fit_var = tk.StringVar()
         self.keep_recommendation_var = tk.StringVar()
-        self.normalize_peak_var = tk.BooleanVar(value=True)
-        self.volume_scale_var = tk.DoubleVar(value=1.0)
+        self.normalize_peak_var = tk.BooleanVar(value=False)
+        self.volume_scale_var = tk.DoubleVar(value=0.7)
 
         self.build_ui()
-        self.bind_shortcuts()
         self.refresh_row_list()
         self.select_index(self.index, force=True)
 
@@ -174,8 +185,10 @@ class ReviewApp:
         self.listbox.configure(yscrollcommand=list_scrollbar.set)
         self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         list_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
-        self.listbox.bind("<<ListboxSelect>>", self.on_listbox_select)
-        self.listbox.bind("<Double-Button-1>", self.on_listbox_select)
+        self.listbox.bind("<Button-1>", self.on_listbox_button_press)
+        self.listbox.bind("<B1-Motion>", self.on_listbox_drag)
+        self.listbox.bind("<ButtonRelease-1>", self.on_listbox_button_release)
+        self.listbox.bind("<Double-Button-1>", self.on_listbox_double_click)
 
         canvas = tk.Canvas(right_frame, highlightthickness=0)
         detail_scrollbar = ttk.Scrollbar(right_frame, orient=tk.VERTICAL, command=canvas.yview)
@@ -206,6 +219,8 @@ class ReviewApp:
         self.original_button.pack(side=tk.LEFT, padx=(6, 0))
         self.processed_button = ttk.Button(playback_button_row, text="播放处理音", command=self.play_processed)
         self.processed_button.pack(side=tk.LEFT, padx=(6, 0))
+        self.aligned_button = ttk.Button(playback_button_row, text="播放处理音(F0对齐原音)", command=self.play_processed_f0_aligned)
+        self.aligned_button.pack(side=tk.LEFT, padx=(6, 0))
         self.baseline_button = ttk.Button(playback_button_row, text="播放raw->RVC", command=self.play_baseline)
         self.baseline_button.pack(side=tk.LEFT, padx=(6, 0))
         ttk.Button(playback_button_row, text="停止", command=self.stop_audio).pack(side=tk.LEFT, padx=(6, 0))
@@ -218,7 +233,7 @@ class ReviewApp:
         playback_control_row.pack(fill=tk.X, pady=(0, 10))
         ttk.Checkbutton(
             playback_control_row,
-            text="播放时按片段峰值归一化",
+            text="播放时按最大峰值归一化",
             variable=self.normalize_peak_var,
             command=self.update_playback_text,
         ).pack(side=tk.LEFT)
@@ -226,10 +241,10 @@ class ReviewApp:
         ttk.Scale(
             playback_control_row,
             from_=0.25,
-            to=2.0,
+            to=8.0,
             variable=self.volume_scale_var,
             orient=tk.HORIZONTAL,
-            length=220,
+            length=320,
             command=lambda _value: self.update_playback_text(),
         ).pack(side=tk.LEFT)
         ttk.Label(playback_control_row, textvariable=self.playback_text).pack(side=tk.LEFT, padx=(10, 0))
@@ -282,26 +297,13 @@ class ReviewApp:
         for option in values:
             ttk.Radiobutton(frame, text=label_map[option], value=label_map[option], variable=variable).pack(anchor="w")
 
-    def bind_shortcuts(self) -> None:
-        self.root.bind("e", lambda _event: self.play_source())
-        self.root.bind("q", lambda _event: self.play_original())
-        self.root.bind("w", lambda _event: self.play_processed())
-        self.root.bind("r", lambda _event: self.play_baseline())
-        self.root.bind("<space>", lambda _event: self.stop_audio())
-        self.root.bind("1", lambda _event: self.mark_keep())
-        self.root.bind("2", lambda _event: self.mark_maybe())
-        self.root.bind("3", lambda _event: self.mark_reject())
-        self.root.bind("<Control-s>", lambda _event: self.save_current_and_flush())
-        self.root.bind("<Up>", lambda _event: self.select_index(max(0, self.index - 1)))
-        self.root.bind("<Down>", lambda _event: self.select_index(min(len(self.rows) - 1, self.index + 1)))
-
     def current_row(self) -> dict[str, str]:
         return self.rows[self.index]
 
     def update_playback_text(self) -> None:
         normalize_text = "on" if self.normalize_peak_var.get() else "off"
         volume_percent = int(round(self.volume_scale_var.get() * 100.0))
-        self.playback_text.set(f"normalize={normalize_text} | volume={volume_percent}%")
+        self.playback_text.set(f"peak_norm={normalize_text} | volume={volume_percent}%")
 
     def format_row_label(self, row: dict[str, str]) -> str:
         status = REVIEW_STATUS_LABELS.get(row.get("review_status", "pending"), row.get("review_status", "pending"))
@@ -315,13 +317,35 @@ class ReviewApp:
         for row in self.rows:
             self.listbox.insert(tk.END, self.format_row_label(row))
 
-    def on_listbox_select(self, _event: tk.Event | None = None) -> None:
-        if self.selection_guard:
-            return
-        selection = self.listbox.curselection()
-        if not selection:
-            return
-        self.select_index(int(selection[0]))
+    def listbox_hit_test(self, x: int, y: int) -> int | None:
+        if not self.rows:
+            return None
+        index = self.listbox.nearest(y)
+        bbox = self.listbox.bbox(index)
+        if bbox is None:
+            return None
+        _x0, y0, _width, height = bbox
+        inside_vertical = y0 <= y < (y0 + height)
+        inside_horizontal = 0 <= x < self.listbox.winfo_width()
+        if inside_vertical and inside_horizontal:
+            return index
+        return None
+
+    def on_listbox_button_press(self, event: tk.Event) -> str:
+        hit_index = self.listbox_hit_test(event.x, event.y)
+        if hit_index is not None:
+            self.select_index(hit_index)
+            self.listbox.focus_set()
+        return "break"
+
+    def on_listbox_drag(self, event: tk.Event) -> str:
+        return "break"
+
+    def on_listbox_button_release(self, event: tk.Event) -> str:
+        return "break"
+
+    def on_listbox_double_click(self, _event: tk.Event) -> str:
+        return "break"
 
     def select_index(self, new_index: int, *, force: bool = False) -> None:
         if not self.rows:
@@ -384,6 +408,7 @@ class ReviewApp:
                 self.original_button.pack(side=tk.LEFT, padx=(6, 0), after=self.source_button)
             self.original_button.configure(text="播放修正后音频")
             self.processed_button.pack_forget()
+            self.aligned_button.pack_forget()
             self.baseline_button.pack_forget()
             self.path_text.set(
                 f"source={row.get('input_audio', '')}\n"
@@ -395,9 +420,12 @@ class ReviewApp:
                 self.original_button.pack_forget()
             if not self.processed_button.winfo_manager():
                 self.processed_button.pack(side=tk.LEFT, padx=(6, 0), after=self.source_button)
+            if not self.aligned_button.winfo_manager():
+                self.aligned_button.pack(side=tk.LEFT, padx=(6, 0), after=self.processed_button)
             if self.baseline_button.winfo_manager():
                 self.baseline_button.pack_forget()
             self.processed_button.configure(text="播放处理音")
+            self.aligned_button.configure(text="播放处理音(F0对齐原音)")
             self.path_text.set(
                 f"raw={row.get('input_audio', '')}\n"
                 f"processed={row.get('processed_audio', '')}"
@@ -477,6 +505,43 @@ class ReviewApp:
         if not path_value:
             return
         self.play_path(path_value)
+
+    def pitch_aligned_processed_audio(self) -> tuple[np.ndarray, int] | None:
+        row = self.current_row()
+        processed_path = row.get("processed_audio", "").strip()
+        if not processed_path:
+            return None
+        source_f0 = parse_float(row.get("original_f0_median_hz")) or parse_float(row.get("f0_median_hz"))
+        processed_f0 = parse_float(row.get("processed_f0_median_hz"))
+        if source_f0 is None or processed_f0 is None or source_f0 <= 0.0 or processed_f0 <= 0.0:
+            return None
+
+        cache_key = (processed_path, int(round(source_f0 * 1000.0)) ^ int(round(processed_f0 * 1000.0)))
+        cached = self.aligned_audio_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        audio, sr = self.load_audio(processed_path)
+        n_steps = 12.0 * float(np.log2(source_f0 / processed_f0))
+        if abs(n_steps) < 0.05:
+            aligned = audio
+        else:
+            aligned = librosa.effects.pitch_shift(audio.astype(np.float32), sr=sr, n_steps=n_steps)
+        result = (np.asarray(aligned, dtype=np.float32), sr)
+        self.aligned_audio_cache[cache_key] = result
+        return result
+
+    def play_processed_f0_aligned(self) -> None:
+        aligned = self.pitch_aligned_processed_audio()
+        if aligned is None:
+            messagebox.showwarning("无法对齐", "当前行缺少可用的原音/处理音 F0 中位数，无法做 F0 对齐试听。")
+            return
+        audio, sr = aligned
+        self.stop_audio()
+        playback_audio = self.prepare_playback_audio(audio)
+        sd.play(playback_audio, sr)
+        self.current_audio = playback_audio
+        self.current_sr = sr
 
     def play_baseline(self) -> None:
         path_value = self.current_row().get("rvc_baseline_audio", "").strip()

@@ -17,6 +17,32 @@
 | 人工巡检工具链 | 用最少操作完成 fixed eval 听审与记录 | 已完成首轮 | `scripts/open_fixed_eval_review_gui.ps1`、`scripts/fixed_eval_review_gui.py`、`experiments/fixed_eval/v1/review_pack/` |
 | clean analysis subsets | 生成保守可复现的 speech / singing 主分析子集 | 已完成首轮 | `scripts/build_clean_analysis_subsets.py`、`data/datasets/_meta/utterance_manifest_clean_*.csv`、`docs/14_clean_analysis_subsets_v1.md` |
 | 分析脚本落地 | 实现阶段 0/1 所需预处理与统计脚本 | 已完成首轮 | `scripts/run_stage0_baseline_analysis.py`、`docs/16_stage0_baseline_analysis_v1.md`、`experiments/stage0_baseline/` |
+| 表示层升级主线 | 在已否定 `pole edit / cepstral delta` 后，先试 `LSF`，失败再转 `VTL warping` | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md` |
+
+## 当前显式断点
+- 当前主线接班断点已固定在：`docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`
+- `LSF v1` 已进入可听审状态：
+- `LSF v1` 已完成听审并给出负向结论：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v1.json`
+  - 入口：`scripts/open_stage0_speech_lsf_review_gui.ps1 -PackVersion v1`
+  - 正式包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v1/`
+  - 主观结果：整体仍偏弱，且部分样本已出现伪影
+- `VTL v1` 已进入可听审状态：
+- `VTL v1` 已完成听审并暴露复杂失效模式：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_vtl_warping_candidate_v1.json`
+  - 入口：`scripts/open_stage0_speech_vtl_review_gui.ps1 -PackVersion v1`
+  - 正式包：`artifacts/listening_review/stage0_speech_vtl_warping_listening_pack/v1/`
+  - 当前机器侧先验：`fail=8/8`
+  - 主观结果：部分样本可辨，但备注显示局部低 `f0` 才生效、`F0` 对齐版本伪影重、部分样本有双声感
+- `VTL v2` 已进入可听审状态：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_vtl_warping_candidate_v2.json`
+  - 入口：`scripts/open_stage0_speech_vtl_review_gui.ps1 -PackVersion v2`
+  - 正式包：`artifacts/listening_review/stage0_speech_vtl_warping_listening_pack/v2/`
+  - 当前机器侧先验：`fail=8/8`，但 `effect` 高于 `v1`
+- 强约束顺序：
+  - `1. LSF`
+  - `2. VTL / tract-length warping`
+  - 在这两步都没有形成正证据前，不再回到 `pole edit / cepstral delta` 微调
 
 ## 分支建议
 - 如果后续开始多人或多任务并行，优先按任务边界拆分，而不是按文件类型拆分。

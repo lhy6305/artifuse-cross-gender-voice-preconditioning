@@ -15,9 +15,9 @@ from build_stage0_speech_listening_pack import TARGET_DIRECTION_BY_SOURCE_GENDER
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_lpc_resonance_candidate_v1.json"
+DEFAULT_RULE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_lsf_resonance_candidate_v1.json"
 DEFAULT_INPUT_CSV = ROOT / "experiments" / "fixed_eval" / "v1_2" / "fixed_eval_review_final_v1_2.csv"
-DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage0_speech_lpc_listening_pack" / "v1"
+DEFAULT_OUTPUT_DIR = ROOT / "artifacts" / "listening_review" / "stage0_speech_lsf_listening_pack" / "v1"
 
 
 def parse_args() -> argparse.Namespace:
@@ -100,75 +100,124 @@ def stable_lpc(frame: np.ndarray, order: int) -> np.ndarray | None:
     return stabilized
 
 
-def select_positive_roots(roots: np.ndarray) -> list[tuple[int, float, float]]:
-    selected: list[tuple[int, float, float]] = []
-    for idx, root in enumerate(roots):
-        if np.imag(root) <= 1e-6:
-            continue
-        selected.append((idx, abs(root), float(np.angle(root))))
-    selected.sort(key=lambda item: item[2])
-    return selected
+def lpc_to_lsf(coeffs: np.ndarray) -> np.ndarray | None:
+    order = coeffs.shape[0] - 1
+    if order <= 0 or order % 2 != 0:
+        return None
+    a = np.concatenate([coeffs.astype(np.float64), [0.0]])
+    p_poly = a + a[::-1]
+    q_poly = a - a[::-1]
+    p_poly, _ = np.polydiv(p_poly, np.array([1.0, 1.0], dtype=np.float64))
+    q_poly, _ = np.polydiv(q_poly, np.array([1.0, -1.0], dtype=np.float64))
+    roots_p = np.roots(np.asarray(p_poly, dtype=np.float64))
+    roots_q = np.roots(np.asarray(q_poly, dtype=np.float64))
+
+    def angles_from_roots(roots: np.ndarray) -> np.ndarray:
+        selected = []
+        for root in roots:
+            if abs(root) <= 1e-8:
+                continue
+            unit_root = root / abs(root)
+            angle = float(np.angle(unit_root))
+            if 1e-5 < angle < math.pi - 1e-5:
+                selected.append(angle)
+        return np.asarray(sorted(selected), dtype=np.float64)
+
+    angles_p = angles_from_roots(roots_p)
+    angles_q = angles_from_roots(roots_q)
+    lsf = np.sort(np.concatenate([angles_p, angles_q]))
+    if lsf.shape[0] != order:
+        return None
+    return lsf
 
 
-def find_conjugate_index(roots: np.ndarray, target_idx: int) -> int | None:
-    target = np.conjugate(roots[target_idx])
-    best_idx = None
-    best_dist = float("inf")
-    for idx, root in enumerate(roots):
-        if idx == target_idx:
-            continue
-        dist = abs(root - target)
-        if dist < best_dist:
-            best_dist = dist
-            best_idx = idx
-    return best_idx if best_dist < 1e-3 else None
+def lsf_to_lpc(lsf: np.ndarray) -> np.ndarray | None:
+    order = lsf.shape[0]
+    if order <= 0 or order % 2 != 0:
+        return None
+
+    p_angles = lsf[0::2]
+    q_angles = lsf[1::2]
+    p_roots = np.concatenate([np.exp(1j * p_angles), np.exp(-1j * p_angles)])
+    q_roots = np.concatenate([np.exp(1j * q_angles), np.exp(-1j * q_angles)])
+
+    p_poly = np.poly(p_roots).real.astype(np.float64)
+    q_poly = np.poly(q_roots).real.astype(np.float64)
+    p_poly = np.convolve(p_poly, np.array([1.0, 1.0], dtype=np.float64))
+    q_poly = np.convolve(q_poly, np.array([1.0, -1.0], dtype=np.float64))
+
+    a = 0.5 * (p_poly + q_poly)
+    coeffs = np.asarray(a[:-1], dtype=np.float64)
+    if coeffs.shape[0] != order + 1 or abs(coeffs[0]) <= 1e-8:
+        return None
+    coeffs = coeffs / coeffs[0]
+    roots = np.roots(coeffs)
+    if np.any(np.abs(roots) >= 0.999):
+        return None
+    return coeffs
 
 
-def edit_lpc_roots(
-    coeffs: np.ndarray,
+def enforce_lsf_spacing(lsf: np.ndarray, *, sample_rate: int, min_gap_hz: float, edge_gap_hz: float) -> np.ndarray | None:
+    edited = np.sort(np.asarray(lsf, dtype=np.float64).copy())
+    min_gap = 2.0 * math.pi * float(min_gap_hz) / sample_rate
+    edge_gap = 2.0 * math.pi * float(edge_gap_hz) / sample_rate
+    if edited.size == 0:
+        return None
+    for _ in range(3):
+        edited[0] = max(edited[0], edge_gap)
+        for idx in range(1, edited.shape[0]):
+            edited[idx] = max(edited[idx], edited[idx - 1] + min_gap)
+        edited[-1] = min(edited[-1], math.pi - edge_gap)
+        for idx in range(edited.shape[0] - 2, -1, -1):
+            edited[idx] = min(edited[idx], edited[idx + 1] - min_gap)
+    if not np.all(np.diff(edited) > 0):
+        return None
+    if edited[0] <= 0.0 or edited[-1] >= math.pi:
+        return None
+    return edited
+
+
+def edit_lsf_pairs(
+    lsf: np.ndarray,
     *,
     sample_rate: int,
     search_ranges_hz: list[list[float]],
-    shift_ratios: list[float],
+    center_shift_ratios: list[float],
+    min_gap_hz: float,
+    edge_gap_hz: float,
 ) -> np.ndarray | None:
-    roots = np.roots(coeffs)
-    if roots.size == 0:
-        return None
-    edited = roots.astype(np.complex128).copy()
-    positive_roots = select_positive_roots(roots)
-    nyquist_hz = sample_rate / 2.0
+    edited = np.asarray(lsf, dtype=np.float64).copy()
+    lsf_hz = edited * sample_rate / (2.0 * math.pi)
+    used_indices: set[int] = set()
 
-    for search_range_hz, shift_ratio in zip(search_ranges_hz, shift_ratios):
+    for search_range_hz, shift_ratio in zip(search_ranges_hz, center_shift_ratios):
         low_hz, high_hz = float(search_range_hz[0]), float(search_range_hz[1])
-        candidate = None
-        for idx, radius, angle in positive_roots:
-            freq_hz = angle * sample_rate / (2.0 * math.pi)
-            if low_hz <= freq_hz <= high_hz:
-                candidate = (idx, radius, angle, freq_hz)
-                break
-        if candidate is None:
+        range_center = (low_hz + high_hz) / 2.0
+        candidate_pairs: list[tuple[float, int, int, float]] = []
+        for idx in range(edited.shape[0] - 1):
+            if idx in used_indices or (idx + 1) in used_indices:
+                continue
+            left_hz = lsf_hz[idx]
+            right_hz = lsf_hz[idx + 1]
+            pair_center = (left_hz + right_hz) / 2.0
+            if low_hz <= pair_center <= high_hz:
+                candidate_pairs.append((abs(pair_center - range_center), idx, idx + 1, pair_center))
+        if not candidate_pairs:
             continue
-        idx, radius, angle, freq_hz = candidate
-        target_hz = min(max(freq_hz * float(shift_ratio), low_hz), min(high_hz * 1.35, nyquist_hz * 0.94))
-        target_angle = target_hz * 2.0 * math.pi / sample_rate
-        edited[idx] = radius * np.exp(1j * target_angle)
-        conj_idx = find_conjugate_index(roots, idx)
-        if conj_idx is not None:
-            edited[conj_idx] = np.conjugate(edited[idx])
+        _, left_idx, right_idx, pair_center = min(candidate_pairs, key=lambda item: item[0])
+        target_center = min(max(pair_center * float(shift_ratio), low_hz), high_hz)
+        delta_hz = target_center - pair_center
+        delta_rad = delta_hz * 2.0 * math.pi / sample_rate
+        edited[left_idx] += delta_rad
+        edited[right_idx] += delta_rad
+        constrained = enforce_lsf_spacing(edited, sample_rate=sample_rate, min_gap_hz=min_gap_hz, edge_gap_hz=edge_gap_hz)
+        if constrained is None:
+            return None
+        edited = constrained
+        lsf_hz = edited * sample_rate / (2.0 * math.pi)
+        used_indices.update({left_idx, right_idx})
 
-    new_coeffs = np.poly(edited).real.astype(np.float64)
-    if abs(new_coeffs[0]) <= 1e-8:
-        return None
-    new_coeffs = new_coeffs / new_coeffs[0]
-    new_roots = np.roots(new_coeffs)
-    if np.any(np.abs(new_roots) >= 0.999):
-        clipped = []
-        for root in new_roots:
-            radius = min(abs(root), 0.995)
-            clipped.append(radius * np.exp(1j * np.angle(root)))
-        new_coeffs = np.poly(np.array(clipped, dtype=np.complex128)).real.astype(np.float64)
-        new_coeffs = new_coeffs / new_coeffs[0]
-    return new_coeffs
+    return edited
 
 
 def overlap_add(frames: list[np.ndarray], frame_length: int, hop_length: int, output_length: int) -> np.ndarray:
@@ -177,10 +226,6 @@ def overlap_add(frames: list[np.ndarray], frame_length: int, hop_length: int, ou
     total_length = max(output_length, (len(frames) - 1) * hop_length + frame_length)
     output = np.zeros(total_length, dtype=np.float64)
     weight = np.zeros(total_length, dtype=np.float64)
-    # The reconstructed frames are full-amplitude time-domain frames, not
-    # analysis-windowed STFT slices. Use a standard synthesis window and
-    # normalize by the accumulated window, otherwise the signal is
-    # systematically attenuated and can develop edge spikes.
     window = np.hanning(frame_length).astype(np.float64)
     for frame_idx, frame in enumerate(frames):
         start = frame_idx * hop_length
@@ -190,7 +235,7 @@ def overlap_add(frames: list[np.ndarray], frame_length: int, hop_length: int, ou
     return output[:output_length].astype(np.float32)
 
 
-def apply_lpc_resonance_shift(
+def apply_lsf_resonance_shift(
     audio: np.ndarray,
     *,
     sample_rate: int,
@@ -201,8 +246,10 @@ def apply_lpc_resonance_shift(
     hop_length: int,
     lpc_order: int,
     search_ranges_hz: list[list[float]],
-    shift_ratios: list[float],
+    center_shift_ratios: list[float],
     blend: float,
+    min_gap_hz: float,
+    edge_gap_hz: float,
 ) -> np.ndarray:
     if audio.size < frame_length:
         padded = np.pad(audio.astype(np.float32), (0, frame_length - int(audio.size)))
@@ -224,12 +271,22 @@ def apply_lpc_resonance_shift(
         if coeffs is None:
             out_frames.append(frame.astype(np.float32))
             continue
-        edited_coeffs = edit_lpc_roots(
-            coeffs,
+        lsf = lpc_to_lsf(coeffs)
+        if lsf is None:
+            out_frames.append(frame.astype(np.float32))
+            continue
+        edited_lsf = edit_lsf_pairs(
+            lsf,
             sample_rate=sample_rate,
             search_ranges_hz=search_ranges_hz,
-            shift_ratios=shift_ratios,
+            center_shift_ratios=center_shift_ratios,
+            min_gap_hz=min_gap_hz,
+            edge_gap_hz=edge_gap_hz,
         )
+        if edited_lsf is None:
+            out_frames.append(frame.astype(np.float32))
+            continue
+        edited_coeffs = lsf_to_lpc(edited_lsf)
         if edited_coeffs is None:
             out_frames.append(frame.astype(np.float32))
             continue
@@ -297,15 +354,15 @@ def write_readme(path: Path, rows: list[dict[str, str]], *, rule_config_path: Pa
     queue_rel = (pack_dir / "listening_review_queue.csv").relative_to(ROOT).as_posix()
     summary_md_rel = (pack_dir / "listening_review_quant_summary.md").relative_to(ROOT).as_posix()
     lines = [
-        f"# Stage0 Speech LPC Listening Pack {pack_version}",
+        f"# Stage0 Speech LSF Listening Pack {pack_version}",
         "",
-        "- purpose: `lpc residual-preserving pole edit probe after representation-layer pivot`",
+        "- purpose: `lsf pair-shift residual-preserving probe after lpc pole-edit rejection`",
         f"- rows: `{len(rows)}`",
         "",
         "## Rebuild",
         "",
         "```powershell",
-        ".\\python.exe .\\scripts\\build_stage0_speech_lpc_listening_pack.py",
+        ".\\python.exe .\\scripts\\build_stage0_speech_lsf_listening_pack.py",
         ".\\python.exe .\\scripts\\build_stage0_rule_review_queue.py `",
         f"  --rule-config {rule_config_rel} `",
         f"  --summary-csv {summary_rel} `",
@@ -334,13 +391,13 @@ def main() -> None:
         params = rule["method_params"]
         input_audio = resolve_path(row["path_raw"])
         dataset_slug = "libritts_r" if row["dataset_name"] == "LibriTTS-R" else "vctk"
-        stem = f"{dataset_slug}__{row['gender']}__{target_direction}__lpc__{row['utt_id']}"
+        stem = f"{dataset_slug}__{row['gender']}__{target_direction}__lsf__{row['utt_id']}"
         original_copy = originals_dir / f"{stem}.{args.audio_format}"
         processed_audio = processed_dir / f"{stem}.{args.audio_format}"
 
         audio, sample_rate = load_audio(input_audio)
         save_audio(original_copy, audio, sample_rate)
-        out = apply_lpc_resonance_shift(
+        out = apply_lsf_resonance_shift(
             audio,
             sample_rate=sample_rate,
             peak_limit=args.peak_limit,
@@ -350,8 +407,10 @@ def main() -> None:
             hop_length=int(params["hop_length"]),
             lpc_order=int(params["lpc_order"]),
             search_ranges_hz=params["search_ranges_hz"],
-            shift_ratios=[float(value) for value in params["shift_ratios"]],
+            center_shift_ratios=[float(value) for value in params["center_shift_ratios"]],
             blend=float(params["blend"]),
+            min_gap_hz=float(params["min_gap_hz"]),
+            edge_gap_hz=float(params["edge_gap_hz"]),
         )
         save_audio(processed_audio, out, sample_rate)
 
