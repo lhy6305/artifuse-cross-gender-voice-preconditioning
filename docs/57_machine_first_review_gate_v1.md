@@ -1,72 +1,61 @@
-# 听审流程调整：Machine-First Review Gate v1
+# Machine-First Review Gate v1
 
-## 背景
+## Background
 
-到 `2026-03-28` 为止，表示层主线已经出现一个很明确的问题：
+By `2026-03-28`, many experiment packs could be built and quantified, but many still failed human review with uniformly weak or null outcomes. The project therefore moved from a pack-first workflow to a machine-first workflow.
 
-- 多条方法虽然已经能稳定出包、出量化、出 GUI；
-- 但其中大量包在机器侧先验明显偏弱时，人工听审仍然反复给出 `8/8 no audible`。
+## Default Flow
 
-这意味着当前若继续默认“每出一包就直接上人工”，时间成本已经明显高于信息增益。
+1. Build the listening pack.
+2. Build the quantified review queue.
+3. Run the machine gate.
+4. Send a pack to formal human review only if the machine gate allows it.
+5. If the pack fails the machine gate, continue machine-only iteration first.
 
-## 新默认流程
+## Gate Thresholds
 
-从这个断点开始，新的默认流程改成：
-
-1. 先建包；
-2. 先跑量化队列；
-3. 先过 machine gate；
-4. 只有 machine gate 通过，才进入正式人工听审；
-5. 若 machine gate 不通过，则优先继续 machine-only 迭代，不立即上人工。
-
-## v1 Gate 阈值
-
-当前 `v1` 采用偏保守阈值：
+A pack is allowed for human review when all of the following hold:
 
 - `avg_auto_quant_score >= 65`
 - `avg_auto_direction_score >= 45`
 - `avg_auto_effect_score >= 45`
-- 并且满足以下至少一条：
+- and either:
   - `top_auto_quant_score >= 75`
-  - `strongish_rows >= 2`
+  - or `strongish_rows >= 2`
 
-其中 `strongish_rows = strong_pass + pass + borderline`。
+Here `strongish_rows = strong_pass + pass + borderline`.
 
-## 这组阈值的目的
+## What This Gate Is For
 
-这组阈值不是为了证明方法成立，而是为了回答更窄的问题：
+The gate is not meant to prove that a method works. It is meant to answer a narrower question:
 
-**这个包是否已经强到值得花人工听一轮。**
+- Is this pack strong enough to justify another round of human listening time?
 
-它允许以下情况继续存在：
+The gate still allows packs that later fail subjectively. It exists mainly to block obviously weak packs from repeatedly consuming manual review time.
 
-- 高机器分但人耳觉得是“错误变化”；
-- 高机器分但最终被主观否掉。
+## Post-Review Strength Escalation Rule
 
-但它会尽量避免继续出现以下情况：
+Machine gating alone is not enough. A pack may pass the gate and still fail human review because the whole pack is simply too weak.
 
-- 机器侧长期 `40~55` 分、全包 `fail=8`；
-- 人工再花一轮时间后，仍然只是 `8/8 no audible`。
+The current process therefore adds one more rule after human review:
 
-## 当前配套脚本
+- If a reviewed pack is dominated by `strength_fit = too_weak`
+- and artifact notes are not the main failure mode
+- then the next step is not another same-strength human pack
+- the next step is `escalate_strength_before_next_human`
 
-- 机器 gate 汇总脚本：`scripts/build_listening_machine_gate_report.py`
-- 当前报告落点：`artifacts/machine_gate/v1/`
+This rule is implemented in:
 
-## 当前结论
+- `scripts/build_listening_machine_gate_report.py`
 
-在现有历史包上回放这套 gate 后：
+The report now records:
 
-- `allow_human_review = 4`
-- `skip_human_review = 20`
+- `reviewed_too_weak_rows`
+- `strength_escalation_recommendation`
+- `strength_escalation_reason`
 
-这说明当前人工听审口径确实应该收紧。
+## Current Operational Meaning
 
-## 对主线的直接影响
-
-1. `source-filter residual v1` 虽然已经完成人工听审并确认 `8/8 no audible`，但按新流程它本来就不该进入人工：
-   - `avg_auto_quant_score ≈ 39.19`
-   - `avg_auto_direction_score ≈ 12.70`
-   - `avg_auto_effect_score ≈ 13.89`
-2. 后续新包若 machine gate 不通过，默认不再直接开 GUI 做正式听审。
-3. 后续主线应先切到“machine-only 搜索下一条高先验候选”，而不是继续扩大人工审听覆盖面。
+- Weak packs should be filtered by machine metrics before formal listening.
+- Packs that pass the gate but come back uniformly too weak should be strengthened before the next human review.
+- Human review time should go to packs that are both machine-viable and strong enough to test the real subjective failure mode.

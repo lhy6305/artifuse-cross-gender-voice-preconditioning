@@ -1,75 +1,45 @@
-# 踩坑记录
+# Pitfalls Log
 
-## 2026-03-25
+## Active Global Pitfalls
 
-### 1. PowerShell 默认编码风险
-- 问题：当前环境是 PowerShell，默认文本交互不可靠，容易回退到本地代码页并产生乱码风险。
-- 影响：直接读取或回写中文文档时，可能把 UTF-8 文件写坏。
-- 处理：所有文本读写都显式指定 UTF-8，并在会话开始时设置控制台输出编码为 UTF-8。
+### 1. PowerShell reads are unsafe without explicit UTF-8
 
-### 2. 模型资产忽略边界原先不完整
-- 问题：仓库里已有 `.pth` 和 `.index` 大文件，但原 `.gitignore` 只覆盖了部分模型文件类型。
-- 影响：后续 `git add .` 时容易误把本地预训练资产纳入版本控制。
-- 处理：补充了 `*.pth`、`*.ckpt`、`*.safetensors`、`*.onnx`、`*.bin`、`*.index` 等忽略规则，并在 `.gitattributes` 中标记为二进制。
+- Problem: PowerShell may decode UTF-8 text through the local code page if encoding is not specified.
+- Impact: correct files may appear garbled and may be edited incorrectly afterward.
+- Rule: always read repo text with explicit UTF-8.
 
-### 3. 运行环境尚未冻结
-- 问题：当前仓库虽已有 `python.exe`，但还没有依赖版本文件或环境说明。
-- 影响：现在直接进入脚本开发，后续仍然容易出现环境漂移和复现困难。
-- 处理：把环境冻结列为下一阶段任务，解释器可先固定为根目录 `python.exe`，但依赖集合必须另行落盘。
+### 2. PowerShell text writes are not trusted for repo docs
 
-### 4. 根目录存在敏感与本地运维文件
-- 问题：根目录存在 `ssh-key-private`、`git-push.bat`、`git-push.sh`。
-- 影响：虽然目前已被忽略，但它们属于高风险、本地专用内容，不应被项目文档或脚本依赖。
-- 处理：继续保持忽略，不围绕这些文件建立工作流。
+- Problem: PowerShell UTF-8 text writes may add a BOM in this environment.
+- Impact: active docs may gain noisy headers and inconsistent byte format.
+- Rule: do not use PowerShell text write cmdlets for repo doc edits.
 
-### 5. 本地 RVC 工作目录需要整体忽略
-- 问题：`Retrieval-based-Voice-Conversion-WebUI-7ef1986/` 允许按训练/测试需要改代码，但不应进入当前仓库的 Git。
-- 影响：如果只忽略个别文件类型，后续联调时很容易把上游代码改动误加进来。
-- 处理：直接忽略整个目录，并在项目文档中把它定义为本地工作目录。
+### 3. Active docs and user replies follow different language rules
 
-### 6. VocalSet 包内含三套重复组织树
-- 问题：`VocalSet1-2.zip` 同时包含 `data_by_singer/`、`data_by_technique/`、`data_by_vowel/` 三套组织形式。
-- 影响：如果扫描整个解压目录统计时长或样本数，会把同一批音频重复计算多次。
-- 处理：当前阶段固定只把 `data_by_singer/` 当作 canonical tree，其余两套视为辅助索引结构。
+- Problem: the user works in Chinese, while active docs must stay English ASCII.
+- Impact: doc maintenance can drift into the wrong language unless the two channels stay separate.
+- Rule: keep active docs in English ASCII, and keep user-facing replies in Simplified Chinese.
 
-### 7. VocalSet 公共页面与包内 readme 的性别数量不一致
-- 问题：Zenodo 记录页摘要写的是 `9 male / 11 female`，但包内 `readme-anon.txt` 和目录名实际对应为 `11 male / 9 female`。
-- 影响：直接照网页摘要建清单会写错男女数量。
-- 处理：盘点阶段优先采用包内 readme 和实际目录名作为本地事实来源，并在数据清单备注中记录这一冲突。
+### 4. Heavy local assets and local work dirs must stay outside Git
 
-### 8. VCTK 本地音频是成对麦克风 FLAC，不是单份 WAV
-- 问题：`wav48_silence_trimmed/` 下实际是 `*_mic1.flac` 和 `*_mic2.flac` 成对文件。
-- 影响：如果按“整树所有音频”统计，会把同一句录音重复算两次；如果还误以为是 WAV，会直接统计失败。
-- 处理：第一轮盘点固定只统计 `*_mic1.flac`，把它作为 canonical audio tree。
+- Problem: model weights, indexes, raw audio, dataset archives, and local work dirs are easy to stage by accident.
+- Impact: Git history can become heavy, noisy, or unsafe.
+- Rule: keep those assets ignored by default and keep only lightweight recoverable artifacts in Git.
 
-### 9. 数据集下载包与 raw 树不能只靠扩展名零散忽略
-- 问题：仅忽略 `*.wav`、`*.flac` 之类扩展名还不够，下载压缩包和 `raw/` 目录中的转写/说明文本仍会出现在 Git 视野里。
-- 影响：后续 `git add` 很容易误纳入数 GB 到十几 GB 的下载包，或把数据集内部说明文件混进仓库。
-- 处理：显式忽略 `data/datasets/**/raw/` 和数据集下载包，只在仓库里保留 `data/datasets/_meta/` 这类结构化摘要。
+### 5. Use stable `record_id`, not `utt_id`, for joins
 
-### 10. 关键 checkpoint 不能被全局二进制规则一刀切挡掉
-- 问题：如果把 `*.pt`、`*.pth`、`*.ckpt`、`*.index` 全局忽略到底，后续就没有地方保留少量真正需要回溯的关键模型。
-- 影响：仓库虽然变轻了，但“全部数据丢失时快速恢复进度”的目标会打折，因为最关键的实验里程碑无法随仓库一起保留。
-- 处理：模型与索引默认仍忽略，但为 `artifacts/checkpoints/keep/` 预留白名单，只存少量可恢复进度的里程碑版本。
+- Problem: `utt_id` is not globally unique in the full manifest.
+- Impact: cache joins and resume logic can silently misalign records.
+- Rule: use stable `record_id` for joins, cache keys, and resume logic.
 
-## 2026-03-28
+### 6. Use repo root `.\python.exe` for project scripts
 
-### 11. 全量 `utterance_manifest.csv` 里存在重复 `utt_id`
-- 问题：`scripts/build_utterance_manifest.py` 直接用 `path.stem` 生成 `utt_id`，在 `VocalSet` 全量树里已出现重复键：`m9_caro_vibrato` 同时来自 `male8` 和 `male9`。
-- 影响：凡是把 `utt_id` 当作全局唯一键的缓存、断点续跑或汇总逻辑，都有潜在错配风险。
-- 处理：当前已引入稳定 `record_id`，后续缓存、断点续跑与跨表对齐统一改走 `record_id`；`utt_id` 仅保留作人类可读短名。
+- Problem: mixing in system Python can break local import assumptions and runtime consistency.
+- Impact: build and analysis scripts may fail or drift across sessions.
+- Rule: use repo root `.\python.exe` unless a task explicitly documents a different interpreter.
 
-### 12. 数据下载包边界与实际 Git 跟踪仍有一处不一致
-- 问题：`data/datasets/speech/libritts_r/doc.tar.gz` 曾一度被 Git 追踪，而仓库规则写的是“数据下载包默认不纳管”。
-- 影响：虽然体积不大，但它会让“哪些压缩包允许进仓”这条边界变模糊，后续容易诱发更重的包体被误跟踪。
-- 处理：当前已执行 `git rm --cached` 把它移出版本控制；本地文件仍可保留，但默认不再纳管。
+## Archived Historical Pitfalls
 
-### 13. 根目录仍有环境耦合的一次性运维脚本
-- 问题：原先根目录存在 `sandbox_clean_removed_item.py`，内部写死沙盒与真实路径映射，且命名无法从仓库语义上判断用途。
-- 影响：它会降低根目录信噪比，也容易让后来者误以为这是项目主线脚本。
-- 处理：当前已迁到 `tools/maintenance/sandbox_zero_byte_cleanup.py`，并补了 `README.md`；后续仍应把它视为本地运维工具，不让主流程依赖它。
+Historical and resolved setup-specific pitfalls were moved out of this active handoff file into:
 
-### 14. 规范已经写在文档里，但此前缺少仓库级编辑器约束
-- 问题：在补 `.editorconfig` 之前，UTF-8 / 行尾 / 末尾换行更多依赖人工纪律。
-- 影响：跨编辑器协作时，容易再次出现编码、行尾和空白差异。
-- 处理：本轮已新增 `.editorconfig`，把文本编码与行尾规则落成仓库级默认约束。
+- `docs/68_archive_historical_pitfalls_from_old_02_v1.md`
