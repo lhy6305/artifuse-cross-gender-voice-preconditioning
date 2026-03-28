@@ -61,6 +61,7 @@
 - 已有表示层主线断点：`docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`
 - 已有 LSF 参数化原型说明：`docs/41_representation_layer_lsf_probe_v1.md`
 - 已有 LSF 参数化原型 `v2` 说明：`docs/58_representation_layer_lsf_probe_v2.md`
+- 已有 LSF 参数化原型 `v3` 说明：`docs/59_representation_layer_lsf_probe_v3.md`
 - 已有 VTL warping 原型说明：`docs/42_representation_layer_vtl_warping_probe_v1.md`
 - 已有 VTL warping v2 原型说明：`docs/43_representation_layer_vtl_warping_probe_v2.md`
 - 已有经典 warp 路线收口断点：`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`
@@ -103,6 +104,8 @@
   - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v1/`
 - 已有 LSF v2 听审包输出：
   - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v2/`
+- 已有 LSF v3 听审包输出：
+  - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v3/`
 - 已有 VTL v1 听审包输出：
   - `artifacts/listening_review/stage0_speech_vtl_warping_listening_pack/v1/`
 - 已有 VTL v2 听审包输出：
@@ -386,6 +389,14 @@
   - `scripts/run_lsf_machine_sweep.py` 已完成 `6` 个 `LSF v2` 变体的 machine-only sweep
   - `order18_vctk_rescue_v2e` 机器侧最佳，并已正式收敛为 `speech_lsf_resonance_candidate_v2.json`
   - 当前 `LSF v2` 已建好标准听审包，重新进入“允许人工听审”的状态
+- `LSF v2` 的正式听审已确认这条线不再是“完全不可辨”：
+  - `8/8 reviewed`
+  - `effect_audible: yes=4, maybe=4, no=0`
+  - 主观主结论是“整体偏弱”，并带有一条 `Libri feminine` 瞬时伪影备注
+- 基于上述备注，当前已继续推进到 `LSF v3`：
+  - `scripts/run_lsf_machine_sweep.py --preset v3` 已完成 `5` 个 `LSF v3` 变体的 machine-only sweep
+  - `order20_rescue_v3e` 机器侧最佳，并已正式收敛为 `speech_lsf_resonance_candidate_v3.json`
+  - 当前 `LSF v3` 已建好标准听审包，成为新的默认听审对象
 
 ## 近期任务
 1. `2026-03-28` 仓库健康度/规范性自检已完成：
@@ -529,7 +540,13 @@
    - sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v2/lsf_machine_sweep_pack_summary.csv`
    - 当前最佳机器侧结果：`avg auto_quant_score = 78.85`、`avg auto_direction_score = 68.09`、`avg auto_effect_score = 73.71`
    - 当前已生成标准听审包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v2/`
-   - 因此下一步默认听审对象已切到 `LSF v2`
+   - 当前正式听审已完成，结论是“全包可辨，但整体仍偏弱”
+38. `LSF v3` 已按 `v2` 的主观备注继续推进：
+   - 配置：`experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v3.json`
+   - sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v3/lsf_machine_sweep_pack_summary.csv`
+   - 当前最佳机器侧结果：`avg auto_quant_score = 82.81`、`avg auto_direction_score = 74.67`、`avg auto_effect_score = 78.63`
+   - 当前已生成标准听审包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v3/`
+   - 因此下一步默认听审对象已切到 `LSF v3`
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

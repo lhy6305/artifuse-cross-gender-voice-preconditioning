@@ -1,0 +1,224 @@
+{
+  "config_version": "stage0_speech_lsf_machine_sweep_order20_rescue_v3e",
+  "source": "representation_layer_lsf_machine_sweep_v2",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "lsf_machine_sweep_order20_rescue_v3e"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_lsf_libritts_feminine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "order20_rescue_v3e",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.13,
+          1.09,
+          1.06
+        ],
+        "blend": 0.77,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF feminine v2：沿用 v1 主体方向，但统一切到 order-18 以配合更稳定的机器侧 sweep 赢家。 [machine_sweep=order20_rescue_v3e]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_feminine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "order20_rescue_v3e",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            280.0,
+            1000.0
+          ],
+          [
+            1000.0,
+            2700.0
+          ],
+          [
+            2700.0,
+            4500.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.14,
+          1.1,
+          1.06
+        ],
+        "blend": 0.8,
+        "min_gap_hz": 70.0,
+        "edge_gap_hz": 90.0
+      },
+      "notes": "LSF feminine v2：VCTK 侧保留 v1 的保守上移，但配合 order-18 维持较好的机器侧响应。 [machine_sweep=order20_rescue_v3e]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_libritts_masculine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "order20_rescue_v3e",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.86,
+          0.85,
+          0.94
+        ],
+        "blend": 0.88,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF masculine v2：改为 order-18，并加强中频成对下移，目标是抬高 masculine 侧可辨性而不回到瓶中感。 [machine_sweep=order20_rescue_v3e]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_masculine_v2",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "order20_rescue_v3e",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            235.0,
+            910.0
+          ],
+          [
+            910.0,
+            2520.0
+          ],
+          [
+            2520.0,
+            4380.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.84,
+          0.86,
+          0.94
+        ],
+        "blend": 0.88,
+        "min_gap_hz": 60.0,
+        "edge_gap_hz": 85.0
+      },
+      "notes": "LSF masculine v2：吸收 machine sweep 最优的 VCTK rescue 结果，单独下调搜索带中心，优先补最弱 cell。 [machine_sweep=order20_rescue_v3e]"
+    }
+  ],
+  "variant_description": "Raise LPC order to 20 and add a moderate strength bump, testing whether the remaining weakness is partly under-resolution rather than blend alone."
+}

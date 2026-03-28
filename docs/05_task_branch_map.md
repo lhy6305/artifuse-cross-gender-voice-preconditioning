@@ -17,7 +17,7 @@
 | 人工巡检工具链 | 用最少操作完成 fixed eval 听审与记录 | 已完成首轮 | `scripts/open_fixed_eval_review_gui.ps1`、`scripts/fixed_eval_review_gui.py`、`experiments/fixed_eval/v1/review_pack/` |
 | clean analysis subsets | 生成保守可复现的 speech / singing 主分析子集 | 已完成首轮 | `scripts/build_clean_analysis_subsets.py`、`data/datasets/_meta/utterance_manifest_clean_*.csv`、`docs/14_clean_analysis_subsets_v1.md` |
 | 分析脚本落地 | 实现阶段 0/1 所需预处理与统计脚本 | 已完成首轮 | `scripts/run_stage0_baseline_analysis.py`、`docs/16_stage0_baseline_analysis_v1.md`、`experiments/stage0_baseline/` |
-| 表示层升级主线 | 在已否定 `pole edit / cepstral delta`、低先验 `envelope-only` 家族与 `source-filter residual v1` 后，当前已切到 `machine-first` 探测阶段；`LSF` 经 sweep 后重新产出一个高先验 `v2` 候选，后续先完成它的正式听审，再决定是否彻底收口 `LSF` | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md`、`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`、`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`、`docs/46_representation_layer_conditional_envelope_transport_probe_v2.md`、`docs/47_post_conditional_transport_checkpoint_move_beyond_reference_envelope_v1.md`、`docs/48_representation_layer_low_rank_envelope_subspace_probe_v1.md`、`docs/49_post_low_rank_checkpoint_move_beyond_linear_subspace_v1.md`、`docs/50_representation_layer_neural_envelope_latent_probe_v1.md`、`docs/51_post_neural_checkpoint_move_beyond_static_latent_mapping_v1.md`、`docs/52_representation_layer_conditioned_neural_envelope_probe_v1.md`、`docs/53_post_conditioned_predictor_checkpoint_move_beyond_mapping_family_v1.md`、`docs/54_representation_layer_probe_guided_envelope_probe_v1.md`、`docs/55_post_probe_guided_checkpoint_move_beyond_envelope_only_v1.md`、`docs/56_representation_layer_source_filter_residual_probe_v1.md`、`docs/57_machine_first_review_gate_v1.md`、`docs/58_representation_layer_lsf_probe_v2.md`、`scripts/build_listening_machine_gate_report.py`、`scripts/run_lsf_machine_sweep.py` |
+| 表示层升级主线 | 在已否定 `pole edit / cepstral delta`、低先验 `envelope-only` 家族与 `source-filter residual v1` 后，当前已切到 `machine-first` 探测阶段；`LSF v2` 已给出“全包可辨但偏弱”的首个连续主观正信号，当前已进一步推进到更强的 `LSF v3`，等待正式听审 | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md`、`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`、`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`、`docs/46_representation_layer_conditional_envelope_transport_probe_v2.md`、`docs/47_post_conditional_transport_checkpoint_move_beyond_reference_envelope_v1.md`、`docs/48_representation_layer_low_rank_envelope_subspace_probe_v1.md`、`docs/49_post_low_rank_checkpoint_move_beyond_linear_subspace_v1.md`、`docs/50_representation_layer_neural_envelope_latent_probe_v1.md`、`docs/51_post_neural_checkpoint_move_beyond_static_latent_mapping_v1.md`、`docs/52_representation_layer_conditioned_neural_envelope_probe_v1.md`、`docs/53_post_conditioned_predictor_checkpoint_move_beyond_mapping_family_v1.md`、`docs/54_representation_layer_probe_guided_envelope_probe_v1.md`、`docs/55_post_probe_guided_checkpoint_move_beyond_envelope_only_v1.md`、`docs/56_representation_layer_source_filter_residual_probe_v1.md`、`docs/57_machine_first_review_gate_v1.md`、`docs/58_representation_layer_lsf_probe_v2.md`、`docs/59_representation_layer_lsf_probe_v3.md`、`scripts/build_listening_machine_gate_report.py`、`scripts/run_lsf_machine_sweep.py` |
 
 ## 当前显式断点
 - 当前主线接班断点已固定在：`docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`
@@ -108,7 +108,15 @@
   - 正式包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v2/`
   - 入口：`scripts/open_stage0_speech_lsf_review_gui.ps1 -PackVersion v2`
   - 当前机器侧先验：`avg auto_quant_score = 78.85`、`avg auto_direction_score = 68.09`、`avg auto_effect_score = 73.71`
-  - 当前判断：这版已经值得做正式听审；若主观仍不给正证据，再正式收口 `LSF`
+  - 当前主观结果：`8/8 reviewed`、`effect_audible yes=4 maybe=4 no=0`
+  - 当前判断：这版已证明 `LSF` 不再是整包不可辨，但主结论仍是整体偏弱
+- `LSF v3` 已作为下一拍正式候选落地：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v3.json`
+  - sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v3/lsf_machine_sweep_pack_summary.csv`
+  - 正式包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v3/`
+  - 入口：`scripts/open_stage0_speech_lsf_review_gui.ps1 -PackVersion v3`
+  - 当前机器侧先验：`avg auto_quant_score = 82.81`、`avg auto_direction_score = 74.67`、`avg auto_effect_score = 78.63`、`fail=0`
+  - 当前判断：这版是按 `v2` 的“偏弱 + 单点瞬时伪影”备注做的受控强化，下一步应直接正式听审
 
 ## 分支建议
 - 如果后续开始多人或多任务并行，优先按任务边界拆分，而不是按文件类型拆分。

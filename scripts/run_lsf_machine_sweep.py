@@ -147,8 +147,115 @@ VARIANT_SPECS: list[dict[str, object]] = [
 ]
 
 
+V3_VARIANT_SPECS: list[dict[str, object]] = [
+    {
+        "variant_id": "asym_boost_v3a",
+        "description": "Boost the newly audible v2 profile, but keep Libri feminine slightly trimmed to reduce the transient artifact noted in review.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.13, 1.09, 1.06],
+                "blend": 0.76,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.14, 1.10, 1.06],
+                "blend": 0.80,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.86, 0.85, 0.94],
+                "blend": 0.88,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.84, 0.87, 0.94],
+                "blend": 0.88,
+            },
+        },
+    },
+    {
+        "variant_id": "vctk_rescue_plus_v3b",
+        "description": "Keep Libri near v2 and spend almost all extra strength budget on the two VCTK cells, especially the still-weak masculine side.",
+        "overrides": {
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.15, 1.11, 1.07],
+                "blend": 0.82,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.83, 0.86, 0.94],
+                "blend": 0.90,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "masc_push_control_v3c",
+        "description": "Leave feminine nearly untouched and push both masculine cells harder, testing whether the remaining weakness is almost entirely on the female-to-masculine side.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.85, 0.84, 0.94],
+                "blend": 0.89,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.82, 0.85, 0.94],
+                "blend": 0.90,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "fem_artifact_guard_v3d",
+        "description": "Pull Libri feminine back slightly while strengthening every other cell, explicitly trading a bit of male-to-feminine intensity for safer transients.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.11, 1.08, 1.05],
+                "blend": 0.73,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.14, 1.10, 1.06],
+                "blend": 0.80,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.86, 0.85, 0.94],
+                "blend": 0.88,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.84, 0.87, 0.94],
+                "blend": 0.89,
+            },
+        },
+    },
+    {
+        "variant_id": "order20_rescue_v3e",
+        "description": "Raise LPC order to 20 and add a moderate strength bump, testing whether the remaining weakness is partly under-resolution rather than blend alone.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "lpc_order": 20,
+                "center_shift_ratios": [1.13, 1.09, 1.06],
+                "blend": 0.77,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "lpc_order": 20,
+                "center_shift_ratios": [1.14, 1.10, 1.06],
+                "blend": 0.80,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "lpc_order": 20,
+                "center_shift_ratios": [0.86, 0.85, 0.94],
+                "blend": 0.88,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "lpc_order": 20,
+                "center_shift_ratios": [0.84, 0.86, 0.94],
+                "blend": 0.88,
+                "search_ranges_hz": [[235.0, 910.0], [910.0, 2520.0], [2520.0, 4380.0]],
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--preset", choices=["v2", "v3"], default="v2")
     parser.add_argument("--base-config", default=str(DEFAULT_BASE_CONFIG))
     parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
     parser.add_argument("--sweep-dir", default=str(DEFAULT_SWEEP_DIR))
@@ -180,10 +287,11 @@ def save_json(path: Path, payload: dict) -> None:
 
 
 def variant_selection(args: argparse.Namespace) -> list[dict[str, object]]:
+    available_specs = VARIANT_SPECS if args.preset == "v2" else V3_VARIANT_SPECS
     if not args.variants.strip():
-        return VARIANT_SPECS
+        return available_specs
     selected = {item.strip() for item in args.variants.split(",") if item.strip()}
-    return [spec for spec in VARIANT_SPECS if spec["variant_id"] in selected]
+    return [spec for spec in available_specs if spec["variant_id"] in selected]
 
 
 def apply_variant(base_config: dict, spec: dict[str, object]) -> dict:
@@ -286,7 +394,7 @@ def write_rows(path: Path, rows: list[dict[str, str]]) -> None:
 
 def build_markdown(rows: list[dict[str, str]], args: argparse.Namespace) -> str:
     lines = [
-        "# LSF Machine Sweep v2",
+        f"# LSF Machine Sweep {args.preset.upper()}",
         "",
         "## Gate Thresholds",
         "",
@@ -374,9 +482,10 @@ def main() -> None:
         )
     )
     write_rows(sweep_dir / "lsf_machine_sweep_pack_summary.csv", summary_rows)
-    (sweep_dir / "LSF_MACHINE_SWEEP_V2.md").write_text(build_markdown(summary_rows, args), encoding="utf-8")
+    markdown_name = f"LSF_MACHINE_SWEEP_{args.preset.upper()}.md"
+    (sweep_dir / markdown_name).write_text(build_markdown(summary_rows, args), encoding="utf-8")
     print(f"Wrote {sweep_dir / 'lsf_machine_sweep_pack_summary.csv'}")
-    print(f"Wrote {sweep_dir / 'LSF_MACHINE_SWEEP_V2.md'}")
+    print(f"Wrote {sweep_dir / markdown_name}")
     print(f"Variants: {len(summary_rows)}")
 
 

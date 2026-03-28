@@ -88,9 +88,29 @@
 - 并且过线不是只靠 `LibriTTS feminine` 单边高分撑起来
 - 因此当前这版值得重新进入正式人工听审
 
+## 主观听审结果
+
+`LSF v2` 的正式听审现已完成：
+
+- `8/8 reviewed`
+- `effect_audible: yes=4, maybe=4, no=0`
+- `strength_fit: too_weak=5`
+- `artifact_issue: yes=1`
+
+当前这轮的关键变化，不是“已经足够强”，而是：
+
+- 它第一次摆脱了整包 `no audible`
+- 但主观主结论仍然是“整体偏弱”
+- 备注里还出现了一条 `Libri feminine` 样本的瞬时明显伪影
+
+因此 `v2` 不能被当作终点，也不该被直接否掉。
+
 ## 下一步
 
-1. 用标准入口打开 `LSF v2` 正式听审：
-   - `.\scripts\open_stage0_speech_lsf_review_gui.ps1 -PackVersion v2`
-2. 若主观仍然不给正证据，再把 `LSF` 整条线彻底收口。
-3. 若主观首次给出稳定正证据，再围绕 `VCTK masculine` 单元继续做更窄的 `v2.x` 修正，而不是重新回到大范围扫参。
+1. 当前不再停在 `v2`，而是按这轮备注继续推进到 `LSF v3`。
+2. `v3` 的目标不是改方法，而是：
+   - 补强整体强度
+   - 继续抬 `VCTK masculine`
+   - 同时盯住 `Libri feminine` 的瞬时伪影
+3. 下一步正式入口已切到：
+   - `.\scripts\open_stage0_speech_lsf_review_gui.ps1 -PackVersion v3`
