@@ -12,6 +12,7 @@ from itertools import repeat
 from pathlib import Path
 
 from enrich_manifest_features import enrich_row
+from row_identity import get_record_id
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -202,7 +203,7 @@ def load_cached_rows_for_input(
     if not path.exists():
         return []
 
-    requested_ids = [row["utt_id"] for row in input_rows]
+    requested_ids = [get_record_id(row) for row in input_rows]
     requested_set = set(requested_ids)
     with path.open("r", encoding="utf-8", newline="") as f:
         cached_rows = list(csv.DictReader(f))
@@ -210,10 +211,10 @@ def load_cached_rows_for_input(
     cached_by_id: dict[str, dict[str, str]] = {}
     duplicate_ids: set[str] = set()
     for row in cached_rows:
-        utt_id = row["utt_id"]
-        if utt_id in cached_by_id:
-            duplicate_ids.add(utt_id)
-        cached_by_id[utt_id] = row
+        record_id = get_record_id(row)
+        if record_id in cached_by_id:
+            duplicate_ids.add(record_id)
+        cached_by_id[record_id] = row
 
     if duplicate_ids:
         print(
@@ -222,14 +223,14 @@ def load_cached_rows_for_input(
             flush=True,
         )
 
-    extra_ids = [utt_id for utt_id in cached_by_id if utt_id not in requested_set]
+    extra_ids = [record_id for record_id in cached_by_id if record_id not in requested_set]
     if extra_ids:
         print(
             f"[{label}] Ignoring {len(extra_ids)} cached rows that are outside the current input selection.",
             flush=True,
         )
 
-    return [cached_by_id[utt_id] for utt_id in requested_ids if utt_id in cached_by_id]
+    return [cached_by_id[record_id] for record_id in requested_ids if record_id in cached_by_id]
 
 
 def enrich_manifest_incremental(
@@ -252,9 +253,9 @@ def enrich_manifest_incremental(
 
     fieldnames = enriched_fieldnames(rows)
     cached_rows = load_cached_rows_for_input(label, out_csv, rows)
-    processed_ids = {row["utt_id"] for row in cached_rows}
-    cached_by_id = {row["utt_id"]: row for row in cached_rows}
-    pending_rows = [row for row in rows if row["utt_id"] not in processed_ids]
+    processed_ids = {get_record_id(row) for row in cached_rows}
+    cached_by_id = {get_record_id(row): row for row in cached_rows}
+    pending_rows = [row for row in rows if get_record_id(row) not in processed_ids]
     done = len(processed_ids)
     total = len(rows)
 
@@ -263,7 +264,7 @@ def enrich_manifest_incremental(
 
     if not pending_rows:
         print(f"[{label}] No pending rows. Reusing {out_csv}", flush=True)
-        return [cached_by_id[row["utt_id"]] for row in rows if row["utt_id"] in cached_by_id]
+        return [cached_by_id[get_record_id(row)] for row in rows if get_record_id(row) in cached_by_id]
 
     start_time = time.time()
     resume_done = done
@@ -296,7 +297,7 @@ def enrich_manifest_incremental(
     try:
         for enriched_row in iterator:
             buffered_rows.append(enriched_row)
-            cached_by_id[enriched_row["utt_id"]] = enriched_row
+            cached_by_id[get_record_id(enriched_row)] = enriched_row
             done += 1
             if len(buffered_rows) >= batch_size:
                 flush_buffer()
@@ -318,7 +319,7 @@ def enrich_manifest_incremental(
     if done > last_reported_done:
         print_progress(label, done, total, start_time, done - resume_done)
     print(f"[{label}] Finished writing {out_csv}", flush=True)
-    return [cached_by_id[row["utt_id"]] for row in rows if row["utt_id"] in cached_by_id]
+    return [cached_by_id[get_record_id(row)] for row in rows if get_record_id(row) in cached_by_id]
 
 
 def build_overview_rows(

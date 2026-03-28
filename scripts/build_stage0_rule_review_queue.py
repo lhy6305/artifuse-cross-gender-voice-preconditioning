@@ -10,6 +10,7 @@ import librosa
 import numpy as np
 
 from enrich_manifest_features import compute_features, load_audio
+from row_identity import get_record_id
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,7 +75,7 @@ def file_mtime_ns(path_value: str) -> int:
 def build_cache_key(row: dict[str, str]) -> tuple[str, str, str, str]:
     return (
         row["rule_id"],
-        row["utt_id"],
+        get_record_id(row),
         row["original_copy"],
         row["processed_audio"],
     )
@@ -83,6 +84,7 @@ def build_cache_key(row: dict[str, str]) -> tuple[str, str, str, str]:
 def build_summary_signature(row: dict[str, str]) -> str:
     fields = [
         "rule_id",
+        "record_id",
         "utt_id",
         "source_gender",
         "target_direction",
@@ -363,6 +365,7 @@ def build_output_row(
 
     return {
         "rule_id": row["rule_id"],
+        "record_id": get_record_id(row),
         "utt_id": row["utt_id"],
         "source_gender": row["source_gender"],
         "target_direction": row["target_direction"],

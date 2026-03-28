@@ -20,7 +20,7 @@
 
 ## 替换关系
 
+- `m1_scales_lip_trill_o` -> `m1_long_pp_a` | `singing_male` | `VocalSet 1.2` | `7-10s`
+- `m10_scales_vocal_fry_a` -> `m10_scales_belt_i` | `singing_male` | `VocalSet 1.2` | `5-7s`
 - `f1_arpeggios_lip_trill_a` -> `f1_arpeggios_breathy_u` | `singing_female` | `VocalSet 1.2` | `5-7s`
 - `f3_scales_lip_trill_o` -> `f2_arpeggios_belt_u` | `singing_female` | `VocalSet 1.2` | `5-7s`
-- `m10_scales_vocal_fry_a` -> `m10_scales_belt_i` | `singing_male` | `VocalSet 1.2` | `5-7s`
-- `m1_scales_lip_trill_o` -> `m1_long_pp_a` | `singing_male` | `VocalSet 1.2` | `7-10s`

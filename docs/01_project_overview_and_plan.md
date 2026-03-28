@@ -9,7 +9,7 @@
 在尽量不破坏内容、节奏和主音高结构的前提下，对输入音频施加轻量、条件化、可解释的共鸣/谱包络修正，以改善 RVC 跨性别转换中的干瘪、薄和腔体感不匹配问题。
 
 ## 当前仓库现状
-- 已有高层设计文档：`initial_design.md`
+- 已有高层设计摘要与完整参考稿：`initial_design.md`、`docs/reference/initial_design_full_v1.md`
 - 已有阶段 0/1 实验设计：`docs/10_stage0_stage1_experiment_design.md`
 - 已有公开数据集候选清单：`docs/11_public_dataset_shortlist.md`
 - 已有初版数据资产清单输出入口：`scripts/build_dataset_inventory.py`
@@ -365,6 +365,16 @@
   - 在这两步完成前，不再回到 `pole edit / cepstral delta` 上继续抠细节
 
 ## 近期任务
+1. `2026-03-28` 仓库健康度/规范性自检已完成：
+   - 已补 `.editorconfig`，把 UTF-8 / 行尾 / 末尾换行约束从口头约定落成仓库级规则；
+   - 已修复 `stage1` 相关脚本中无法关闭的布尔参数，以及一处错误的 PowerShell 重建命令；
+   - 已修正 `stage0 speech listening pack` 当前 README 的落点路径，避免继续把正式产物误写成 `tmp/`。
+   - 已为结构化清单引入稳定 `record_id`，后续缓存、断点续跑和跨表对齐不再依赖 `utt_id` 全局唯一。
+2. 当前自检残留风险已明确：
+   - `utterance_manifest.csv` 在全量层面仍存在至少一个重复 `utt_id`，但当前主链脚本已切到稳定 `record_id`，`utt_id` 只保留作人类可读短名；
+   - `data/datasets/speech/libritts_r/doc.tar.gz` 已从 Git 跟踪中移除，本地仍可保留；后续继续维持“下载包默认不纳管”边界；
+   - 环境耦合的沙盒清理脚本已迁到 `tools/maintenance/sandbox_zero_byte_cleanup.py`；后续仍不应让这类本地运维工具参与项目主流程；
+   - 多个表示层脚本已超过 `400~600` 行；其中长设计稿 `initial_design.md` 已完成“摘要入口 + 冻结参考稿”拆分，后续类似长文档继续按同一模式处理。
 1. 以 `scripts/build_listening_review_rollup.py` 为标准汇总入口，后续不再要求把稀疏标注手工补成满表。
 2. 基于 `artifacts/listening_review_rollup/v1/` 正式冻结以下结论：
    - `static EQ / resonance tilt / formant anchor` 归入 `null result`；

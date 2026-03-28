@@ -4,6 +4,8 @@ import csv
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from row_identity import get_record_id
+
 
 ROOT = Path(__file__).resolve().parents[1]
 META_DIR = ROOT / "data" / "datasets" / "_meta"
@@ -37,7 +39,7 @@ def extract_technique(path_raw: str) -> str:
 
 
 def stable_row_sort_key(row: dict[str, str]) -> tuple[float, str, str]:
-    return (float(row["duration_sec"]), row["speaker_id"], row["utt_id"])
+    return (float(row["duration_sec"]), row["speaker_id"], get_record_id(row))
 
 
 def round_robin_select(rows: list[dict[str, str]], quota: int) -> list[dict[str, str]]:

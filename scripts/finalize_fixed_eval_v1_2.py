@@ -5,6 +5,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from row_identity import get_record_id
+
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(Path(__file__).resolve().parent) not in sys.path:
@@ -97,8 +99,8 @@ def build_v1_2() -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[
             out_row["eval_set_id"] = "fixed_eval_v1_2"
             base_rows.append(out_row)
 
-    existing_utts = {row["utt_id"] for row in base_rows}
-    prior_utts = {row["utt_id"] for row in review_rows}
+    existing_record_ids = {get_record_id(row) for row in base_rows}
+    prior_record_ids = {get_record_id(row) for row in review_rows}
 
     replacements: list[dict[str, str]] = []
     replacement_log: list[dict[str, str]] = []
@@ -138,8 +140,8 @@ def build_v1_2() -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[
             and row["gender"] == gender
             and row["quality_flag"] == "ok"
             and lower <= float(row["duration_sec"]) < upper
-            and row["utt_id"] not in prior_utts
-            and row["utt_id"] not in existing_utts
+            and get_record_id(row) not in prior_record_ids
+            and get_record_id(row) not in existing_record_ids
             and is_allowed_candidate(row)
         ]
         chosen = select_for_bin(
@@ -171,13 +173,15 @@ def build_v1_2() -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[
         replacement["final_resolution"] = "replacement_for_removed_maybe"
         replacement["final_resolution_reason"] = FINAL_DECISIONS[removed_utt]["reason"]
         replacements.append(replacement)
-        existing_utts.add(replacement["utt_id"])
+        existing_record_ids.add(get_record_id(replacement))
 
         replacement_log.append(
             {
+                "removed_record_id": get_record_id(removed_row),
                 "removed_utt_id": removed_utt,
                 "removed_path_raw": removed_row["path_raw"],
                 "removed_reason": FINAL_DECISIONS[removed_utt]["reason"],
+                "replacement_record_id": get_record_id(replacement),
                 "replacement_utt_id": replacement["utt_id"],
                 "replacement_path_raw": replacement["path_raw"],
                 "eval_bucket": eval_bucket,
@@ -199,7 +203,7 @@ def build_v1_2() -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[
             row.get("dataset_name", ""),
             row.get("duration_bin", ""),
             int(row.get("selection_order", "0")),
-            row.get("utt_id", ""),
+            get_record_id(row),
         )
     )
 
@@ -208,6 +212,7 @@ def build_v1_2() -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[
         row = removed_rows[utt_id]
         removed_summary.append(
             {
+                "record_id": get_record_id(row),
                 "utt_id": utt_id,
                 "eval_bucket": row["eval_bucket"],
                 "dataset_name": row["dataset_name"],
@@ -263,15 +268,17 @@ def main() -> None:
     write_csv(OUT_DIR / "fixed_eval_manifest_v1_2.csv", fieldnames, final_rows)
     write_csv(
         OUT_DIR / "removed_samples_v1_2.csv",
-        ["utt_id", "eval_bucket", "dataset_name", "speaker_id", "duration_bin", "path_raw", "reason"],
+        ["record_id", "utt_id", "eval_bucket", "dataset_name", "speaker_id", "duration_bin", "path_raw", "reason"],
         removed_summary,
     )
     write_csv(
         OUT_DIR / "replacement_log_v1_2.csv",
         [
+            "removed_record_id",
             "removed_utt_id",
             "removed_path_raw",
             "removed_reason",
+            "replacement_record_id",
             "replacement_utt_id",
             "replacement_path_raw",
             "eval_bucket",

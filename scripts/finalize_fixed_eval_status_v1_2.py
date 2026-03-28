@@ -4,6 +4,8 @@ import csv
 from collections import Counter
 from pathlib import Path
 
+from row_identity import get_record_id
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "experiments" / "fixed_eval" / "v1_2" / "fixed_eval_manifest_v1_2.csv"
@@ -54,13 +56,14 @@ def write_summary(path: Path, rows: list[dict[str, str]]) -> None:
 def main() -> None:
     manifest_rows = load_csv(MANIFEST)
     replacement_rows = load_csv(REPLACEMENTS)
-    replacement_by_utt = {row["utt_id"]: row for row in replacement_rows}
+    replacement_by_record_id = {get_record_id(row): row for row in replacement_rows}
 
     final_rows = []
     for row in manifest_rows:
         out_row = dict(row)
-        if row["utt_id"] in replacement_by_utt:
-            replacement = replacement_by_utt[row["utt_id"]]
+        record_id = get_record_id(row)
+        if record_id in replacement_by_record_id:
+            replacement = replacement_by_record_id[record_id]
             for key, value in replacement.items():
                 if key in out_row:
                     out_row[key] = value
@@ -76,7 +79,7 @@ def main() -> None:
             row.get("dataset_name", ""),
             row.get("duration_bin", ""),
             int(row.get("selection_order", "0")),
-            row.get("utt_id", ""),
+            get_record_id(row),
         )
     )
 

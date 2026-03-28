@@ -103,5 +103,5 @@ $OutputEncoding = [Console]::OutputEncoding
 ## 备注
 
 - 当前 `stage0 baseline` 直接复用 `scripts/enrich_manifest_features.py` 的特征定义，避免字段漂移。
-- `full` 特征提取现在支持按 `subset` 分步执行、按 `utt_id` 断点续跑，并持续打印进度与 ETA。
+- `full` 特征提取现在支持按 `subset` 分步执行、按稳定 `record_id` 断点续跑，并持续打印进度与 ETA；`utt_id` 仅保留作人类可读短名。
 - 若后面切换更正式的 band energy / tilt 实现，应升级版本号，不要原地改写 `v1` 产物。

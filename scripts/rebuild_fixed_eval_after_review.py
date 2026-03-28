@@ -5,6 +5,7 @@ from collections import Counter
 from pathlib import Path
 
 from sample_fixed_eval_set import CELL_SPECS, DURATION_BINS, select_for_bin
+from row_identity import get_record_id
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -80,8 +81,8 @@ def build_replacement_manifest() -> tuple[list[dict[str, str]], list[dict[str, s
     reviewed_by_utt = {row["utt_id"]: row for row in reviewed_rows}
 
     keep_rows = [row for row in reviewed_rows if row["utt_id"] not in excluded_utts]
-    existing_utts = {row["utt_id"] for row in keep_rows}
-    all_v1_utts = {row["utt_id"] for row in reviewed_rows}
+    existing_record_ids = {get_record_id(row) for row in keep_rows}
+    all_v1_record_ids = {get_record_id(row) for row in reviewed_rows}
 
     replacements: list[dict[str, str]] = []
 
@@ -109,8 +110,8 @@ def build_replacement_manifest() -> tuple[list[dict[str, str]], list[dict[str, s
                 and row["gender"] == spec.gender
                 and row["quality_flag"] == "ok"
                 and lower <= float(row["duration_sec"]) < upper
-                and row["utt_id"] not in all_v1_utts
-                and row["utt_id"] not in existing_utts
+                and get_record_id(row) not in all_v1_record_ids
+                and get_record_id(row) not in existing_record_ids
                 and row["utt_id"] not in excluded_utts
                 and is_allowed_candidate(row)
             ]
@@ -132,7 +133,7 @@ def build_replacement_manifest() -> tuple[list[dict[str, str]], list[dict[str, s
                 out_row["selection_rule"] = "replacement_after_review_keep_original_cell_and_duration_quota"
                 out_row["replacement_for"] = ""
                 replacements.append(out_row)
-                existing_utts.add(row["utt_id"])
+                existing_record_ids.add(get_record_id(row))
 
     replacements_by_cell: dict[tuple[str, str, str], list[dict[str, str]]] = {}
     for row in replacements:
@@ -154,9 +155,11 @@ def build_replacement_manifest() -> tuple[list[dict[str, str]], list[dict[str, s
             final_rows.append(replacement)
             replacement_log.append(
                 {
+                    "excluded_record_id": get_record_id(row),
                     "excluded_utt_id": utt_id,
                     "excluded_path_raw": row["path_raw"],
                     "excluded_reason": EXCLUSION_REASONS[utt_id],
+                    "replacement_record_id": get_record_id(replacement),
                     "replacement_utt_id": replacement["utt_id"],
                     "replacement_path_raw": replacement["path_raw"],
                     "eval_bucket": row["eval_bucket"],
@@ -175,6 +178,7 @@ def build_replacement_manifest() -> tuple[list[dict[str, str]], list[dict[str, s
         row = reviewed_by_utt[utt_id]
         excluded_rows.append(
             {
+                "record_id": get_record_id(row),
                 "utt_id": utt_id,
                 "eval_bucket": row["eval_bucket"],
                 "dataset_name": row["dataset_name"],
@@ -191,7 +195,7 @@ def build_replacement_manifest() -> tuple[list[dict[str, str]], list[dict[str, s
             row["dataset_name"],
             row["duration_bin"],
             int(row["selection_order"]),
-            row["utt_id"],
+            get_record_id(row),
         )
     )
     return final_rows, excluded_rows, replacement_log
@@ -245,15 +249,17 @@ def main() -> None:
     write_csv(OUT_DIR / "fixed_eval_manifest_v1_1.csv", fieldnames, final_rows)
     write_csv(
         OUT_DIR / "excluded_samples_v1_1.csv",
-        ["utt_id", "eval_bucket", "dataset_name", "speaker_id", "duration_bin", "path_raw", "exclusion_reason"],
+        ["record_id", "utt_id", "eval_bucket", "dataset_name", "speaker_id", "duration_bin", "path_raw", "exclusion_reason"],
         excluded_rows,
     )
     write_csv(
         OUT_DIR / "replacement_log_v1_1.csv",
         [
+            "excluded_record_id",
             "excluded_utt_id",
             "excluded_path_raw",
             "excluded_reason",
+            "replacement_record_id",
             "replacement_utt_id",
             "replacement_path_raw",
             "eval_bucket",

@@ -4,6 +4,8 @@ import argparse
 import csv
 from pathlib import Path
 
+from row_identity import get_record_id
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "artifacts" / "listening_review" / "stage1_rvc_cascade_eval" / "v1" / "rvc_cascade_manifest.csv"
@@ -66,7 +68,7 @@ def build_review_rows(manifest_rows: list[dict[str, str]]) -> list[dict[str, str
     for row in manifest_rows:
         if row.get("status") != "done":
             continue
-        key = (row["utt_id"], row["target_id"])
+        key = (get_record_id(row), row["target_id"])
         paired.setdefault(key, {})[row["input_variant"]] = row
 
     rows: list[dict[str, str]] = []
@@ -79,6 +81,7 @@ def build_review_rows(manifest_rows: list[dict[str, str]]) -> list[dict[str, str
         rows.append(
             {
                 "rule_id": raw_row["rule_id"],
+                "record_id": get_record_id(raw_row),
                 "utt_id": raw_row["utt_id"],
                 "source_gender": raw_row["source_gender"],
                 "target_direction": raw_row["target_direction"],
@@ -100,7 +103,7 @@ def build_review_rows(manifest_rows: list[dict[str, str]]) -> list[dict[str, str
                     f"f0_up_key={raw_row.get('f0_up_key', '')} | "
                     f"f0_reason={raw_row.get('f0_up_key_reason', '')}"
                 ),
-                "summary_signature": f"{raw_row['utt_id']}|{raw_row['target_id']}",
+                "summary_signature": f"{get_record_id(raw_row)}|{raw_row['target_id']}",
                 "input_audio": raw_row["input_audio"],
                 "original_copy": proc_row["input_audio"],
                 "processed_audio": proc_row["output_audio"],

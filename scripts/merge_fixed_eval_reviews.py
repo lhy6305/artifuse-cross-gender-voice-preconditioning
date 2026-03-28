@@ -4,6 +4,8 @@ import csv
 from collections import Counter
 from pathlib import Path
 
+from row_identity import get_record_id
+
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_QUEUE = ROOT / "experiments" / "fixed_eval" / "v1" / "review_pack" / "review_queue_v1.csv"
@@ -59,14 +61,15 @@ def main() -> None:
     replacement_rows = load_csv(REPLACEMENT_QUEUE)
 
     excluded_utts = {row["replacement_for"] for row in replacement_rows}
-    merged_rows = [row for row in base_rows if row["utt_id"] not in excluded_utts] + replacement_rows
+    excluded_record_ids = {get_record_id(row) for row in base_rows if row["utt_id"] in excluded_utts}
+    merged_rows = [row for row in base_rows if get_record_id(row) not in excluded_record_ids] + replacement_rows
     merged_rows.sort(
         key=lambda row: (
             row.get("eval_bucket", ""),
             row.get("dataset_name", ""),
             row.get("duration_bin", ""),
             int(row.get("selection_order", "0")),
-            row.get("utt_id", ""),
+            get_record_id(row),
         )
     )
 

@@ -5,6 +5,8 @@ import re
 import wave
 from pathlib import Path
 
+from row_identity import build_record_id
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROOT = ROOT / "data" / "datasets"
@@ -80,6 +82,12 @@ def add_vctk_rows(rows: list[dict[str, str]]) -> None:
         utt_id = path.stem
         rows.append(
             {
+                "record_id": build_record_id(
+                    dataset_name="VCTK Corpus 0.92",
+                    speaker_id=speaker_id,
+                    utt_id=utt_id,
+                    path_raw=str(path.relative_to(ROOT)).replace("\\", "/"),
+                ),
                 "utt_id": utt_id,
                 "dataset_name": "VCTK Corpus 0.92",
                 "split_name": "full local extraction",
@@ -106,8 +114,15 @@ def add_libritts_rows(rows: list[dict[str, str]]) -> None:
             duration_sec, sample_rate = audio_info(path)
             speaker_id = path.parts[-3]
             utt_id = path.stem
+            path_raw = str(path.relative_to(ROOT)).replace("\\", "/")
             rows.append(
                 {
+                    "record_id": build_record_id(
+                        dataset_name="LibriTTS-R",
+                        speaker_id=speaker_id,
+                        utt_id=utt_id,
+                        path_raw=path_raw,
+                    ),
                     "utt_id": utt_id,
                     "dataset_name": "LibriTTS-R",
                     "split_name": split_name,
@@ -115,7 +130,7 @@ def add_libritts_rows(rows: list[dict[str, str]]) -> None:
                     "gender": gender_map.get(speaker_id, "unknown"),
                     "domain": "speech",
                     "language": "English",
-                    "path_raw": str(path.relative_to(ROOT)).replace("\\", "/"),
+                    "path_raw": path_raw,
                     "path_proc": "",
                     "duration_sec": f"{duration_sec:.6f}",
                     "sample_rate": str(sample_rate),
@@ -132,8 +147,15 @@ def add_vocalset_rows(rows: list[dict[str, str]]) -> None:
         speaker_id = path.parts[-4]
         gender = "female" if speaker_id.startswith("female") else "male"
         utt_id = path.stem
+        path_raw = str(path.relative_to(ROOT)).replace("\\", "/")
         rows.append(
             {
+                "record_id": build_record_id(
+                    dataset_name="VocalSet 1.2",
+                    speaker_id=speaker_id,
+                    utt_id=utt_id,
+                    path_raw=path_raw,
+                ),
                 "utt_id": utt_id,
                 "dataset_name": "VocalSet 1.2",
                 "split_name": "full local extraction",
@@ -141,7 +163,7 @@ def add_vocalset_rows(rows: list[dict[str, str]]) -> None:
                 "gender": gender,
                 "domain": "singing",
                 "language": "mixed / vocalise + excerpt",
-                "path_raw": str(path.relative_to(ROOT)).replace("\\", "/"),
+                "path_raw": path_raw,
                 "path_proc": "",
                 "duration_sec": f"{duration_sec:.6f}",
                 "sample_rate": str(sample_rate),
@@ -159,6 +181,7 @@ def main() -> None:
     add_vocalset_rows(rows)
 
     fieldnames = [
+        "record_id",
         "utt_id",
         "dataset_name",
         "split_name",

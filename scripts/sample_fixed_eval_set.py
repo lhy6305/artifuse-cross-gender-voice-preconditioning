@@ -5,6 +5,8 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
+from row_identity import get_record_id
+
 
 ROOT = Path(__file__).resolve().parents[1]
 IN_CSV = ROOT / "data" / "datasets" / "_meta" / "utterance_manifest.csv"
@@ -48,7 +50,7 @@ def in_duration_bin(duration_sec: float, lower: float, upper: float) -> bool:
 
 def stable_candidate_sort_key(row: dict[str, str], center: float) -> tuple[float, str, str]:
     duration_sec = float(row["duration_sec"])
-    return (abs(duration_sec - center), row["utt_id"], row["path_raw"])
+    return (abs(duration_sec - center), get_record_id(row), row["path_raw"])
 
 
 def select_for_bin(
@@ -147,7 +149,7 @@ def select_fixed_eval(rows: list[dict[str, str]]) -> list[dict[str, str]]:
             row["dataset_name"],
             row["duration_bin"],
             int(row["selection_order"]),
-            row["utt_id"],
+            get_record_id(row),
         )
     )
     return selected
@@ -161,6 +163,7 @@ def write_rows(rows: list[dict[str, str]]) -> None:
         "duration_bin",
         "selection_order",
         "selection_rule",
+        "record_id",
         "utt_id",
         "dataset_name",
         "split_name",

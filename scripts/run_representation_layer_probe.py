@@ -13,6 +13,7 @@ import numpy as np
 import pyworld
 
 from enrich_manifest_features import load_audio
+from row_identity import get_record_id
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -89,7 +90,7 @@ def select_rows(rows: list[dict[str, str]], samples_per_cell: int, max_rows: int
             grouped[(row.get("dataset_name", "unknown"), row["gender"])].append(row)
         selected = []
         for key in sorted(grouped):
-            group_rows = sorted(grouped[key], key=lambda row: row.get("utt_id", ""))
+            group_rows = sorted(grouped[key], key=get_record_id)
             selected.extend(group_rows[:samples_per_cell])
     if max_rows > 0:
         selected = selected[:max_rows]
@@ -297,6 +298,7 @@ def extract_row(row: dict[str, str], args: argparse.Namespace) -> dict[str, str]
     )
 
     out = {
+        "record_id": get_record_id(row),
         "utt_id": row.get("utt_id", ""),
         "dataset_name": row.get("dataset_name", "unknown"),
         "gender": row["gender"],

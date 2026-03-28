@@ -40,7 +40,7 @@
 - 输出基于 `f0_median_hz` 四分位的分桶统计。
 - 同时把固定评测集终稿状态快照写进总表。
 - `full` 入口支持 `speech` / `singing` 分步提取。
-- `full` 特征提取支持按 `utt_id` 断点续跑。
+- `full` 特征提取支持按稳定 `record_id` 断点续跑。
 - `full` 特征提取支持并行 worker 与周期性进度打印。
 - 新增 PowerShell 手动入口：`scripts/run_stage0_baseline_full.ps1`
 
@@ -99,7 +99,7 @@ $OutputEncoding = [Console]::OutputEncoding
 
 ## 当前注意点
 
-- `resume` 依赖 `utt_id`，因此输入清单必须保持该字段稳定且唯一。
+- `resume` 依赖稳定 `record_id`；`utt_id` 只保留作人类可读短名，不再承担全局唯一职责。
 - 如果切换到新的输出目录，可避免 `pilot`、`smoke test` 和 `full` 之间互相污染缓存。
 - 如需从头重跑某个子集，直接对该步骤使用 `--overwrite` 或 PowerShell 包装入口的 `-Overwrite`。
 - 如果另一侧 enriched CSV 已存在，运行第二个子集时会自动刷新总表；`finalize-only` 主要用于只重建汇总文件。

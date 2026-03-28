@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--infer-cli", default=str(DEFAULT_INFER_CLI))
     parser.add_argument("--summary-md", default=str(DEFAULT_SUMMARY_MD))
     parser.add_argument("--max-rows", type=int, default=0)
-    parser.add_argument("--only-pending", action="store_true", default=True)
+    parser.add_argument("--only-pending", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
 
 

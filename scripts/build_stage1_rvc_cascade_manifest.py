@@ -20,6 +20,7 @@ from build_stage0_speech_world_stft_delta_listening_pack import (
     build_rule_lookup,
     load_json as load_rule_json,
 )
+from row_identity import get_filename_token, get_record_id
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SUMMARY_CSV = ROOT / "artifacts" / "listening_review" / "stage0_speech_world_stft_delta_listening_pack" / "v1" / "listening_pack_summary.csv"
@@ -42,8 +43,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-audio-root", default=str(DEFAULT_TARGET_AUDIO_ROOT))
     parser.add_argument("--target-reference-cache", default=str(DEFAULT_TARGET_REFERENCE_CACHE))
     parser.add_argument("--target-reference-sample-count", type=int, default=DEFAULT_TARGET_REFERENCE_SAMPLE_COUNT)
-    parser.add_argument("--include-raw", action="store_true", default=True)
-    parser.add_argument("--include-processed", action="store_true", default=True)
+    parser.add_argument("--include-raw", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--include-processed", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
 
 
@@ -238,6 +239,7 @@ def resolve_target_f0_for_source(source_entry: dict[str, str], target_reference:
 def build_source_entries_from_summary(summary_rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return [
         {
+            "record_id": get_record_id(row),
             "utt_id": row["utt_id"],
             "rule_id": row["rule_id"],
             "source_gender": row["source_gender"],
@@ -294,6 +296,14 @@ def build_custom_source_entries(
             save_audio(processed_audio, processed, sample_rate)
             entries.append(
                 {
+                    "record_id": get_record_id(
+                        {
+                            "dataset_name": "custom_input",
+                            "speaker_id": "external",
+                            "utt_id": path.stem,
+                            "path_raw": str(path),
+                        }
+                    ),
                     "utt_id": path.stem,
                     "rule_id": rule["rule_id"],
                     "source_gender": "unknown",
@@ -309,7 +319,7 @@ def build_custom_source_entries(
 
     deduped: dict[tuple[str, str], dict[str, str]] = {}
     for entry in entries:
-        deduped[(entry["utt_id"], entry["target_direction"])] = entry
+        deduped[(entry["record_id"], entry["target_direction"])] = entry
     return list(deduped.values())
 
 
@@ -344,12 +354,13 @@ def build_rows(
             target_slug = slugify(target["target_id"])
 
             for input_variant, input_audio in variants:
-                stem = Path(input_audio).stem
+                stem = get_filename_token(source_entry)
                 output_audio = output_dir / "rendered" / target_slug / input_variant / f"{stem}__{target_slug}.wav"
-                eval_item_id = f"{source_entry['utt_id']}__{input_variant}__{target_slug}"
+                eval_item_id = f"{source_entry['record_id']}__{input_variant}__{target_slug}"
                 rows.append(
                     {
                         "eval_item_id": eval_item_id,
+                        "record_id": source_entry["record_id"],
                         "utt_id": source_entry["utt_id"],
                         "rule_id": source_entry["rule_id"],
                         "source_gender": source_entry["source_gender"],
@@ -424,7 +435,7 @@ def write_readme(
             "",
             "```powershell",
             ".\\python.exe .\\scripts\\build_stage1_rvc_cascade_manifest.py",
-            ".\\python.exe .\\scripts\\run_stage1_rvc_cascade_batch.ps1",
+            ".\\scripts\\run_stage1_rvc_cascade_batch.ps1",
             ".\\python.exe .\\scripts\\build_stage1_rvc_cascade_review_queue.py",
             "```",
             "",

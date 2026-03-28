@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
-import json
 import math
 from pathlib import Path
 
@@ -12,6 +10,15 @@ import pyworld
 
 from apply_stage0_rule_preconditioner import load_audio, resolve_path, save_audio
 from build_stage0_speech_listening_pack import TARGET_DIRECTION_BY_SOURCE_GENDER, load_source_rows, select_rows
+from stage0_speech_resonance_pack_common import (
+    build_enabled_directional_rule_lookup,
+    build_output_stem,
+    build_summary_row,
+    load_json,
+    safe_rms,
+    write_pack_readme,
+    write_summary,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,22 +36,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--audio-format", choices=["wav", "flac"], default="wav")
     parser.add_argument("--peak-limit", type=float, default=0.98)
     return parser.parse_args()
-
-
-def load_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def build_rule_lookup(rule_config: dict) -> dict[tuple[str, str], dict]:
-    return {
-        (rule["match"]["group_value"], rule["target_direction"]): rule
-        for rule in rule_config["rules"]
-        if rule.get("enabled", False)
-    }
-
-
-def safe_rms(audio: np.ndarray) -> float:
-    return float(np.sqrt(np.mean(np.square(audio.astype(np.float64))))) if audio.size else 0.0
 
 
 def analyze_world(
@@ -226,74 +217,11 @@ def apply_vtl_warping(
     return output.astype(np.float32)
 
 
-def write_summary(path: Path, rows: list[dict[str, str]]) -> None:
-    fieldnames = [
-        "rule_id",
-        "utt_id",
-        "source_gender",
-        "target_direction",
-        "group_value",
-        "f0_condition",
-        "f0_median_hz",
-        "input_audio",
-        "original_copy",
-        "processed_audio",
-        "confidence",
-        "strength_label",
-        "alpha_default",
-        "alpha_max",
-        "dataset_name",
-        "eval_bucket",
-        "duration_sec",
-        "selection_rank",
-        "selection_score",
-        "method_family",
-        "method_params",
-        "rule_notes",
-    ]
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
-
-
-def write_readme(path: Path, rows: list[dict[str, str]], *, rule_config_path: Path) -> None:
-    pack_dir = path.parent
-    pack_version = pack_dir.name
-    try:
-        rule_config_rel = rule_config_path.relative_to(ROOT).as_posix()
-    except ValueError:
-        rule_config_rel = str(rule_config_path)
-    summary_rel = (pack_dir / "listening_pack_summary.csv").relative_to(ROOT).as_posix()
-    queue_rel = (pack_dir / "listening_review_queue.csv").relative_to(ROOT).as_posix()
-    summary_md_rel = (pack_dir / "listening_review_quant_summary.md").relative_to(ROOT).as_posix()
-    lines = [
-        f"# Stage0 Speech VTL Warping Listening Pack {pack_version}",
-        "",
-        "- purpose: `tract-length warp on WORLD envelope with original-phase reconstruction after LSF setback`",
-        f"- rows: `{len(rows)}`",
-        "",
-        "## Rebuild",
-        "",
-        "```powershell",
-        ".\\python.exe .\\scripts\\build_stage0_speech_vtl_warping_listening_pack.py",
-        ".\\python.exe .\\scripts\\build_stage0_rule_review_queue.py `",
-        f"  --rule-config {rule_config_rel} `",
-        f"  --summary-csv {summary_rel} `",
-        f"  --output-csv {queue_rel} `",
-        f"  --summary-md {summary_md_rel}",
-        "```",
-        "",
-    ]
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
 def main() -> None:
     args = parse_args()
     rule_config_path = resolve_path(args.rule_config)
     rule_config = load_json(rule_config_path)
-    rule_lookup = build_rule_lookup(rule_config)
+    rule_lookup = build_enabled_directional_rule_lookup(rule_config)
     selected_rows = select_rows(load_source_rows(resolve_path(args.input_csv)), samples_per_cell=args.samples_per_cell)
     output_dir = resolve_path(args.output_dir)
     originals_dir = output_dir / "original"
@@ -305,8 +233,7 @@ def main() -> None:
         rule = rule_lookup[(row["dataset_name"], target_direction)]
         params = rule["method_params"]
         input_audio = resolve_path(row["path_raw"])
-        dataset_slug = "libritts_r" if row["dataset_name"] == "LibriTTS-R" else "vctk"
-        stem = f"{dataset_slug}__{row['gender']}__{target_direction}__vtl__{row['utt_id']}"
+        stem = build_output_stem(row, target_direction=target_direction, method_token="vtl")
         original_copy = originals_dir / f"{stem}.{args.audio_format}"
         processed_audio = processed_dir / f"{stem}.{args.audio_format}"
 
@@ -337,35 +264,26 @@ def main() -> None:
         save_audio(processed_audio, output, sample_rate)
 
         summary_rows.append(
-            {
-                "rule_id": rule["rule_id"],
-                "utt_id": row["utt_id"],
-                "source_gender": row["gender"],
-                "target_direction": target_direction,
-                "group_value": row["dataset_name"],
-                "f0_condition": rule["match"]["f0_condition"],
-                "f0_median_hz": row["f0_median_hz"],
-                "input_audio": str(input_audio),
-                "original_copy": str(original_copy),
-                "processed_audio": str(processed_audio),
-                "confidence": rule["confidence"],
-                "strength_label": rule["strength"]["label"],
-                "alpha_default": f"{rule['strength']['alpha_default']:.3f}",
-                "alpha_max": f"{rule['strength']['alpha_max']:.3f}",
-                "dataset_name": row["dataset_name"],
-                "eval_bucket": row["eval_bucket"],
-                "duration_sec": row["duration_sec"],
-                "selection_rank": row["selection_rank"],
-                "selection_score": row["selection_score"],
-                "method_family": rule["method_family"],
-                "method_params": json.dumps(rule["method_params"], ensure_ascii=False, sort_keys=True),
-                "rule_notes": rule.get("notes", ""),
-            }
+            build_summary_row(
+                row,
+                rule=rule,
+                target_direction=target_direction,
+                input_audio=input_audio,
+                original_copy=original_copy,
+                processed_audio=processed_audio,
+            )
         )
 
     summary_path = output_dir / "listening_pack_summary.csv"
     write_summary(summary_path, summary_rows)
-    write_readme(output_dir / "README.md", summary_rows, rule_config_path=rule_config_path)
+    write_pack_readme(
+        output_dir / "README.md",
+        rows=summary_rows,
+        pack_title="Stage0 Speech VTL Warping Listening Pack",
+        purpose="tract-length warp on WORLD envelope with original-phase reconstruction after LSF setback",
+        script_name="build_stage0_speech_vtl_warping_listening_pack.py",
+        rule_config_path=rule_config_path,
+    )
     print(f"Wrote {summary_path}")
     print(f"Selected rows: {len(summary_rows)}")
     print(f"Output dir: {output_dir}")
