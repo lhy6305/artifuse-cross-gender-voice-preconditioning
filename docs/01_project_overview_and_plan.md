@@ -62,6 +62,8 @@
 - 已有 LSF 参数化原型说明：`docs/41_representation_layer_lsf_probe_v1.md`
 - 已有 LSF 参数化原型 `v2` 说明：`docs/58_representation_layer_lsf_probe_v2.md`
 - 已有 LSF 参数化原型 `v3` 说明：`docs/59_representation_layer_lsf_probe_v3.md`
+- 已有 LSF `v3` 后续频谱诊断与 selective-shift `v4` 断点：`docs/60_post_lsf_v3_spectral_diagnosis_and_selective_shift_v4.md`
+- 已有 LSF `v5` presence-bypass 结果与下一步目标重定义断点：`docs/61_post_lsf_v5_presence_bypass_result_and_next_target_redefinition.md`
 - 已有 VTL warping 原型说明：`docs/42_representation_layer_vtl_warping_probe_v1.md`
 - 已有 VTL warping v2 原型说明：`docs/43_representation_layer_vtl_warping_probe_v2.md`
 - 已有经典 warp 路线收口断点：`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`
@@ -106,6 +108,8 @@
   - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v2/`
 - 已有 LSF v3 听审包输出：
   - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v3/`
+- 已有 LSF v3 频谱诊断输出：
+  - `artifacts/diagnostics/lsf_review_v3/`
 - 已有 VTL v1 听审包输出：
   - `artifacts/listening_review/stage0_speech_vtl_warping_listening_pack/v1/`
 - 已有 VTL v2 听审包输出：
@@ -397,6 +401,14 @@
   - `scripts/run_lsf_machine_sweep.py --preset v3` 已完成 `5` 个 `LSF v3` 变体的 machine-only sweep
   - `order20_rescue_v3e` 机器侧最佳，并已正式收敛为 `speech_lsf_resonance_candidate_v3.json`
   - 当前 `LSF v3` 已建好标准听审包，成为新的默认听审对象
+- `LSF v3` 的正式听审进一步说明当前矛盾已经变化：
+  - 不再是“整包听不见”
+  - 而是 `female -> male` 容易落成“发闷 / 瓶子音 + 轻微伪影”
+  - 当前已新增频谱诊断脚本 `scripts/plot_lsf_review_diagnostics.py` 与 `v4 selective-shift` machine-only sweep
+  - 最新结论是：问题不只是强度，而是当前 `male` 方向目标函数把共鸣变化错误近似成了整体变暗
+- `LSF v5` 进一步排除了“高频旁路就能修好 male 方向”这个假设：
+  - 当前 `presence-bypass` 虽能减轻高频塌陷，但会把 `female -> male` 的方向性和可感知强度一起冲掉
+  - 因此下一步不再继续抠 `brightness_down + bypass`，而应重定义 `male` 方向目标本身
 
 ## 近期任务
 1. `2026-03-28` 仓库健康度/规范性自检已完成：
@@ -546,7 +558,16 @@
    - sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v3/lsf_machine_sweep_pack_summary.csv`
    - 当前最佳机器侧结果：`avg auto_quant_score = 82.81`、`avg auto_direction_score = 74.67`、`avg auto_effect_score = 78.63`
    - 当前已生成标准听审包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v3/`
-   - 因此下一步默认听审对象已切到 `LSF v3`
+   - 当前正式听审已完成，结论是 `female -> male` 侧容易发闷并出现瓶子音
+39. 当前已新增 `LSF v3` 后续频谱诊断与 `v4 selective-shift` machine-only 搜索：
+   - 诊断脚本：`scripts/plot_lsf_review_diagnostics.py`
+   - 诊断输出：`artifacts/diagnostics/lsf_review_v3/`
+   - `v4` sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v4/lsf_machine_sweep_pack_summary.csv`
+   - 当前判断：`保 F3` 后高频塌陷有所缓解，但 `1.5-3k` 仍系统性下压，`v4` 还不应直接晋级人工
+40. 当前已新增 `LSF v5 presence-bypass` machine-only 搜索：
+   - `v5` sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v5/lsf_machine_sweep_pack_summary.csv`
+   - 当前最佳变体：`presence_bypass_plus_v5b`
+   - 当前判断：旁路保高频能减少 muffled 风险，但会把 `female -> male` 方向性显著削弱，因此也不应直接晋级人工
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

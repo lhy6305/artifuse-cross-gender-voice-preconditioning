@@ -253,9 +253,299 @@ V3_VARIANT_SPECS: list[dict[str, object]] = [
 ]
 
 
+V4_VARIANT_SPECS: list[dict[str, object]] = [
+    {
+        "variant_id": "air_preserve_v4a",
+        "description": "Preserve the third resonance proxy for female-to-masculine edits so the result stops sounding like broad high-frequency suppression.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.88, 0.86, 0.99],
+                "blend": 0.86,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.86, 0.87, 0.99],
+                "blend": 0.86,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "mid_only_v4b",
+        "description": "Hold F3 at neutral and concentrate the masculine move into F2, testing whether the bottle effect is mostly a too-broad downward shift.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.90, 0.84, 1.00],
+                "blend": 0.88,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.89, 0.85, 1.00],
+                "blend": 0.88,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "f2_focus_v4c",
+        "description": "Keep F1 and F3 near neutral while pushing F2 more assertively, aiming for tract-shape change without dulling upper-band air.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.95, 0.84, 1.00],
+                "blend": 0.89,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.94, 0.85, 1.00],
+                "blend": 0.89,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "split_band_v4d",
+        "description": "Retune masculine search bands downward for F1/F2 only, while leaving the top band almost untouched to avoid the muffled bottle impression.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "search_ranges_hz": [[240.0, 820.0], [880.0, 2200.0], [2500.0, 4300.0]],
+                "center_shift_ratios": [0.90, 0.85, 1.00],
+                "blend": 0.88,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "search_ranges_hz": [[240.0, 860.0], [930.0, 2280.0], [2550.0, 4380.0]],
+                "center_shift_ratios": [0.89, 0.86, 1.00],
+                "blend": 0.88,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "conservative_air_v4e",
+        "description": "Trade some masculine strength for safer high-band preservation, serving as a control against over-correction in the new selective-shift family.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.92, 0.88, 1.00],
+                "blend": 0.82,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.91, 0.89, 1.00],
+                "blend": 0.82,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+]
+
+
+V5_VARIANT_SPECS: list[dict[str, object]] = [
+    {
+        "variant_id": "presence_bypass_v5a",
+        "description": "Use a gradual original-band bypass above 1.8kHz so female-to-masculine keeps air while F1/F2 still move downward.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.90, 0.86, 0.99],
+                "blend": 0.86,
+                "preserve_original_from_hz": 1800.0,
+                "preserve_original_full_hz": 3200.0,
+                "preserve_original_mix": 0.85,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.89, 0.86, 0.99],
+                "blend": 0.86,
+                "min_gap_hz": 60.0,
+                "preserve_original_from_hz": 1800.0,
+                "preserve_original_full_hz": 3200.0,
+                "preserve_original_mix": 0.90,
+            },
+        },
+    },
+    {
+        "variant_id": "presence_bypass_plus_v5b",
+        "description": "Push F2 a bit harder than v5a while still bypassing the upper presence and brilliance region from the original signal.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.90, 0.84, 0.99],
+                "blend": 0.88,
+                "preserve_original_from_hz": 1750.0,
+                "preserve_original_full_hz": 3150.0,
+                "preserve_original_mix": 0.88,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.89, 0.84, 0.99],
+                "blend": 0.88,
+                "min_gap_hz": 60.0,
+                "preserve_original_from_hz": 1750.0,
+                "preserve_original_full_hz": 3150.0,
+                "preserve_original_mix": 0.92,
+            },
+        },
+    },
+    {
+        "variant_id": "f2_only_bypass_v5c",
+        "description": "Keep F1/F3 near neutral and rely on F2 plus an upper-band bypass, testing the narrowest tract-shift version of male direction.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.96, 0.84, 1.00],
+                "blend": 0.89,
+                "preserve_original_from_hz": 1700.0,
+                "preserve_original_full_hz": 3000.0,
+                "preserve_original_mix": 0.92,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.95, 0.84, 1.00],
+                "blend": 0.89,
+                "min_gap_hz": 60.0,
+                "preserve_original_from_hz": 1700.0,
+                "preserve_original_full_hz": 3000.0,
+                "preserve_original_mix": 0.95,
+            },
+        },
+    },
+    {
+        "variant_id": "vctk_bypass_focus_v5d",
+        "description": "Keep Libri masculine moderate but use a stronger bypass on the weakest VCTK masculine cell, targeting the main failure case first.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.91, 0.87, 0.99],
+                "blend": 0.84,
+                "preserve_original_from_hz": 1850.0,
+                "preserve_original_full_hz": 3250.0,
+                "preserve_original_mix": 0.82,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.88, 0.84, 0.99],
+                "blend": 0.88,
+                "min_gap_hz": 60.0,
+                "preserve_original_from_hz": 1700.0,
+                "preserve_original_full_hz": 3000.0,
+                "preserve_original_mix": 0.98,
+            },
+        },
+    },
+    {
+        "variant_id": "gentle_bypass_control_v5e",
+        "description": "Use a lighter F1/F2 shift with a strong original-band bypass as a control for separating muffling risk from sheer strength loss.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.93, 0.89, 1.00],
+                "blend": 0.80,
+                "preserve_original_from_hz": 1750.0,
+                "preserve_original_full_hz": 3050.0,
+                "preserve_original_mix": 0.95,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.92, 0.89, 1.00],
+                "blend": 0.80,
+                "min_gap_hz": 60.0,
+                "preserve_original_from_hz": 1750.0,
+                "preserve_original_full_hz": 3050.0,
+                "preserve_original_mix": 0.98,
+            },
+        },
+    },
+]
+
+
+V6_VARIANT_SPECS: list[dict[str, object]] = [
+    {
+        "variant_id": "lower_geom_v6a",
+        "description": "Switch masculine rules to formant-lowering-with-air-preserve and widen the first two pairs slightly while keeping F3 neutral.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.94, 0.90, 1.00],
+                "pair_width_ratios": [1.18, 1.10, 1.00],
+                "blend": 0.86,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.93, 0.90, 1.00],
+                "pair_width_ratios": [1.16, 1.12, 1.00],
+                "blend": 0.86,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "lower_geom_v6b",
+        "description": "Concentrate more movement into F2 plus width expansion, testing a lower-formant geometry change without a broad dark tilt.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.88, 1.00],
+                "pair_width_ratios": [1.08, 1.20, 1.00],
+                "blend": 0.88,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.88, 1.00],
+                "pair_width_ratios": [1.06, 1.22, 1.00],
+                "blend": 0.88,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "lower_geom_v6c",
+        "description": "Use moderate center shifts but stronger pair-width growth, probing whether the audible male cue is more bandwidth-like than centroid-like.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.92, 1.00],
+                "pair_width_ratios": [1.28, 1.18, 1.00],
+                "blend": 0.84,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.95, 0.92, 1.00],
+                "pair_width_ratios": [1.24, 1.20, 1.00],
+                "blend": 0.84,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "vctk_geom_focus_v6d",
+        "description": "Keep Libri conservative but push VCTK masculine geometry harder, since the weakest failures have concentrated there so far.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.95, 0.91, 1.00],
+                "pair_width_ratios": [1.10, 1.10, 1.00],
+                "blend": 0.84,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.92, 0.88, 1.00],
+                "pair_width_ratios": [1.18, 1.24, 1.00],
+                "blend": 0.88,
+                "min_gap_hz": 60.0,
+                "search_ranges_hz": [[235.0, 880.0], [900.0, 2250.0], [2550.0, 4380.0]],
+            },
+        },
+    },
+    {
+        "variant_id": "conservative_geom_v6e",
+        "description": "A conservative control for the new formant-lowering family: smaller center moves, modest width changes, and more blend restraint.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.94, 1.00],
+                "pair_width_ratios": [1.10, 1.08, 1.00],
+                "blend": 0.78,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.94, 1.00],
+                "pair_width_ratios": [1.08, 1.10, 1.00],
+                "blend": 0.78,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--preset", choices=["v2", "v3"], default="v2")
+    parser.add_argument("--preset", choices=["v2", "v3", "v4", "v5", "v6"], default="v2")
     parser.add_argument("--base-config", default=str(DEFAULT_BASE_CONFIG))
     parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
     parser.add_argument("--sweep-dir", default=str(DEFAULT_SWEEP_DIR))
@@ -287,17 +577,26 @@ def save_json(path: Path, payload: dict) -> None:
 
 
 def variant_selection(args: argparse.Namespace) -> list[dict[str, object]]:
-    available_specs = VARIANT_SPECS if args.preset == "v2" else V3_VARIANT_SPECS
+    if args.preset == "v2":
+        available_specs = VARIANT_SPECS
+    elif args.preset == "v3":
+        available_specs = V3_VARIANT_SPECS
+    elif args.preset == "v4":
+        available_specs = V4_VARIANT_SPECS
+    elif args.preset == "v5":
+        available_specs = V5_VARIANT_SPECS
+    else:
+        available_specs = V6_VARIANT_SPECS
     if not args.variants.strip():
         return available_specs
     selected = {item.strip() for item in args.variants.split(",") if item.strip()}
     return [spec for spec in available_specs if spec["variant_id"] in selected]
 
 
-def apply_variant(base_config: dict, spec: dict[str, object]) -> dict:
+def apply_variant(base_config: dict, spec: dict[str, object], *, preset: str) -> dict:
     payload = deepcopy(base_config)
     payload["config_version"] = f"stage0_speech_lsf_machine_sweep_{spec['variant_id']}"
-    payload["source"] = "representation_layer_lsf_machine_sweep_v2"
+    payload["source"] = f"representation_layer_lsf_machine_sweep_{preset}"
     payload["selection_policy"]["purpose"] = f"lsf_machine_sweep_{spec['variant_id']}"
     payload["variant_description"] = spec["description"]
 
@@ -307,7 +606,10 @@ def apply_variant(base_config: dict, spec: dict[str, object]) -> dict:
         params = rule["method_params"]
         if key in overrides:
             for param_name, param_value in overrides[key].items():
-                params[param_name] = param_value
+                if param_name in {"action_family", "signal_name"}:
+                    rule[param_name] = param_value
+                else:
+                    params[param_name] = param_value
         rule["rule_id"] = rule["rule_id"].replace("_v1", f"_{spec['variant_id']}")
         rule["strength"]["label"] = spec["variant_id"]
         rule["notes"] = f"{rule.get('notes', '')} [machine_sweep={spec['variant_id']}]".strip()
@@ -435,7 +737,7 @@ def main() -> None:
     summary_rows: list[dict[str, str]] = []
     for spec in selected_specs:
         variant_id = str(spec["variant_id"])
-        config_payload = apply_variant(base_config, spec)
+        config_payload = apply_variant(base_config, spec, preset=args.preset)
         config_path = sweep_dir / "configs" / f"{variant_id}.json"
         pack_dir = pack_root / variant_id
         summary_csv = pack_dir / "listening_pack_summary.csv"

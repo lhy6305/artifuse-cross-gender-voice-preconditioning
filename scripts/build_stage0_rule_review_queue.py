@@ -191,9 +191,29 @@ def action_expected_sign(action_family: str) -> float:
     return 1.0 if action_family == "brightness_up" else -1.0
 
 
-def direction_control_delta(action_family: str, delta_low_mid_share_db: float | None, delta_brilliance_share_db: float | None) -> float | None:
+def primary_target_delta(action_family: str) -> float:
+    if action_family == "formant_lowering_preserve_air":
+        return 0.025
+    return 0.040
+
+
+def direction_control_delta(
+    action_family: str,
+    delta_low_mid_share_db: float | None,
+    delta_presence_share_db: float | None,
+    delta_brilliance_share_db: float | None,
+) -> float | None:
     if action_family == "brightness_up":
         return delta_brilliance_share_db
+    if action_family == "formant_lowering_preserve_air":
+        low_mid_term = delta_low_mid_share_db if delta_low_mid_share_db is not None else 0.0
+        presence_penalty = 0.0
+        brilliance_penalty = 0.0
+        if delta_presence_share_db is not None:
+            presence_penalty = max(-delta_presence_share_db - 1.0, 0.0)
+        if delta_brilliance_share_db is not None:
+            brilliance_penalty = max(-delta_brilliance_share_db - 0.25, 0.0)
+        return low_mid_term - 0.8 * presence_penalty - 1.2 * brilliance_penalty
     if delta_low_mid_share_db is None:
         return None
     return -delta_low_mid_share_db
@@ -201,6 +221,7 @@ def direction_control_delta(action_family: str, delta_low_mid_share_db: float | 
 
 def build_auto_notes(
     *,
+    action_family: str,
     signed_primary_delta: float | None,
     effect_score: float,
     preservation_score: float,
@@ -208,6 +229,8 @@ def build_auto_notes(
     delta_rms_dbfs: float | None,
     delta_f0_voiced_ratio: float | None,
     delta_clipping_ratio: float | None,
+    delta_presence_share_db: float | None,
+    delta_brilliance_share_db: float | None,
 ) -> str:
     notes: list[str] = []
     if signed_primary_delta is None:
@@ -228,6 +251,16 @@ def build_auto_notes(
         notes.append("voiced_ratio_shift_gt_0p08")
     if delta_clipping_ratio is not None and delta_clipping_ratio > 0.001:
         notes.append("clipping_increase")
+    if action_family == "brightness_down":
+        if delta_presence_share_db is not None and delta_presence_share_db < -2.0:
+            notes.append("presence_drop_gt_2db")
+        if delta_brilliance_share_db is not None and delta_brilliance_share_db < -0.75:
+            notes.append("brilliance_drop_gt_0p75db")
+    if action_family == "formant_lowering_preserve_air":
+        if delta_presence_share_db is not None and delta_presence_share_db < -1.5:
+            notes.append("presence_drop_gt_1p5db")
+        if delta_brilliance_share_db is not None and delta_brilliance_share_db < -0.5:
+            notes.append("brilliance_drop_gt_0p5db")
     return ";".join(notes)
 
 
@@ -236,6 +269,7 @@ def score_row(
     action_family: str,
     delta_log_centroid_minus_log_f0: float | None,
     delta_low_mid_share_db: float | None,
+    delta_presence_share_db: float | None,
     delta_brilliance_share_db: float | None,
     delta_spectral_centroid_hz_mean: float | None,
     delta_f0_median_pct: float | None,
@@ -246,14 +280,19 @@ def score_row(
 ) -> dict[str, str]:
     expected_sign = action_expected_sign(action_family)
     signed_primary = None if delta_log_centroid_minus_log_f0 is None else expected_sign * delta_log_centroid_minus_log_f0
-    control_delta = direction_control_delta(action_family, delta_low_mid_share_db, delta_brilliance_share_db)
+    control_delta = direction_control_delta(
+        action_family,
+        delta_low_mid_share_db,
+        delta_presence_share_db,
+        delta_brilliance_share_db,
+    )
 
-    primary_score = 0.0 if signed_primary is None else clamp(100.0 * signed_primary / 0.040, 0.0, 100.0)
+    primary_score = 0.0 if signed_primary is None else clamp(100.0 * signed_primary / primary_target_delta(action_family), 0.0, 100.0)
     control_score = 0.0 if control_delta is None else clamp(100.0 * control_delta / 1.000, 0.0, 100.0)
     direction_score = 0.7 * primary_score + 0.3 * control_score
 
     centroid_effect = 0.0 if delta_spectral_centroid_hz_mean is None else clamp(abs(delta_spectral_centroid_hz_mean) / 150.0 * 100.0, 0.0, 100.0)
-    primary_effect = 0.0 if delta_log_centroid_minus_log_f0 is None else clamp(abs(delta_log_centroid_minus_log_f0) / 0.040 * 100.0, 0.0, 100.0)
+    primary_effect = 0.0 if delta_log_centroid_minus_log_f0 is None else clamp(abs(delta_log_centroid_minus_log_f0) / primary_target_delta(action_family) * 100.0, 0.0, 100.0)
     control_effect = 0.0 if control_delta is None else clamp(abs(control_delta) / 1.000 * 100.0, 0.0, 100.0)
     effect_score = 0.5 * primary_effect + 0.3 * control_effect + 0.2 * centroid_effect
 
@@ -267,6 +306,16 @@ def score_row(
     if delta_clipping_ratio is not None:
         preservation_score -= clamp(max(delta_clipping_ratio, 0.0) * 4000.0, 0.0, 15.0)
     preservation_score -= clamp(max(spectral_distance_l1 - 0.12, 0.0) * 80.0, 0.0, 15.0)
+    if action_family == "brightness_down":
+        if delta_presence_share_db is not None:
+            preservation_score -= clamp(max(-delta_presence_share_db - 2.0, 0.0) * 6.0, 0.0, 18.0)
+        if delta_brilliance_share_db is not None:
+            preservation_score -= clamp(max(-delta_brilliance_share_db - 0.75, 0.0) * 10.0, 0.0, 18.0)
+    if action_family == "formant_lowering_preserve_air":
+        if delta_presence_share_db is not None:
+            preservation_score -= clamp(max(-delta_presence_share_db - 1.5, 0.0) * 8.0, 0.0, 20.0)
+        if delta_brilliance_share_db is not None:
+            preservation_score -= clamp(max(-delta_brilliance_share_db - 0.5, 0.0) * 12.0, 0.0, 20.0)
     preservation_score = clamp(preservation_score, 0.0, 100.0)
 
     quant_score = 0.45 * direction_score + 0.30 * preservation_score + 0.25 * effect_score
@@ -302,6 +351,7 @@ def score_row(
         quant_grade = "borderline"
 
     notes = build_auto_notes(
+        action_family=action_family,
         signed_primary_delta=signed_primary,
         effect_score=effect_score,
         preservation_score=preservation_score,
@@ -309,6 +359,8 @@ def score_row(
         delta_rms_dbfs=delta_rms_dbfs,
         delta_f0_voiced_ratio=delta_f0_voiced_ratio,
         delta_clipping_ratio=delta_clipping_ratio,
+        delta_presence_share_db=delta_presence_share_db,
+        delta_brilliance_share_db=delta_brilliance_share_db,
     )
     return {
         "auto_direction_score": fmt_float(direction_score, digits=2),
@@ -354,6 +406,7 @@ def build_output_row(
         action_family=rule["action_family"],
         delta_log_centroid_minus_log_f0=delta_log_metric,
         delta_low_mid_share_db=delta_low_mid,
+        delta_presence_share_db=delta_presence,
         delta_brilliance_share_db=delta_brilliance,
         delta_spectral_centroid_hz_mean=delta_centroid,
         delta_f0_median_pct=delta_f0_pct,

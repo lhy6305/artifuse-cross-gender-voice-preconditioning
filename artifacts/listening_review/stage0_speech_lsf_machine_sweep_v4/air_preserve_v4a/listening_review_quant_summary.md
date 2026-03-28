@@ -1,17 +1,17 @@
 # Stage0 Rule Listening Quant Summary
 
 - rows: `8`
-- avg auto_quant_score: `80.16`
-- avg auto_direction_score: `74.67`
-- avg auto_preservation_score: `89.66`
-- avg auto_effect_score: `78.63`
+- avg auto_quant_score: `78.10`
+- avg auto_direction_score: `70.35`
+- avg auto_preservation_score: `91.90`
+- avg auto_effect_score: `75.51`
 
 ## Grade Counts
 
 - `strong_pass`: `4`
-- `pass`: `2`
+- `pass`: `1`
 - `borderline`: `2`
-- `fail`: `0`
+- `fail`: `1`
 
 ## Top Rows
 
@@ -21,4 +21,4 @@
 
 ## Risk Rows
 
-- none
+- `stage0_speech_lsf_vctk_masculine_v3` | score=`57.28` | direction=`fail` | preserve=`safe` | notes=`presence_drop_gt_2db`

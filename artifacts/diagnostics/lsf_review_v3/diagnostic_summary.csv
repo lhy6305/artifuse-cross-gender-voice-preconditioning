@@ -1,0 +1,9 @@
+utt_id,group_value,target_direction,effect_audible,artifact_issue,strength_fit,delta_band_0_1p5k_db,delta_band_1p5_3k_db,delta_band_3_8k_db,figure_path
+1919_142785_000089_000003,LibriTTS-R,masculine,yes,slight,,0.06,-4.38,-1.77,F:\proj_dev\tmp\workdir4-2\artifacts\diagnostics\lsf_review_v3\masculine_LibriTTS-R_1919_142785_000089_000003.png
+1995_1826_000022_000000,LibriTTS-R,masculine,yes,slight,,0.03,-6.29,-0.58,F:\proj_dev\tmp\workdir4-2\artifacts\diagnostics\lsf_review_v3\masculine_LibriTTS-R_1995_1826_000022_000000.png
+174_50561_000024_000000,LibriTTS-R,feminine,yes,,too_weak,-0.17,2.43,2.15,F:\proj_dev\tmp\workdir4-2\artifacts\diagnostics\lsf_review_v3\feminine_LibriTTS-R_174_50561_000024_000000.png
+2086_149214_000006_000002,LibriTTS-R,feminine,yes,,too_weak,-0.20,1.86,2.98,F:\proj_dev\tmp\workdir4-2\artifacts\diagnostics\lsf_review_v3\feminine_LibriTTS-R_2086_149214_000006_000002.png
+p231_011_mic1,VCTK Corpus 0.92,masculine,no,,too_weak,0.09,-2.29,-0.97,F:\proj_dev\tmp\workdir4-2\artifacts\diagnostics\lsf_review_v3\masculine_VCTK_Corpus_0_92_p231_011_mic1.png
+p230_107_mic1,VCTK Corpus 0.92,masculine,no,,too_weak,0.08,-3.49,-2.29,F:\proj_dev\tmp\workdir4-2\artifacts\diagnostics\lsf_review_v3\masculine_VCTK_Corpus_0_92_p230_107_mic1.png
+p241_005_mic1,VCTK Corpus 0.92,feminine,no,,too_weak,-0.12,1.11,2.89,F:\proj_dev\tmp\workdir4-2\artifacts\diagnostics\lsf_review_v3\feminine_VCTK_Corpus_0_92_p241_005_mic1.png
+p226_011_mic1,VCTK Corpus 0.92,feminine,no,,too_weak,-0.16,1.84,1.64,F:\proj_dev\tmp\workdir4-2\artifacts\diagnostics\lsf_review_v3\feminine_VCTK_Corpus_0_92_p226_011_mic1.png

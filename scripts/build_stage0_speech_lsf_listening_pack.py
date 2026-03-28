@@ -128,14 +128,16 @@ def edit_lsf_pairs(
     sample_rate: int,
     search_ranges_hz: list[list[float]],
     center_shift_ratios: list[float],
+    pair_width_ratios: list[float] | None,
     min_gap_hz: float,
     edge_gap_hz: float,
 ) -> np.ndarray | None:
     edited = np.asarray(lsf, dtype=np.float64).copy()
     lsf_hz = edited * sample_rate / (2.0 * math.pi)
     used_indices: set[int] = set()
+    width_ratios = pair_width_ratios if pair_width_ratios is not None else [1.0] * len(search_ranges_hz)
 
-    for search_range_hz, shift_ratio in zip(search_ranges_hz, center_shift_ratios):
+    for search_range_hz, shift_ratio, width_ratio in zip(search_ranges_hz, center_shift_ratios, width_ratios):
         low_hz, high_hz = float(search_range_hz[0]), float(search_range_hz[1])
         range_center = (low_hz + high_hz) / 2.0
         candidate_pairs: list[tuple[float, int, int, float]] = []
@@ -150,11 +152,13 @@ def edit_lsf_pairs(
         if not candidate_pairs:
             continue
         _, left_idx, right_idx, pair_center = min(candidate_pairs, key=lambda item: item[0])
+        pair_width = max(lsf_hz[right_idx] - lsf_hz[left_idx], 1e-3)
         target_center = min(max(pair_center * float(shift_ratio), low_hz), high_hz)
-        delta_hz = target_center - pair_center
-        delta_rad = delta_hz * 2.0 * math.pi / sample_rate
-        edited[left_idx] += delta_rad
-        edited[right_idx] += delta_rad
+        target_width = pair_width * float(width_ratio)
+        target_left_hz = target_center - target_width / 2.0
+        target_right_hz = target_center + target_width / 2.0
+        edited[left_idx] = target_left_hz * 2.0 * math.pi / sample_rate
+        edited[right_idx] = target_right_hz * 2.0 * math.pi / sample_rate
         constrained = enforce_lsf_spacing(edited, sample_rate=sample_rate, min_gap_hz=min_gap_hz, edge_gap_hz=edge_gap_hz)
         if constrained is None:
             return None
@@ -163,6 +167,32 @@ def edit_lsf_pairs(
         used_indices.update({left_idx, right_idx})
 
     return edited
+
+
+def blend_original_band(
+    original_frame: np.ndarray,
+    processed_frame: np.ndarray,
+    *,
+    sample_rate: int,
+    preserve_from_hz: float,
+    preserve_full_hz: float,
+    preserve_mix: float,
+) -> np.ndarray:
+    if preserve_mix <= 0.0:
+        return processed_frame.astype(np.float32)
+
+    original_spec = np.fft.rfft(original_frame.astype(np.float64))
+    processed_spec = np.fft.rfft(processed_frame.astype(np.float64))
+    freqs = np.fft.rfftfreq(original_frame.shape[0], d=1.0 / float(sample_rate))
+
+    if preserve_full_hz <= preserve_from_hz:
+        weights = np.where(freqs >= preserve_from_hz, 1.0, 0.0)
+    else:
+        weights = np.clip((freqs - preserve_from_hz) / (preserve_full_hz - preserve_from_hz), 0.0, 1.0)
+    weights = np.asarray(weights * preserve_mix, dtype=np.float64)
+
+    merged_spec = processed_spec * (1.0 - weights) + original_spec * weights
+    return np.fft.irfft(merged_spec, n=original_frame.shape[0]).astype(np.float32)
 
 
 def apply_lsf_resonance_shift(
@@ -177,9 +207,13 @@ def apply_lsf_resonance_shift(
     lpc_order: int,
     search_ranges_hz: list[list[float]],
     center_shift_ratios: list[float],
+    pair_width_ratios: list[float] | None,
     blend: float,
     min_gap_hz: float,
     edge_gap_hz: float,
+    preserve_original_from_hz: float | None = None,
+    preserve_original_full_hz: float | None = None,
+    preserve_original_mix: float = 0.0,
 ) -> np.ndarray:
     if audio.size < frame_length:
         padded = np.pad(audio.astype(np.float32), (0, frame_length - int(audio.size)))
@@ -210,6 +244,7 @@ def apply_lsf_resonance_shift(
             sample_rate=sample_rate,
             search_ranges_hz=search_ranges_hz,
             center_shift_ratios=center_shift_ratios,
+            pair_width_ratios=pair_width_ratios,
             min_gap_hz=min_gap_hz,
             edge_gap_hz=edge_gap_hz,
         )
@@ -228,6 +263,22 @@ def apply_lsf_resonance_shift(
         if synth_rms > 1e-8 and frame_rms > 1e-8:
             synthesized = synthesized * (frame_rms / synth_rms)
         blended = (1.0 - blend) * frame.astype(np.float32) + blend * synthesized
+        if (
+            preserve_original_from_hz is not None
+            and preserve_original_full_hz is not None
+            and preserve_original_mix > 0.0
+        ):
+            blended = blend_original_band(
+                frame.astype(np.float32),
+                blended.astype(np.float32),
+                sample_rate=sample_rate,
+                preserve_from_hz=float(preserve_original_from_hz),
+                preserve_full_hz=float(preserve_original_full_hz),
+                preserve_mix=float(preserve_original_mix),
+            )
+            blended_rms = safe_rms(blended)
+            if blended_rms > 1e-8 and frame_rms > 1e-8:
+                blended = blended * (frame_rms / blended_rms)
         out_frames.append(blended.astype(np.float32))
 
     out = overlap_add(out_frames, frame_length, hop_length, len(audio))
@@ -274,9 +325,13 @@ def main() -> None:
             lpc_order=int(params["lpc_order"]),
             search_ranges_hz=params["search_ranges_hz"],
             center_shift_ratios=[float(value) for value in params["center_shift_ratios"]],
+            pair_width_ratios=[float(value) for value in params["pair_width_ratios"]] if "pair_width_ratios" in params else None,
             blend=float(params["blend"]),
             min_gap_hz=float(params["min_gap_hz"]),
             edge_gap_hz=float(params["edge_gap_hz"]),
+            preserve_original_from_hz=float(params["preserve_original_from_hz"]) if "preserve_original_from_hz" in params else None,
+            preserve_original_full_hz=float(params["preserve_original_full_hz"]) if "preserve_original_full_hz" in params else None,
+            preserve_original_mix=float(params.get("preserve_original_mix", 0.0)),
         )
         save_audio(processed_audio, out, sample_rate)
 

@@ -1,0 +1,234 @@
+{
+  "config_version": "stage0_speech_lsf_machine_sweep_vctk_geom_focus_v6d",
+  "source": "representation_layer_lsf_machine_sweep_v6",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "lsf_machine_sweep_vctk_geom_focus_v6d"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_lsf_libritts_feminine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "vctk_geom_focus_v6d",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.13,
+          1.09,
+          1.06
+        ],
+        "blend": 0.77,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF feminine v3：在 v2 已可辨的基础上切到 order-20，并只做中等幅度增强，避免放大 v2 的瞬时伪影备注。 [machine_sweep=vctk_geom_focus_v6d]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_feminine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "vctk_geom_focus_v6d",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            280.0,
+            1000.0
+          ],
+          [
+            1000.0,
+            2700.0
+          ],
+          [
+            2700.0,
+            4500.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.14,
+          1.1,
+          1.06
+        ],
+        "blend": 0.8,
+        "min_gap_hz": 70.0,
+        "edge_gap_hz": 90.0
+      },
+      "notes": "LSF feminine v3：在 v2 基础上小幅增强 VCTK feminine，目标是把上一轮的 maybe 提到更稳定可辨。 [machine_sweep=vctk_geom_focus_v6d]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_libritts_masculine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "formant_lowering_preserve_air",
+      "strength": {
+        "label": "vctk_geom_focus_v6d",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.95,
+          0.91,
+          1.0
+        ],
+        "blend": 0.84,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0,
+        "pair_width_ratios": [
+          1.1,
+          1.1,
+          1.0
+        ]
+      },
+      "notes": "LSF masculine v3：保持 v2 的主方向，但进一步加一点中频下移和 blend，回应听审里“整体偏弱”的主结论。 [machine_sweep=vctk_geom_focus_v6d]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_masculine_v3",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "formant_lowering_preserve_air",
+      "strength": {
+        "label": "vctk_geom_focus_v6d",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            235.0,
+            880.0
+          ],
+          [
+            900.0,
+            2250.0
+          ],
+          [
+            2550.0,
+            4380.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.92,
+          0.88,
+          1.0
+        ],
+        "blend": 0.88,
+        "min_gap_hz": 60.0,
+        "edge_gap_hz": 85.0,
+        "pair_width_ratios": [
+          1.18,
+          1.24,
+          1.0
+        ]
+      },
+      "notes": "LSF masculine v3：沿用 machine sweep 最优的 order-20 rescue 方案，继续优先抬升当前最弱的 VCTK female-to-masculine 单元。 [machine_sweep=vctk_geom_focus_v6d]"
+    }
+  ],
+  "variant_description": "Keep Libri conservative but push VCTK masculine geometry harder, since the weakest failures have concentrated there so far."
+}
