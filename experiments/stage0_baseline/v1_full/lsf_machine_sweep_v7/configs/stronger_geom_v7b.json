@@ -1,0 +1,234 @@
+{
+  "config_version": "stage0_speech_lsf_machine_sweep_stronger_geom_v7b",
+  "source": "representation_layer_lsf_machine_sweep_v7",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "lsf_machine_sweep_stronger_geom_v7b"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_lsf_libritts_feminine_v6",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "stronger_geom_v7b",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.13,
+          1.09,
+          1.06
+        ],
+        "blend": 0.77,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF feminine v6：沿用 v3 中已相对稳定的 feminine 路径，不在这轮混入新的变量。 [machine_sweep=stronger_geom_v7b]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_feminine_v6",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "stronger_geom_v7b",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            280.0,
+            1000.0
+          ],
+          [
+            1000.0,
+            2700.0
+          ],
+          [
+            2700.0,
+            4500.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.14,
+          1.1,
+          1.06
+        ],
+        "blend": 0.8,
+        "min_gap_hz": 70.0,
+        "edge_gap_hz": 90.0
+      },
+      "notes": "LSF feminine v6：沿用 v3 中已相对稳定的 feminine 路径，不在这轮混入新的变量。 [machine_sweep=stronger_geom_v7b]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_libritts_masculine_v6",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "formant_lowering_preserve_air",
+      "strength": {
+        "label": "stronger_geom_v7b",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.98,
+          0.84,
+          1.0
+        ],
+        "pair_width_ratios": [
+          1.08,
+          1.28,
+          1.0
+        ],
+        "blend": 0.93,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF masculine v6：不再把 male 等价成 brightness_down，而是切到 lower-formant geometry + pair-width expansion，同时保住 upper-band air。 [machine_sweep=stronger_geom_v7b]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_masculine_v6",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "formant_lowering_preserve_air",
+      "strength": {
+        "label": "stronger_geom_v7b",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            280.0,
+            1000.0
+          ],
+          [
+            1000.0,
+            2700.0
+          ],
+          [
+            2700.0,
+            4500.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.97,
+          0.84,
+          1.0
+        ],
+        "pair_width_ratios": [
+          1.06,
+          1.3,
+          1.0
+        ],
+        "blend": 0.93,
+        "min_gap_hz": 60.0,
+        "edge_gap_hz": 90.0
+      },
+      "notes": "LSF masculine v6：VCTK 侧沿用 v6 最优 machine-only 方案，主攻 F2 + pair-width geometry，不再继续 broad dark tilt。 [machine_sweep=stronger_geom_v7b]"
+    }
+  ],
+  "variant_description": "Keep F1 near v6 but push F2 and pair width harder, testing a more forceful male cue without reviving broad dark tilt."
+}

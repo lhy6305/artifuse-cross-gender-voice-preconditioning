@@ -91,19 +91,34 @@
 - 队列：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v6/listening_review_queue.csv`
 - 量化摘要：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v6/listening_review_quant_summary.md`
 
+## v6 正式听审结果
+
+`LSF v6` 的正式听审已经完成，结果位于：
+
+- `artifacts/listening_review/stage0_speech_lsf_listening_pack/v6/listening_review_queue.csv`
+
+结果摘要：
+
+1. `8/8 reviewed`
+2. `effect_audible = yes 2 / maybe 6 / no 0`
+3. `strength_fit = too_weak 8 / 8`
+4. 本轮没有新增主导性伪影备注
+
+因此 `v6` 的结论不是“路线错误”，而是：
+
+- `formant_lowering_preserve_air` 这条新 masculine family 仍然成立
+- 但它进入正式人审时的整包强度统一偏弱
+
 ## 当前判断
 
-`v6` 是到目前为止第一版满足下面三个条件的 masculine 路线：
+`v6` 已经完成了它的任务：
 
-1. 不继续把 male 近似成 broad dark tilt
-2. 不再只靠 bypass 把高频硬混回
-3. machine gate 仍然明确通过
-
-因此当前最合理的下一步就是正式听审。
+1. 证明了新的 masculine 目标函数可以维持方向
+2. 证明了当前矛盾已经收缩到“强度不足”
+3. 为下一拍给出了明确动作：先提强，再送下一轮人审
 
 ## 下一步
 
-1. 用标准入口打开 `LSF v6` 正式听审：
-   - `.\scripts\open_stage0_speech_lsf_review_gui.ps1 -PackVersion v6`
-2. 若 `female -> male` 的“发闷 / 瓶子音”明显缓解，而 effect 仍可辨，则 `LSF` 主线继续保留。
-3. 若主观仍然失败，再考虑把 `LSF` 家族从“中心位移”进一步升级到真正的带宽 / 几何建模。 
+1. 不再重复送同强度的 `v6.x` 包做人审。
+2. 先按 `too_weak` 主观结果把整包强度整体提高，再做下一版正式候选。
+3. 下一版已切到 `LSF v7`，详见 `docs/63_representation_layer_lsf_probe_v7.md`。

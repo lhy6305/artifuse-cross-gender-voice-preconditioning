@@ -100,6 +100,17 @@ def proposed_outcome_from_reviews(rows: list[dict[str, str]]) -> str:
     return "reviewed_non_null"
 
 
+def reviewed_strength_recommendation(rows: list[dict[str, str]]) -> tuple[str, str, int]:
+    reviewed_rows = [row for row in rows if row.get("review_status", "").strip() == "reviewed"]
+    if not reviewed_rows:
+        return "not_reviewed", "no_review_signal", 0
+    too_weak_count = sum(1 for row in reviewed_rows if row.get("strength_fit", "").strip() == "too_weak")
+    artifact_count = sum(1 for row in reviewed_rows if row.get("artifact_issue", "").strip() not in {"", "no"})
+    if too_weak_count >= max(6, len(reviewed_rows) - 1) and artifact_count <= 2:
+        return "escalate_strength_before_next_human", "reviewed_too_weak_dominant", too_weak_count
+    return "no_strength_escalation_flag", "no_dominant_too_weak_signal", too_weak_count
+
+
 def build_pack_rows(paths: list[Path], args: argparse.Namespace) -> list[dict[str, str]]:
     output_rows: list[dict[str, str]] = []
     for path in paths:
@@ -119,6 +130,7 @@ def build_pack_rows(paths: list[Path], args: argparse.Namespace) -> list[dict[st
             args=args,
         )
         reviewed_outcome = proposed_outcome_from_reviews(rows)
+        strength_recommendation, strength_reason, too_weak_rows = reviewed_strength_recommendation(rows)
         output_rows.append(
             {
                 "queue_label": queue_label(path),
@@ -136,6 +148,9 @@ def build_pack_rows(paths: list[Path], args: argparse.Namespace) -> list[dict[st
                 "machine_gate_decision": decision,
                 "machine_gate_reason": reason,
                 "reviewed_outcome": reviewed_outcome,
+                "reviewed_too_weak_rows": str(too_weak_rows),
+                "strength_escalation_recommendation": strength_recommendation,
+                "strength_escalation_reason": strength_reason,
             }
         )
     return sorted(output_rows, key=lambda row: (row["machine_gate_decision"], -float(row["avg_auto_quant_score"]), row["queue_label"]))
@@ -187,6 +202,8 @@ def build_summary_markdown(rows: list[dict[str, str]], args: argparse.Namespace)
                 f"- top score: `{row['top_auto_quant_score']}`",
                 f"- strong/pass/borderline/fail: `{row['strong_pass_rows']}` / `{row['pass_rows']}` / `{row['borderline_rows']}` / `{row['fail_rows']}`",
                 f"- reviewed outcome: `{row['reviewed_outcome']}`",
+                f"- reviewed too_weak rows: `{row['reviewed_too_weak_rows']}`",
+                f"- strength escalation: `{row['strength_escalation_recommendation']}`",
                 "",
             ]
         )

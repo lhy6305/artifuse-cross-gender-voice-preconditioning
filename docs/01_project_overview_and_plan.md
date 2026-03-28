@@ -64,6 +64,8 @@
 - 已有 LSF 参数化原型 `v3` 说明：`docs/59_representation_layer_lsf_probe_v3.md`
 - 已有 LSF `v3` 后续频谱诊断与 selective-shift `v4` 断点：`docs/60_post_lsf_v3_spectral_diagnosis_and_selective_shift_v4.md`
 - 已有 LSF `v5` presence-bypass 结果与下一步目标重定义断点：`docs/61_post_lsf_v5_presence_bypass_result_and_next_target_redefinition.md`
+- 已有 LSF 参数化原型 `v6` 说明：`docs/62_representation_layer_lsf_probe_v6.md`
+- 已有 LSF 参数化原型 `v7` 说明：`docs/63_representation_layer_lsf_probe_v7.md`
 - 已有 VTL warping 原型说明：`docs/42_representation_layer_vtl_warping_probe_v1.md`
 - 已有 VTL warping v2 原型说明：`docs/43_representation_layer_vtl_warping_probe_v2.md`
 - 已有经典 warp 路线收口断点：`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`
@@ -108,6 +110,10 @@
   - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v2/`
 - 已有 LSF v3 听审包输出：
   - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v3/`
+- 已有 LSF v6 听审包输出：
+  - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v6/`
+- 已有 LSF v7 听审包输出：
+  - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v7/`
 - 已有 LSF v3 频谱诊断输出：
   - `artifacts/diagnostics/lsf_review_v3/`
 - 已有 VTL v1 听审包输出：
@@ -409,6 +415,20 @@
 - `LSF v5` 进一步排除了“高频旁路就能修好 male 方向”这个假设：
   - 当前 `presence-bypass` 虽能减轻高频塌陷，但会把 `female -> male` 的方向性和可感知强度一起冲掉
   - 因此下一步不再继续抠 `brightness_down + bypass`，而应重定义 `male` 方向目标本身
+- `LSF v6` 已把 masculine 路线正式切到新的目标定义：
+  - 不再使用 `brightness_down`
+  - 改为 `formant_lowering_preserve_air`
+  - 并引入 `pair_width_ratios`
+  - 当前 machine gate 再次明确通过，并已完成正式听审
+- `LSF v6` 的正式听审结果已经把当前问题进一步收缩：
+  - `8/8 reviewed`
+  - `effect_audible = yes 2 / maybe 6 / no 0`
+  - `strength_fit = too_weak 8 / 8`
+  - 当前结论不是换路线，而是先提强再送下一轮人工
+- `LSF v7` 已按上述主观结果继续推进：
+  - `scripts/run_lsf_machine_sweep.py --preset v7` 已完成 `5` 个更强的 `LSF v7` 变体 machine-only sweep
+  - `balanced_strong_v7d` 机器侧最佳，并已正式收敛为 `speech_lsf_resonance_candidate_v7.json`
+  - 当前 `LSF v7` 已建好标准听审包，成为新的默认听审对象
 
 ## 近期任务
 1. `2026-03-28` 仓库健康度/规范性自检已完成：
@@ -568,6 +588,18 @@
    - `v5` sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v5/lsf_machine_sweep_pack_summary.csv`
    - 当前最佳变体：`presence_bypass_plus_v5b`
    - 当前判断：旁路保高频能减少 muffled 风险，但会把 `female -> male` 方向性显著削弱，因此也不应直接晋级人工
+41. 当前已新增 `LSF v6`：
+   - 配置：`experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v6.json`
+   - sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v6/lsf_machine_sweep_pack_summary.csv`
+   - 当前最佳机器侧结果：`avg auto_quant_score = 81.13`、`avg auto_direction_score = 70.97`、`avg auto_effect_score = 87.46`
+   - 当前已生成标准听审包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v6/`
+   - 当前正式听审已完成，结论是“方向仍在，但 8/8 too_weak”
+42. 当前已新增 `LSF v7`：
+   - 配置：`experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v7.json`
+   - sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v7/lsf_machine_sweep_pack_summary.csv`
+   - 当前最佳机器侧结果：`avg auto_quant_score = 86.47`、`avg auto_direction_score = 81.05`、`avg auto_effect_score = 97.17`
+   - 当前已生成标准听审包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v7/`
+   - 因此下一步默认听审对象已切到 `LSF v7`
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

@@ -17,7 +17,7 @@
 | 人工巡检工具链 | 用最少操作完成 fixed eval 听审与记录 | 已完成首轮 | `scripts/open_fixed_eval_review_gui.ps1`、`scripts/fixed_eval_review_gui.py`、`experiments/fixed_eval/v1/review_pack/` |
 | clean analysis subsets | 生成保守可复现的 speech / singing 主分析子集 | 已完成首轮 | `scripts/build_clean_analysis_subsets.py`、`data/datasets/_meta/utterance_manifest_clean_*.csv`、`docs/14_clean_analysis_subsets_v1.md` |
 | 分析脚本落地 | 实现阶段 0/1 所需预处理与统计脚本 | 已完成首轮 | `scripts/run_stage0_baseline_analysis.py`、`docs/16_stage0_baseline_analysis_v1.md`、`experiments/stage0_baseline/` |
-| 表示层升级主线 | 在已否定 `pole edit / cepstral delta`、低先验 `envelope-only` 家族与 `source-filter residual v1` 后，当前已切到 `machine-first` 探测阶段；`LSF` 已从“不可辨”推进到“可辨但 male 方向目标函数错误”，现已进一步排除 `brightness_down + presence bypass`，接班点转为“重定义 masculine 目标函数” | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md`、`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`、`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`、`docs/46_representation_layer_conditional_envelope_transport_probe_v2.md`、`docs/47_post_conditional_transport_checkpoint_move_beyond_reference_envelope_v1.md`、`docs/48_representation_layer_low_rank_envelope_subspace_probe_v1.md`、`docs/49_post_low_rank_checkpoint_move_beyond_linear_subspace_v1.md`、`docs/50_representation_layer_neural_envelope_latent_probe_v1.md`、`docs/51_post_neural_checkpoint_move_beyond_static_latent_mapping_v1.md`、`docs/52_representation_layer_conditioned_neural_envelope_probe_v1.md`、`docs/53_post_conditioned_predictor_checkpoint_move_beyond_mapping_family_v1.md`、`docs/54_representation_layer_probe_guided_envelope_probe_v1.md`、`docs/55_post_probe_guided_checkpoint_move_beyond_envelope_only_v1.md`、`docs/56_representation_layer_source_filter_residual_probe_v1.md`、`docs/57_machine_first_review_gate_v1.md`、`docs/58_representation_layer_lsf_probe_v2.md`、`docs/59_representation_layer_lsf_probe_v3.md`、`docs/60_post_lsf_v3_spectral_diagnosis_and_selective_shift_v4.md`、`docs/61_post_lsf_v5_presence_bypass_result_and_next_target_redefinition.md`、`scripts/build_listening_machine_gate_report.py`、`scripts/run_lsf_machine_sweep.py`、`scripts/plot_lsf_review_diagnostics.py` |
+| 表示层升级主线 | 在已否定 `pole edit / cepstral delta`、低先验 `envelope-only` 家族与 `source-filter residual v1` 后，当前已切到 `machine-first` 探测阶段；`LSF v6` 已被主观确认是“整包偏弱而非路线失效”，现已按更高强度正式晋级到 `LSF v7`，等待新的正式听审 | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md`、`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`、`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`、`docs/46_representation_layer_conditional_envelope_transport_probe_v2.md`、`docs/47_post_conditional_transport_checkpoint_move_beyond_reference_envelope_v1.md`、`docs/48_representation_layer_low_rank_envelope_subspace_probe_v1.md`、`docs/49_post_low_rank_checkpoint_move_beyond_linear_subspace_v1.md`、`docs/50_representation_layer_neural_envelope_latent_probe_v1.md`、`docs/51_post_neural_checkpoint_move_beyond_static_latent_mapping_v1.md`、`docs/52_representation_layer_conditioned_neural_envelope_probe_v1.md`、`docs/53_post_conditioned_predictor_checkpoint_move_beyond_mapping_family_v1.md`、`docs/54_representation_layer_probe_guided_envelope_probe_v1.md`、`docs/55_post_probe_guided_checkpoint_move_beyond_envelope_only_v1.md`、`docs/56_representation_layer_source_filter_residual_probe_v1.md`、`docs/57_machine_first_review_gate_v1.md`、`docs/58_representation_layer_lsf_probe_v2.md`、`docs/59_representation_layer_lsf_probe_v3.md`、`docs/60_post_lsf_v3_spectral_diagnosis_and_selective_shift_v4.md`、`docs/61_post_lsf_v5_presence_bypass_result_and_next_target_redefinition.md`、`docs/62_representation_layer_lsf_probe_v6.md`、`docs/63_representation_layer_lsf_probe_v7.md`、`scripts/build_listening_machine_gate_report.py`、`scripts/run_lsf_machine_sweep.py`、`scripts/plot_lsf_review_diagnostics.py` |
 
 ## 当前显式断点
 - 当前主线接班断点已固定在：`docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`
@@ -130,6 +130,24 @@
   - 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v5/lsf_machine_sweep_pack_summary.csv`
   - 当前最佳变体：`presence_bypass_plus_v5b`
   - 当前判断：高频旁路能减轻 muffled 风险，但会把 `female -> male` 的方向性和 effect 一起冲掉，因此同样不直接晋级人工
+- 当前已新增 `v6 formant-lowering` machine-only sweep：
+  - 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v6/lsf_machine_sweep_pack_summary.csv`
+  - 当前最佳变体：`lower_geom_v6b`
+  - 正式包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v6/`
+  - 入口：`scripts/open_stage0_speech_lsf_review_gui.ps1 -PackVersion v6`
+  - 当前判断：这版在不继续 broad dark tilt 的前提下重新通过 machine gate，并已完成正式听审
+- `LSF v6` 的正式听审已经完成：
+  - `8/8 reviewed`
+  - `effect_audible = yes 2 / maybe 6 / no 0`
+  - `strength_fit = too_weak 8 / 8`
+  - 当前判断：问题已收缩到“整包强度统一偏弱”，不再重复送同强度变体做人审
+- 当前已新增 `v7 strength-escalated` machine-only sweep 与正式候选：
+  - 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v7/lsf_machine_sweep_pack_summary.csv`
+  - 当前最佳变体：`balanced_strong_v7d`
+  - 正式配置：`experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v7.json`
+  - 正式包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v7/`
+  - 入口：`scripts/open_stage0_speech_lsf_review_gui.ps1 -PackVersion v7`
+  - 当前判断：这版直接响应 `v6` 的 `too_weak` 反馈，已成为新的默认听审对象
 
 ## 分支建议
 - 如果后续开始多人或多任务并行，优先按任务边界拆分，而不是按文件类型拆分。

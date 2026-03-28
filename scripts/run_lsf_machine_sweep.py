@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import subprocess
 import sys
 from copy import deepcopy
@@ -543,9 +544,117 @@ V6_VARIANT_SPECS: list[dict[str, object]] = [
 ]
 
 
+V7_VARIANT_SPECS: list[dict[str, object]] = [
+    {
+        "variant_id": "stronger_geom_v7a",
+        "description": "Raise blend and F2/width strength off the v6 winner so the new masculine family stops landing as uniformly too weak.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.85, 1.00],
+                "pair_width_ratios": [1.10, 1.24, 1.00],
+                "blend": 0.92,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.95, 0.85, 1.00],
+                "pair_width_ratios": [1.08, 1.26, 1.00],
+                "blend": 0.92,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "stronger_geom_v7b",
+        "description": "Keep F1 near v6 but push F2 and pair width harder, testing a more forceful male cue without reviving broad dark tilt.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.98, 0.84, 1.00],
+                "pair_width_ratios": [1.08, 1.28, 1.00],
+                "blend": 0.93,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.84, 1.00],
+                "pair_width_ratios": [1.06, 1.30, 1.00],
+                "blend": 0.93,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "vctk_strong_geom_v7c",
+        "description": "Spend most of the extra strength budget on VCTK masculine, while only modestly increasing Libri masculine to avoid needless artifact risk.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.87, 1.00],
+                "pair_width_ratios": [1.08, 1.22, 1.00],
+                "blend": 0.89,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.95, 0.83, 1.00],
+                "pair_width_ratios": [1.10, 1.32, 1.00],
+                "blend": 0.94,
+                "min_gap_hz": 60.0,
+                "search_ranges_hz": [[270.0, 990.0], [980.0, 2660.0], [2700.0, 4500.0]],
+            },
+        },
+    },
+    {
+        "variant_id": "balanced_strong_v7d",
+        "description": "Increase both feminine and masculine strength one notch so the next human package is not dominated by a global too-weak verdict.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.15, 1.11, 1.07],
+                "blend": 0.82,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.16, 1.12, 1.08],
+                "blend": 0.84,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.85, 1.00],
+                "pair_width_ratios": [1.10, 1.24, 1.00],
+                "blend": 0.92,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.85, 1.00],
+                "pair_width_ratios": [1.08, 1.26, 1.00],
+                "blend": 0.92,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "conservative_plus_v7e",
+        "description": "A milder strength bump control, useful if the stronger v7 variants jump too fast into artifact-heavy territory.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.86, 1.00],
+                "pair_width_ratios": [1.09, 1.22, 1.00],
+                "blend": 0.90,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.86, 1.00],
+                "pair_width_ratios": [1.07, 1.24, 1.00],
+                "blend": 0.90,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--preset", choices=["v2", "v3", "v4", "v5", "v6"], default="v2")
+    parser.add_argument("--preset", choices=["v2", "v3", "v4", "v5", "v6", "v7"], default="v2")
     parser.add_argument("--base-config", default=str(DEFAULT_BASE_CONFIG))
     parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
     parser.add_argument("--sweep-dir", default=str(DEFAULT_SWEEP_DIR))
@@ -585,8 +694,10 @@ def variant_selection(args: argparse.Namespace) -> list[dict[str, object]]:
         available_specs = V4_VARIANT_SPECS
     elif args.preset == "v5":
         available_specs = V5_VARIANT_SPECS
-    else:
+    elif args.preset == "v6":
         available_specs = V6_VARIANT_SPECS
+    else:
+        available_specs = V7_VARIANT_SPECS
     if not args.variants.strip():
         return available_specs
     selected = {item.strip() for item in args.variants.split(",") if item.strip()}
@@ -610,7 +721,7 @@ def apply_variant(base_config: dict, spec: dict[str, object], *, preset: str) ->
                     rule[param_name] = param_value
                 else:
                     params[param_name] = param_value
-        rule["rule_id"] = rule["rule_id"].replace("_v1", f"_{spec['variant_id']}")
+        rule["rule_id"] = re.sub(r"_v\d+$", "", rule["rule_id"]) + f"_{spec['variant_id']}"
         rule["strength"]["label"] = spec["variant_id"]
         rule["notes"] = f"{rule.get('notes', '')} [machine_sweep={spec['variant_id']}]".strip()
     return payload
