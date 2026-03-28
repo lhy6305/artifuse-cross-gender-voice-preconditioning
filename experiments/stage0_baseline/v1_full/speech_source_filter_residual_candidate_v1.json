@@ -1,0 +1,199 @@
+{
+  "config_version": "stage0_speech_source_filter_residual_candidate_v1",
+  "source": "representation_layer_source_filter_residual_probe_v1",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "source_filter_residual_probe_v1"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_source_filter_residual_libritts_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_source_filter_residual_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_source_filter_residual_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "probe_guided_source_filter_residual",
+      "method_params": {
+        "keep_coeffs": 18,
+        "detail_band_edges_hz": [300.0, 1200.0, 2800.0, 7600.0],
+        "detail_clip_db": 10.0,
+        "hidden_dims": [64, 32],
+        "train_epochs": 240,
+        "train_batch_size": 256,
+        "learning_rate": 0.0025,
+        "weight_decay": 0.0001,
+        "probe_opt_steps": 20,
+        "probe_step_size": 0.055,
+        "lambda_l2": 0.22,
+        "lambda_l1": 0.018,
+        "envelope_blend": 0.82,
+        "detail_blend": 0.72,
+        "max_envelope_gain_db": 6.6,
+        "max_detail_band_delta_db": 2.8,
+        "max_feature_delta_l2": 2.6,
+        "time_smooth_frames": 9,
+        "reference_frame_stride": 4
+      },
+      "notes": "Source-filter residual v1：在低阶包络之外加入 voiced harmonic residual band proxy，验证 joint source+filter 表示是否终于能跨过 envelope-only 的不可辨阈值。"
+    },
+    {
+      "rule_id": "stage0_speech_source_filter_residual_vctk_feminine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_source_filter_residual_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_source_filter_residual_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "probe_guided_source_filter_residual",
+      "method_params": {
+        "keep_coeffs": 18,
+        "detail_band_edges_hz": [300.0, 1200.0, 2800.0, 7600.0],
+        "detail_clip_db": 9.0,
+        "hidden_dims": [64, 32],
+        "train_epochs": 240,
+        "train_batch_size": 256,
+        "learning_rate": 0.0025,
+        "weight_decay": 0.0001,
+        "probe_opt_steps": 18,
+        "probe_step_size": 0.050,
+        "lambda_l2": 0.24,
+        "lambda_l1": 0.018,
+        "envelope_blend": 0.76,
+        "detail_blend": 0.66,
+        "max_envelope_gain_db": 5.8,
+        "max_detail_band_delta_db": 2.3,
+        "max_feature_delta_l2": 2.2,
+        "time_smooth_frames": 11,
+        "reference_frame_stride": 4
+      },
+      "notes": "Source-filter residual v1：VCTK feminine 侧继续保守一点，避免把整体高频抬升误判成真正的 source+filter 结构变化。"
+    },
+    {
+      "rule_id": "stage0_speech_source_filter_residual_libritts_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_source_filter_residual_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_source_filter_residual_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "probe_guided_source_filter_residual",
+      "method_params": {
+        "keep_coeffs": 18,
+        "detail_band_edges_hz": [300.0, 1200.0, 2800.0, 7600.0],
+        "detail_clip_db": 10.0,
+        "hidden_dims": [64, 32],
+        "train_epochs": 240,
+        "train_batch_size": 256,
+        "learning_rate": 0.0025,
+        "weight_decay": 0.0001,
+        "probe_opt_steps": 20,
+        "probe_step_size": 0.055,
+        "lambda_l2": 0.22,
+        "lambda_l1": 0.018,
+        "envelope_blend": 0.82,
+        "detail_blend": 0.70,
+        "max_envelope_gain_db": 6.4,
+        "max_detail_band_delta_db": 2.6,
+        "max_feature_delta_l2": 2.5,
+        "time_smooth_frames": 9,
+        "reference_frame_stride": 4
+      },
+      "notes": "Source-filter residual v1：重点看 masculine 侧是否终于不再只是整体变暗，而是能同时带动 tract 和 harmonic residual proxy 往目标方向移动。"
+    },
+    {
+      "rule_id": "stage0_speech_source_filter_residual_vctk_masculine_v1",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_source_filter_residual_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "diagnostic_source_filter_residual_v1",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "probe_guided_source_filter_residual",
+      "method_params": {
+        "keep_coeffs": 18,
+        "detail_band_edges_hz": [300.0, 1200.0, 2800.0, 7600.0],
+        "detail_clip_db": 9.0,
+        "hidden_dims": [64, 32],
+        "train_epochs": 240,
+        "train_batch_size": 256,
+        "learning_rate": 0.0025,
+        "weight_decay": 0.0001,
+        "probe_opt_steps": 18,
+        "probe_step_size": 0.050,
+        "lambda_l2": 0.24,
+        "lambda_l1": 0.018,
+        "envelope_blend": 0.74,
+        "detail_blend": 0.62,
+        "max_envelope_gain_db": 5.6,
+        "max_detail_band_delta_db": 2.1,
+        "max_feature_delta_l2": 2.1,
+        "time_smooth_frames": 11,
+        "reference_frame_stride": 4
+      },
+      "notes": "Source-filter residual v1：VCTK masculine 侧继续压住强度，优先看 joint residual 是否至少比 envelope-only 更容易跨过可辨阈值。"
+    }
+  ]
+}

@@ -1,0 +1,384 @@
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import subprocess
+import sys
+from copy import deepcopy
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_BASE_CONFIG = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "speech_lsf_resonance_candidate_v1.json"
+DEFAULT_SWEEP_DIR = ROOT / "experiments" / "stage0_baseline" / "v1_full" / "lsf_machine_sweep_v2"
+DEFAULT_PACK_ROOT = ROOT / "artifacts" / "listening_review" / "stage0_speech_lsf_machine_sweep_v2"
+DEFAULT_INPUT_CSV = ROOT / "experiments" / "fixed_eval" / "v1_2" / "fixed_eval_review_final_v1_2.csv"
+
+
+VARIANT_SPECS: list[dict[str, object]] = [
+    {
+        "variant_id": "masc_mid_focus_v2a",
+        "description": "Keep feminine side near v1, but strengthen masculine F2 shift first to avoid bottle-heavy F1 overpull.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.90, 0.86, 0.96],
+                "blend": 0.84,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.92, 0.88, 0.97],
+                "blend": 0.80,
+            },
+        },
+    },
+    {
+        "variant_id": "masc_uniform_push_v2b",
+        "description": "Push masculine direction more uniformly across F1/F2/F3 while keeping feminine untouched for comparison.",
+        "overrides": {
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.86, 0.90, 0.94],
+                "blend": 0.85,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.88, 0.92, 0.95],
+                "blend": 0.82,
+            },
+        },
+    },
+    {
+        "variant_id": "balanced_pull_fem_push_masc_v2c",
+        "description": "Pull back feminine brightness slightly while pushing masculine direction harder to improve directional balance.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.10, 1.07, 1.04],
+                "blend": 0.74,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.08, 1.05, 1.03],
+                "blend": 0.70,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "center_shift_ratios": [0.88, 0.86, 0.95],
+                "blend": 0.84,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "center_shift_ratios": [0.90, 0.88, 0.96],
+                "blend": 0.81,
+            },
+        },
+    },
+    {
+        "variant_id": "order18_mid_focus_v2d",
+        "description": "Raise LPC order to 18 and focus the extra strength into the mid band, testing whether v1 was under-resolved.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [1.11, 1.09, 1.05],
+                "blend": 0.76,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [1.09, 1.07, 1.04],
+                "blend": 0.72,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [0.90, 0.86, 0.95],
+                "blend": 0.84,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [0.92, 0.88, 0.96],
+                "blend": 0.80,
+            },
+        },
+    },
+    {
+        "variant_id": "order18_vctk_rescue_v2e",
+        "description": "Raise LPC order and retune VCTK search bands downward to rescue the weakest masculine cell without reopening WORLD/VTL.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "lpc_order": 18,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "lpc_order": 18,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [0.88, 0.87, 0.95],
+                "blend": 0.84,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "lpc_order": 18,
+                "search_ranges_hz": [[240.0, 920.0], [920.0, 2550.0], [2550.0, 4380.0]],
+                "center_shift_ratios": [0.86, 0.89, 0.95],
+                "blend": 0.84,
+                "min_gap_hz": 65.0,
+                "edge_gap_hz": 85.0,
+            },
+        },
+    },
+    {
+        "variant_id": "conservative_order18_control_v2f",
+        "description": "Use order 18 but pull overall blend down to test whether v1 artifacts were mostly reconstruction pressure rather than wrong direction.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [1.09, 1.07, 1.04],
+                "blend": 0.70,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [1.07, 1.05, 1.03],
+                "blend": 0.67,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [0.90, 0.88, 0.96],
+                "blend": 0.78,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "lpc_order": 18,
+                "center_shift_ratios": [0.92, 0.90, 0.97],
+                "blend": 0.75,
+            },
+        },
+    },
+]
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--base-config", default=str(DEFAULT_BASE_CONFIG))
+    parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
+    parser.add_argument("--sweep-dir", default=str(DEFAULT_SWEEP_DIR))
+    parser.add_argument("--pack-root", default=str(DEFAULT_PACK_ROOT))
+    parser.add_argument("--variants", default="", help="Comma-separated variant ids. Empty means all.")
+    parser.add_argument("--force-rebuild", action="store_true")
+    parser.add_argument("--min-avg-quant", type=float, default=65.0)
+    parser.add_argument("--min-avg-direction", type=float, default=45.0)
+    parser.add_argument("--min-avg-effect", type=float, default=45.0)
+    parser.add_argument("--min-top-score", type=float, default=75.0)
+    parser.add_argument("--min-strongish-rows", type=int, default=2)
+    return parser.parse_args()
+
+
+def resolve_path(value: str) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    return ROOT / path
+
+
+def load_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def save_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def variant_selection(args: argparse.Namespace) -> list[dict[str, object]]:
+    if not args.variants.strip():
+        return VARIANT_SPECS
+    selected = {item.strip() for item in args.variants.split(",") if item.strip()}
+    return [spec for spec in VARIANT_SPECS if spec["variant_id"] in selected]
+
+
+def apply_variant(base_config: dict, spec: dict[str, object]) -> dict:
+    payload = deepcopy(base_config)
+    payload["config_version"] = f"stage0_speech_lsf_machine_sweep_{spec['variant_id']}"
+    payload["source"] = "representation_layer_lsf_machine_sweep_v2"
+    payload["selection_policy"]["purpose"] = f"lsf_machine_sweep_{spec['variant_id']}"
+    payload["variant_description"] = spec["description"]
+
+    overrides: dict[tuple[str, str], dict[str, object]] = spec["overrides"]  # type: ignore[assignment]
+    for rule in payload["rules"]:
+        key = (rule["match"]["group_value"], rule["target_direction"])
+        params = rule["method_params"]
+        if key in overrides:
+            for param_name, param_value in overrides[key].items():
+                params[param_name] = param_value
+        rule["rule_id"] = rule["rule_id"].replace("_v1", f"_{spec['variant_id']}")
+        rule["strength"]["label"] = spec["variant_id"]
+        rule["notes"] = f"{rule.get('notes', '')} [machine_sweep={spec['variant_id']}]".strip()
+    return payload
+
+
+def run_python(arguments: list[str]) -> None:
+    command = [str(ROOT / "python.exe"), *arguments]
+    subprocess.run(command, cwd=ROOT, check=True)
+
+
+def parse_float(value: str) -> float:
+    return float(value)
+
+
+def gate_decision(
+    *,
+    avg_quant: float,
+    avg_direction: float,
+    avg_effect: float,
+    top_score: float,
+    strongish_rows: int,
+    args: argparse.Namespace,
+) -> tuple[str, str]:
+    quant_ok = avg_quant >= float(args.min_avg_quant)
+    direction_ok = avg_direction >= float(args.min_avg_direction)
+    effect_ok = avg_effect >= float(args.min_avg_effect)
+    top_ok = top_score >= float(args.min_top_score)
+    rows_ok = strongish_rows >= int(args.min_strongish_rows)
+    if quant_ok and direction_ok and effect_ok and (top_ok or rows_ok):
+        return "allow_human_review", "meets_primary_machine_gate"
+    if top_ok and direction_ok and avg_effect >= float(args.min_avg_effect) * 0.8:
+        return "borderline_review_optional", "has_high_top_score_but_pack_average_is_weaker"
+    return "skip_human_review", "machine_gate_not_met"
+
+
+def build_variant_summary(queue_csv: Path, spec: dict[str, object], args: argparse.Namespace) -> dict[str, str]:
+    with queue_csv.open("r", encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    avg_quant = sum(parse_float(row["auto_quant_score"]) for row in rows) / len(rows)
+    avg_direction = sum(parse_float(row["auto_direction_score"]) for row in rows) / len(rows)
+    avg_effect = sum(parse_float(row["auto_effect_score"]) for row in rows) / len(rows)
+    top_score = max(parse_float(row["auto_quant_score"]) for row in rows)
+    strong_pass = sum(1 for row in rows if row["auto_quant_grade"] == "strong_pass")
+    passed = sum(1 for row in rows if row["auto_quant_grade"] == "pass")
+    borderline = sum(1 for row in rows if row["auto_quant_grade"] == "borderline")
+    fail = sum(1 for row in rows if row["auto_quant_grade"] == "fail")
+    strongish_rows = strong_pass + passed + borderline
+    decision, reason = gate_decision(
+        avg_quant=avg_quant,
+        avg_direction=avg_direction,
+        avg_effect=avg_effect,
+        top_score=top_score,
+        strongish_rows=strongish_rows,
+        args=args,
+    )
+    return {
+        "variant_id": str(spec["variant_id"]),
+        "description": str(spec["description"]),
+        "queue_csv": str(queue_csv),
+        "avg_auto_quant_score": f"{avg_quant:.2f}",
+        "avg_auto_direction_score": f"{avg_direction:.2f}",
+        "avg_auto_effect_score": f"{avg_effect:.2f}",
+        "top_auto_quant_score": f"{top_score:.2f}",
+        "strong_pass_rows": str(strong_pass),
+        "pass_rows": str(passed),
+        "borderline_rows": str(borderline),
+        "fail_rows": str(fail),
+        "strongish_rows": str(strongish_rows),
+        "machine_gate_decision": decision,
+        "machine_gate_reason": reason,
+    }
+
+
+def write_rows(path: Path, rows: list[dict[str, str]]) -> None:
+    if not rows:
+        raise ValueError("No rows to write.")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def build_markdown(rows: list[dict[str, str]], args: argparse.Namespace) -> str:
+    lines = [
+        "# LSF Machine Sweep v2",
+        "",
+        "## Gate Thresholds",
+        "",
+        f"- `avg_auto_quant_score >= {args.min_avg_quant:.2f}`",
+        f"- `avg_auto_direction_score >= {args.min_avg_direction:.2f}`",
+        f"- `avg_auto_effect_score >= {args.min_avg_effect:.2f}`",
+        f"- and (`top_auto_quant_score >= {args.min_top_score:.2f}` or `strongish_rows >= {args.min_strongish_rows}`)",
+        "",
+        "## Variant Ranking",
+        "",
+    ]
+    for row in rows:
+        lines.extend(
+            [
+                f"### `{row['variant_id']}`",
+                "",
+                f"- decision: `{row['machine_gate_decision']}`",
+                f"- reason: `{row['machine_gate_reason']}`",
+                f"- avg quant / direction / effect: `{row['avg_auto_quant_score']}` / `{row['avg_auto_direction_score']}` / `{row['avg_auto_effect_score']}`",
+                f"- top score: `{row['top_auto_quant_score']}`",
+                f"- strong/pass/borderline/fail: `{row['strong_pass_rows']}` / `{row['pass_rows']}` / `{row['borderline_rows']}` / `{row['fail_rows']}`",
+                f"- description: {row['description']}",
+                "",
+            ]
+        )
+    return "\n".join(lines) + "\n"
+
+
+def main() -> None:
+    args = parse_args()
+    base_config = load_json(resolve_path(args.base_config))
+    sweep_dir = resolve_path(args.sweep_dir)
+    pack_root = resolve_path(args.pack_root)
+    selected_specs = variant_selection(args)
+    if not selected_specs:
+        raise ValueError("No LSF sweep variants selected.")
+
+    summary_rows: list[dict[str, str]] = []
+    for spec in selected_specs:
+        variant_id = str(spec["variant_id"])
+        config_payload = apply_variant(base_config, spec)
+        config_path = sweep_dir / "configs" / f"{variant_id}.json"
+        pack_dir = pack_root / variant_id
+        summary_csv = pack_dir / "listening_pack_summary.csv"
+        queue_csv = pack_dir / "listening_review_queue.csv"
+        summary_md = pack_dir / "listening_review_quant_summary.md"
+
+        save_json(config_path, config_payload)
+
+        if args.force_rebuild or not summary_csv.exists():
+            run_python(
+                [
+                    str(ROOT / "scripts" / "build_stage0_speech_lsf_listening_pack.py"),
+                    "--rule-config",
+                    str(config_path),
+                    "--input-csv",
+                    str(resolve_path(args.input_csv)),
+                    "--output-dir",
+                    str(pack_dir),
+                ]
+            )
+
+        run_python(
+            [
+                str(ROOT / "scripts" / "build_stage0_rule_review_queue.py"),
+                "--rule-config",
+                str(config_path),
+                "--summary-csv",
+                str(summary_csv),
+                "--output-csv",
+                str(queue_csv),
+                "--summary-md",
+                str(summary_md),
+                "--reuse-cache",
+            ]
+        )
+
+        summary_rows.append(build_variant_summary(queue_csv, spec, args))
+
+    summary_rows.sort(
+        key=lambda row: (
+            row["machine_gate_decision"] != "allow_human_review",
+            -float(row["avg_auto_quant_score"]),
+            row["variant_id"],
+        )
+    )
+    write_rows(sweep_dir / "lsf_machine_sweep_pack_summary.csv", summary_rows)
+    (sweep_dir / "LSF_MACHINE_SWEEP_V2.md").write_text(build_markdown(summary_rows, args), encoding="utf-8")
+    print(f"Wrote {sweep_dir / 'lsf_machine_sweep_pack_summary.csv'}")
+    print(f"Wrote {sweep_dir / 'LSF_MACHINE_SWEEP_V2.md'}")
+    print(f"Variants: {len(summary_rows)}")
+
+
+if __name__ == "__main__":
+    main()

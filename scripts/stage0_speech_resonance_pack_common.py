@@ -192,6 +192,7 @@ def write_pack_readme(
     summary_rel = (pack_dir / "listening_pack_summary.csv").relative_to(ROOT).as_posix()
     queue_rel = (pack_dir / "listening_review_queue.csv").relative_to(ROOT).as_posix()
     summary_md_rel = (pack_dir / "listening_review_quant_summary.md").relative_to(ROOT).as_posix()
+    pack_dir_rel = pack_dir.relative_to(ROOT).as_posix()
     lines = [
         f"# {pack_title} {pack_version}",
         "",
@@ -201,7 +202,9 @@ def write_pack_readme(
         "## Rebuild",
         "",
         "```powershell",
-        f".\\python.exe .\\scripts\\{script_name}",
+        f".\\python.exe .\\scripts\\{script_name} `",
+        f"  --rule-config {rule_config_rel} `",
+        f"  --output-dir {pack_dir_rel}",
         ".\\python.exe .\\scripts\\build_stage0_rule_review_queue.py `",
         f"  --rule-config {rule_config_rel} `",
         f"  --summary-csv {summary_rel} `",

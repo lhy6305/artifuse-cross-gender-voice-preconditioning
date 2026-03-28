@@ -17,7 +17,7 @@
 | 人工巡检工具链 | 用最少操作完成 fixed eval 听审与记录 | 已完成首轮 | `scripts/open_fixed_eval_review_gui.ps1`、`scripts/fixed_eval_review_gui.py`、`experiments/fixed_eval/v1/review_pack/` |
 | clean analysis subsets | 生成保守可复现的 speech / singing 主分析子集 | 已完成首轮 | `scripts/build_clean_analysis_subsets.py`、`data/datasets/_meta/utterance_manifest_clean_*.csv`、`docs/14_clean_analysis_subsets_v1.md` |
 | 分析脚本落地 | 实现阶段 0/1 所需预处理与统计脚本 | 已完成首轮 | `scripts/run_stage0_baseline_analysis.py`、`docs/16_stage0_baseline_analysis_v1.md`、`experiments/stage0_baseline/` |
-| 表示层升级主线 | 在已否定 `pole edit / cepstral delta`、`LSF`、`VTL`、`reference envelope transport`、`linear low-rank envelope subspace`、`static neural latent mapping` 与 `conditioned predictor mapping` 后，已切到 `probe-guided direct residual v1`，当前待正式听审 | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md`、`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`、`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`、`docs/46_representation_layer_conditional_envelope_transport_probe_v2.md`、`docs/47_post_conditional_transport_checkpoint_move_beyond_reference_envelope_v1.md`、`docs/48_representation_layer_low_rank_envelope_subspace_probe_v1.md`、`docs/49_post_low_rank_checkpoint_move_beyond_linear_subspace_v1.md`、`docs/50_representation_layer_neural_envelope_latent_probe_v1.md`、`docs/51_post_neural_checkpoint_move_beyond_static_latent_mapping_v1.md`、`docs/52_representation_layer_conditioned_neural_envelope_probe_v1.md`、`docs/53_post_conditioned_predictor_checkpoint_move_beyond_mapping_family_v1.md`、`docs/54_representation_layer_probe_guided_envelope_probe_v1.md` |
+| 表示层升级主线 | 在已否定 `pole edit / cepstral delta`、低先验 `envelope-only` 家族与 `source-filter residual v1` 后，当前已切到 `machine-first` 探测阶段；`LSF` 经 sweep 后重新产出一个高先验 `v2` 候选，后续先完成它的正式听审，再决定是否彻底收口 `LSF` | 进行中 | `docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`、`docs/41_representation_layer_lsf_probe_v1.md`、`docs/42_representation_layer_vtl_warping_probe_v1.md`、`docs/43_representation_layer_vtl_warping_probe_v2.md`、`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`、`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`、`docs/46_representation_layer_conditional_envelope_transport_probe_v2.md`、`docs/47_post_conditional_transport_checkpoint_move_beyond_reference_envelope_v1.md`、`docs/48_representation_layer_low_rank_envelope_subspace_probe_v1.md`、`docs/49_post_low_rank_checkpoint_move_beyond_linear_subspace_v1.md`、`docs/50_representation_layer_neural_envelope_latent_probe_v1.md`、`docs/51_post_neural_checkpoint_move_beyond_static_latent_mapping_v1.md`、`docs/52_representation_layer_conditioned_neural_envelope_probe_v1.md`、`docs/53_post_conditioned_predictor_checkpoint_move_beyond_mapping_family_v1.md`、`docs/54_representation_layer_probe_guided_envelope_probe_v1.md`、`docs/55_post_probe_guided_checkpoint_move_beyond_envelope_only_v1.md`、`docs/56_representation_layer_source_filter_residual_probe_v1.md`、`docs/57_machine_first_review_gate_v1.md`、`docs/58_representation_layer_lsf_probe_v2.md`、`scripts/build_listening_machine_gate_report.py`、`scripts/run_lsf_machine_sweep.py` |
 
 ## 当前显式断点
 - 当前主线接班断点已固定在：`docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`
@@ -87,7 +87,28 @@
   - 入口：`scripts/open_stage0_speech_probe_guided_envelope_review_gui.ps1 -PackVersion v1`
   - 正式包：`artifacts/listening_review/stage0_speech_probe_guided_envelope_listening_pack/v1/`
   - 当前机器侧先验：`avg auto_quant_score ≈ 41.62`、`avg auto_direction_score ≈ 15.91`、`avg auto_effect_score ≈ 17.86`、`fail=8`
-  - 当前判断：这条 direct residual 线方法层级更激进，但机器侧仍偏负；下一步应直接进入正式听审
+  - 主观结果：`8/8 reviewed`、`effect_audible no=8`
+  - 当前判断：这条 direct residual 线方法层级更激进，但最终仍不可辨识；下一步不再继续出 `v2`
+- `source-filter residual v1` 已进入可听审状态：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_source_filter_residual_candidate_v1.json`
+  - 入口：`scripts/open_stage0_speech_source_filter_residual_review_gui.ps1 -PackVersion v1`
+  - 正式包：`artifacts/listening_review/stage0_speech_source_filter_residual_listening_pack/v1/`
+  - 当前机器侧先验：`avg auto_quant_score ≈ 39.19`、`avg auto_direction_score ≈ 12.70`、`avg auto_effect_score ≈ 13.89`、`fail=8`
+  - 主观结果：`8/8 reviewed`、`effect_audible no=8`
+  - 当前判断：这条线虽然升级到了 joint source/filter representation，但首轮仍不可辨识；后续不再继续扩大同档低先验包的人审覆盖
+- `machine-first review gate v1` 已固定为当前流程默认：
+  - 脚本：`scripts/build_listening_machine_gate_report.py`
+  - 报告：`artifacts/machine_gate/v1/`
+  - 当前 gate 阈值：`avg_auto_quant_score >= 65`、`avg_auto_direction_score >= 45`、`avg_auto_effect_score >= 45`，且 `top_auto_quant_score >= 75` 或 `strongish_rows >= 2`
+  - 当前判断：gate 不通过的包，默认不再直接进正式人工听审
+- `LSF v2` 已作为 machine-first 流程下首个晋级候选落地：
+  - 配置：`experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v2.json`
+  - sweep 入口：`scripts/run_lsf_machine_sweep.py`
+  - sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v2/lsf_machine_sweep_pack_summary.csv`
+  - 正式包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v2/`
+  - 入口：`scripts/open_stage0_speech_lsf_review_gui.ps1 -PackVersion v2`
+  - 当前机器侧先验：`avg auto_quant_score = 78.85`、`avg auto_direction_score = 68.09`、`avg auto_effect_score = 73.71`
+  - 当前判断：这版已经值得做正式听审；若主观仍不给正证据，再正式收口 `LSF`
 
 ## 分支建议
 - 如果后续开始多人或多任务并行，优先按任务边界拆分，而不是按文件类型拆分。

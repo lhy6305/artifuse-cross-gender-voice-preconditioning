@@ -60,12 +60,16 @@
 - 已有 cepstral envelope 对照原型说明：`docs/39_representation_layer_cepstral_envelope_probe_v1.md`
 - 已有表示层主线断点：`docs/40_representation_layer_lsf_then_vtl_checkpoint_v1.md`
 - 已有 LSF 参数化原型说明：`docs/41_representation_layer_lsf_probe_v1.md`
+- 已有 LSF 参数化原型 `v2` 说明：`docs/58_representation_layer_lsf_probe_v2.md`
 - 已有 VTL warping 原型说明：`docs/42_representation_layer_vtl_warping_probe_v1.md`
 - 已有 VTL warping v2 原型说明：`docs/43_representation_layer_vtl_warping_probe_v2.md`
 - 已有经典 warp 路线收口断点：`docs/44_post_lsf_vtl_checkpoint_move_beyond_classic_warping_v1.md`
 - 已有 Conditional Envelope Transport 原型说明：`docs/45_representation_layer_conditional_envelope_transport_probe_v1.md`
 - 已有 Conditional Envelope Transport v2 原型说明：`docs/46_representation_layer_conditional_envelope_transport_probe_v2.md`
 - 已有 reference envelope transport 路线收口断点：`docs/47_post_conditional_transport_checkpoint_move_beyond_reference_envelope_v1.md`
+- 已有 envelope-only 原始相位重建家族收口断点：`docs/55_post_probe_guided_checkpoint_move_beyond_envelope_only_v1.md`
+- 已有 joint source-filter residual 原型说明：`docs/56_representation_layer_source_filter_residual_probe_v1.md`
+- 已有 machine-first 听审 gate 文档：`docs/57_machine_first_review_gate_v1.md`
 - 已有阶段 0 轻量前置修正 phase gate 文档：`docs/30_stage0_lightweight_preconditioning_phase_gate_v1.md`
 - 已有 speech source-filter / vocal-tract morph 原型与 GUI 入口：`scripts/build_stage0_speech_vocal_tract_listening_pack.py`、`scripts/open_stage0_speech_vocal_tract_review_gui.ps1`、`scripts/open_stage0_speech_vocal_tract_review_gui.cmd`
 - 已有 source-filter / vocal-tract morph 说明：`docs/31_stage0_source_filter_vocal_tract_morph_v1.md`
@@ -85,6 +89,7 @@
 - 已有 Neural Envelope 听审包构建与 GUI 入口：`scripts/build_stage0_speech_neural_envelope_listening_pack.py`、`scripts/open_stage0_speech_neural_envelope_review_gui.ps1`、`scripts/open_stage0_speech_neural_envelope_review_gui.cmd`
 - 已有 Conditioned Neural Envelope 听审包构建与 GUI 入口：`scripts/build_stage0_speech_conditioned_neural_envelope_listening_pack.py`、`scripts/open_stage0_speech_conditioned_neural_envelope_review_gui.ps1`、`scripts/open_stage0_speech_conditioned_neural_envelope_review_gui.cmd`
 - 已有 Probe-Guided Envelope 听审包构建与 GUI 入口：`scripts/build_stage0_speech_probe_guided_envelope_listening_pack.py`、`scripts/open_stage0_speech_probe_guided_envelope_review_gui.ps1`、`scripts/open_stage0_speech_probe_guided_envelope_review_gui.cmd`
+- 已有 Source-Filter Residual 听审包构建与 GUI 入口：`scripts/build_stage0_speech_source_filter_residual_listening_pack.py`、`scripts/open_stage0_speech_source_filter_residual_review_gui.ps1`、`scripts/open_stage0_speech_source_filter_residual_review_gui.cmd`
 - 已有表示层 pilot 输出：
   - `experiments/representation_layer/v1_fixed_eval_pilot/`
   - `experiments/representation_layer/v1_clean_speech_probe/`
@@ -96,6 +101,8 @@
   - `artifacts/listening_review/stage0_speech_cepstral_listening_pack/v1/`
 - 已有 LSF v1 听审包输出：
   - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v1/`
+- 已有 LSF v2 听审包输出：
+  - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v2/`
 - 已有 VTL v1 听审包输出：
   - `artifacts/listening_review/stage0_speech_vtl_warping_listening_pack/v1/`
 - 已有 VTL v2 听审包输出：
@@ -112,6 +119,8 @@
   - `artifacts/listening_review/stage0_speech_conditioned_neural_envelope_listening_pack/v1/`
 - 已有 Probe-Guided Envelope v1 听审包输出：
   - `artifacts/listening_review/stage0_speech_probe_guided_envelope_listening_pack/v1/`
+- 已有 Source-Filter Residual v1 听审包输出：
+  - `artifacts/listening_review/stage0_speech_source_filter_residual_listening_pack/v1/`
 - 听审包与听审结果当前已迁到正式目录：`artifacts/listening_review/`；`tmp/` 不再作为长期保留位点
 - 根目录已有可调用解释器：`python.exe`（当前可用）
 - 已有本地预训练资产：`pretrained_rvc_firefly_fp32/`
@@ -357,12 +366,26 @@
   - 当前实现不再学习 target mapping，而是先训练 `gender probe`，再对当前帧包络做有约束的直接优化
   - 已完成正式包导出、量化队列生成与 GUI smoke
   - 当前机器侧先验：`avg auto_quant_score ≈ 41.62`、`avg auto_direction_score ≈ 15.91`、`avg auto_effect_score ≈ 17.86`、`fail=8`
-  - 这说明 direct residual 线已跑通，且机器侧略强于 `conditioned neural v1`，但仍未进入正证据区间
-  - 因此当前默认下一步应直接进入 `probe-guided v1` 的正式听审
+  - 这说明 direct residual 线已跑通，但机器侧仍未进入正证据区间
+  - `2026-03-28` 的正式听审结果已确认：`8/8 reviewed`、`effect_audible no=8`
+  - 因此当前 envelope-only 原始相位重建家族也应正式收口，不再继续抠 `probe-guided envelope v2`
+- `source-filter residual v1` 已按上述新约束落地为下一条主线原型：
+  - `stage0_speech_source_filter_residual_listening_pack/v1`
+  - 当前实现不再只优化低阶包络，而是联合优化 `low-order envelope + voiced harmonic residual band proxy`
+  - 已完成正式包导出、量化队列生成与 GUI smoke
+  - 当前机器侧先验：`avg auto_quant_score ≈ 39.19`、`avg auto_direction_score ≈ 12.70`、`avg auto_effect_score ≈ 13.89`、`fail=8`
+  - 这说明 joint source-filter residual 线已经真正落地，但首轮机器侧先验依然偏负
+  - `2026-03-28` 的正式听审结果已确认：`8/8 reviewed`、`effect_audible no=8`
+  - 因此当前轻量 `joint source-filter residual` 线也应收口为 `null_result`
+  - 后续默认不再把这类低先验包直接送人工，而是先过 machine gate
 - 当前表示层主线断点已明确固定：
   - 先试 `LSF`
   - 若 `LSF` 仍无正证据，再试 `VTL / tract-length warping`
   - 在这两步完成前，不再回到 `pole edit / cepstral delta` 上继续抠细节
+- machine-first 搜索已经重新给 `LSF` 这条线提供了有效新证据：
+  - `scripts/run_lsf_machine_sweep.py` 已完成 `6` 个 `LSF v2` 变体的 machine-only sweep
+  - `order18_vctk_rescue_v2e` 机器侧最佳，并已正式收敛为 `speech_lsf_resonance_candidate_v2.json`
+  - 当前 `LSF v2` 已建好标准听审包，重新进入“允许人工听审”的状态
 
 ## 近期任务
 1. `2026-03-28` 仓库健康度/规范性自检已完成：
@@ -482,7 +505,31 @@
    - 入口：`scripts/open_stage0_speech_probe_guided_envelope_review_gui.ps1 -PackVersion v1`
    - 当前正式包、量化队列与摘要都已生成
    - 当前机器侧先验仍偏负：`avg auto_quant_score ≈ 41.62`、`avg auto_effect_score ≈ 17.86`、`fail=8`
-   - 但它已满足“从 mapping 升级到 direct objective”的方法约束，因此当前下一步应直接做正式听审
+   - `2026-03-28` 的正式听审已确认：`8/8 reviewed`、`effect_audible no=8`
+   - 这说明 envelope-only 原始相位重建家族到此已经给出连续负证据
+33. 当前新的强约束已经继续收紧：
+   - 不再继续抠 `probe-guided envelope v2 / v3`
+   - 不再把 `envelope-only` 原始相位重建当成当前主线
+   - 下一步应升级到 `joint source-filter residual`
+34. `source-filter residual v1` 已完成建包、量化与入口 smoke：
+   - 入口：`scripts/open_stage0_speech_source_filter_residual_review_gui.ps1 -PackVersion v1`
+   - 当前正式包、量化队列与摘要都已生成
+   - 当前机器侧先验仍偏负：`avg auto_quant_score ≈ 39.19`、`avg auto_effect_score ≈ 13.89`、`fail=8`
+   - `2026-03-28` 的正式听审已确认：`8/8 reviewed`、`effect_audible no=8`
+   - 这说明轻量 `joint source-filter residual` 首轮也没有跨过可辨阈值
+35. 当前听审流程已改成 machine-first gate：
+   - 默认先跑 `scripts/build_listening_machine_gate_report.py`
+   - 当前 gate 阈值固定为：`avg_auto_quant_score >= 65`、`avg_auto_direction_score >= 45`、`avg_auto_effect_score >= 45`，且 `top_auto_quant_score >= 75` 或 `strongish_rows >= 2`
+   - gate 不通过的包，默认不再直接进入正式人工听审
+36. 当前主线接班点已改为：
+   - 不再继续扩大低先验包的人审覆盖
+   - 先做 machine-only 搜索，直到出现明显过 gate 的候选
+37. `LSF v2` 已作为 machine-first 流程下的首个重新晋级候选落地：
+   - 配置：`experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v2.json`
+   - sweep 总表：`experiments/stage0_baseline/v1_full/lsf_machine_sweep_v2/lsf_machine_sweep_pack_summary.csv`
+   - 当前最佳机器侧结果：`avg auto_quant_score = 78.85`、`avg auto_direction_score = 68.09`、`avg auto_effect_score = 73.71`
+   - 当前已生成标准听审包：`artifacts/listening_review/stage0_speech_lsf_listening_pack/v2/`
+   - 因此下一步默认听审对象已切到 `LSF v2`
 
 ## 当前阶段验收标准
 - 上下文恢复入口可直接使用。

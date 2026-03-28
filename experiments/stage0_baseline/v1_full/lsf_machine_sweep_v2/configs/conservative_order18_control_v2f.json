@@ -1,0 +1,224 @@
+{
+  "config_version": "stage0_speech_lsf_machine_sweep_conservative_order18_control_v2f",
+  "source": "representation_layer_lsf_machine_sweep_v2",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "lsf_machine_sweep_conservative_order18_control_v2f"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_lsf_libritts_feminine_conservative_order18_control_v2f",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "conservative_order18_control_v2f",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 18,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.09,
+          1.07,
+          1.04
+        ],
+        "blend": 0.7,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF feminine v1：先做成对 LSF 中心上移，验证是否比 LPC pole edit 更少高频假感。 [machine_sweep=conservative_order18_control_v2f]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_feminine_conservative_order18_control_v2f",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "conservative_order18_control_v2f",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 18,
+        "search_ranges_hz": [
+          [
+            280.0,
+            1000.0
+          ],
+          [
+            1000.0,
+            2700.0
+          ],
+          [
+            2700.0,
+            4500.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.07,
+          1.05,
+          1.03
+        ],
+        "blend": 0.67,
+        "min_gap_hz": 70.0,
+        "edge_gap_hz": 90.0
+      },
+      "notes": "LSF feminine v1：VCTK 稍收一档，优先观察是否比 cepstral v1 更少出现假高频。 [machine_sweep=conservative_order18_control_v2f]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_libritts_masculine_conservative_order18_control_v2f",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "conservative_order18_control_v2f",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 18,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.9,
+          0.88,
+          0.96
+        ],
+        "blend": 0.78,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF masculine v1：重点看是否比 LPC masculine 少瓶中感。 [machine_sweep=conservative_order18_control_v2f]"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_masculine_conservative_order18_control_v2f",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "brightness_down",
+      "strength": {
+        "label": "conservative_order18_control_v2f",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 18,
+        "search_ranges_hz": [
+          [
+            280.0,
+            1000.0
+          ],
+          [
+            1000.0,
+            2700.0
+          ],
+          [
+            2700.0,
+            4500.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.92,
+          0.9,
+          0.97
+        ],
+        "blend": 0.75,
+        "min_gap_hz": 70.0,
+        "edge_gap_hz": 90.0
+      },
+      "notes": "LSF masculine v1：VCTK 侧先保守起步，避免直接回到闷化。 [machine_sweep=conservative_order18_control_v2f]"
+    }
+  ],
+  "variant_description": "Use order 18 but pull overall blend down to test whether v1 artifacts were mostly reconstruction pressure rather than wrong direction."
+}
