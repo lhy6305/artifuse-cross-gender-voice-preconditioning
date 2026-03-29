@@ -1,0 +1,234 @@
+{
+  "config_version": "stage0_speech_lsf_resonance_candidate_v8",
+  "source": "lsf_machine_sweep_v8_winner_conservative_v8e",
+  "selection_policy": {
+    "domain": "speech_only",
+    "group_axis": "dataset_name",
+    "source_gender_to_target_direction": {
+      "male": "feminine",
+      "female": "masculine"
+    },
+    "purpose": "lsf_pair_shift_probe_v8"
+  },
+  "rules": [
+    {
+      "rule_id": "stage0_speech_lsf_libritts_feminine_v8",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_lsf_v8",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.17,
+          1.12,
+          1.08
+        ],
+        "blend": 0.84,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF feminine v7：针对 v6 听审 8/8 too_weak，把 v6 已相对稳定的 feminine 路径整体提强一档，避免新包再次因统一偏弱浪费人审。"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_feminine_v8",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "feminine",
+      "action_family": "brightness_up",
+      "strength": {
+        "label": "diagnostic_lsf_v8",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            280.0,
+            1000.0
+          ],
+          [
+            1000.0,
+            2700.0
+          ],
+          [
+            2700.0,
+            4500.0
+          ]
+        ],
+        "center_shift_ratios": [
+          1.18,
+          1.13,
+          1.09
+        ],
+        "blend": 0.86,
+        "min_gap_hz": 70.0,
+        "edge_gap_hz": 90.0
+      },
+      "notes": "LSF feminine v7：同步提高 VCTK feminine 强度，避免整包出现只补 masculine、而 feminine 侧继续普遍偏弱的失衡。"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_libritts_masculine_v8",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "LibriTTS-R",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "formant_lowering_preserve_air",
+      "strength": {
+        "label": "diagnostic_lsf_v8",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 100,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            250.0,
+            900.0
+          ],
+          [
+            900.0,
+            2500.0
+          ],
+          [
+            2500.0,
+            4300.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.97,
+          0.84,
+          1.0
+        ],
+        "pair_width_ratios": [
+          1.11,
+          1.26,
+          1.0
+        ],
+        "blend": 0.93,
+        "min_gap_hz": 65.0,
+        "edge_gap_hz": 80.0
+      },
+      "notes": "LSF masculine v7：沿用 v6 的 lower-formant geometry + pair-width 路线，但针对 8/8 too_weak 把 F2 与 pair-width 再推一档，同时继续避免 broad dark tilt。"
+    },
+    {
+      "rule_id": "stage0_speech_lsf_vctk_masculine_v8",
+      "enabled": true,
+      "match": {
+        "domain": "speech",
+        "group_axis": "dataset_name",
+        "group_value": "VCTK Corpus 0.92",
+        "f0_condition": "all",
+        "f0_lower_hz": null,
+        "f0_upper_hz": null,
+        "bucket_scheme": "all"
+      },
+      "signal_name": "speech_lsf_pair_shift_probe",
+      "target_direction": "masculine",
+      "action_family": "formant_lowering_preserve_air",
+      "strength": {
+        "label": "diagnostic_lsf_v8",
+        "alpha_default": 1.0,
+        "alpha_max": 1.0
+      },
+      "confidence": "diagnostic",
+      "priority": 99,
+      "method_family": "lsf_pair_shift_residual_preserving",
+      "method_params": {
+        "frame_length": 1024,
+        "hop_length": 256,
+        "lpc_order": 20,
+        "search_ranges_hz": [
+          [
+            280.0,
+            1000.0
+          ],
+          [
+            1000.0,
+            2700.0
+          ],
+          [
+            2700.0,
+            4500.0
+          ]
+        ],
+        "center_shift_ratios": [
+          0.96,
+          0.84,
+          1.0
+        ],
+        "pair_width_ratios": [
+          1.09,
+          1.28,
+          1.0
+        ],
+        "blend": 0.93,
+        "min_gap_hz": 60.0,
+        "edge_gap_hz": 90.0
+      },
+      "notes": "LSF masculine v7：继续保持 preserve-air 几何式 male 代理，并把 VCTK masculine 强度提高到与新的正式人审门槛相匹配。"
+    }
+  ],
+  "variant_description": "Conservative v8 control: modest step above v7d, serving as safety baseline if stronger variants collapse preservation."
+}

@@ -652,9 +652,149 @@ V7_VARIANT_SPECS: list[dict[str, object]] = [
 ]
 
 
+
+
+V8_VARIANT_SPECS: list[dict[str, object]] = [
+    {
+        "variant_id": "balanced_stronger_v8a",
+        "description": "Uniform strength escalation from v7d: push both directions one clear notch above the too_weak baseline.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.19, 1.14, 1.09],
+                "blend": 0.88,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.20, 1.15, 1.10],
+                "blend": 0.90,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.95, 0.82, 1.00],
+                "pair_width_ratios": [1.14, 1.30, 1.00],
+                "blend": 0.94,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.94, 0.82, 1.00],
+                "pair_width_ratios": [1.12, 1.32, 1.00],
+                "blend": 0.94,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "masc_width_focus_v8b",
+        "description": "Push masculine pair-width harder than center shift, targeting resonance spread rather than pure centroid lowering.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.18, 1.13, 1.08],
+                "blend": 0.86,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.19, 1.14, 1.09],
+                "blend": 0.88,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.84, 1.00],
+                "pair_width_ratios": [1.18, 1.36, 1.00],
+                "blend": 0.93,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.84, 1.00],
+                "pair_width_ratios": [1.16, 1.38, 1.00],
+                "blend": 0.93,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "high_blend_v8c",
+        "description": "Push blend to 0.96 for masculine and 0.92 for feminine, with moderate center/width moves: tests whether blend ceiling is the bottleneck.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.17, 1.13, 1.08],
+                "blend": 0.92,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.18, 1.14, 1.09],
+                "blend": 0.93,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.84, 1.00],
+                "pair_width_ratios": [1.12, 1.28, 1.00],
+                "blend": 0.96,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.95, 0.84, 1.00],
+                "pair_width_ratios": [1.10, 1.30, 1.00],
+                "blend": 0.96,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "fem_focus_v8d",
+        "description": "Spend most of the extra strength on feminine direction to test whether male-to-feminine weakness is the dominant remaining problem.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.22, 1.17, 1.11],
+                "blend": 0.90,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.23, 1.18, 1.12],
+                "blend": 0.92,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.84, 1.00],
+                "pair_width_ratios": [1.11, 1.26, 1.00],
+                "blend": 0.93,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.84, 1.00],
+                "pair_width_ratios": [1.09, 1.28, 1.00],
+                "blend": 0.93,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+    {
+        "variant_id": "conservative_v8e",
+        "description": "Conservative v8 control: modest step above v7d, serving as safety baseline if stronger variants collapse preservation.",
+        "overrides": {
+            ("LibriTTS-R", "feminine"): {
+                "center_shift_ratios": [1.17, 1.12, 1.08],
+                "blend": 0.84,
+            },
+            ("VCTK Corpus 0.92", "feminine"): {
+                "center_shift_ratios": [1.18, 1.13, 1.09],
+                "blend": 0.86,
+            },
+            ("LibriTTS-R", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.97, 0.84, 1.00],
+                "pair_width_ratios": [1.11, 1.26, 1.00],
+                "blend": 0.93,
+            },
+            ("VCTK Corpus 0.92", "masculine"): {
+                "action_family": "formant_lowering_preserve_air",
+                "center_shift_ratios": [0.96, 0.84, 1.00],
+                "pair_width_ratios": [1.09, 1.28, 1.00],
+                "blend": 0.93,
+                "min_gap_hz": 60.0,
+            },
+        },
+    },
+]
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--preset", choices=["v2", "v3", "v4", "v5", "v6", "v7"], default="v2")
+    parser.add_argument("--preset", choices=["v2", "v3", "v4", "v5", "v6", "v7", "v8"], default="v2")
     parser.add_argument("--base-config", default=str(DEFAULT_BASE_CONFIG))
     parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
     parser.add_argument("--sweep-dir", default=str(DEFAULT_SWEEP_DIR))
@@ -696,8 +836,10 @@ def variant_selection(args: argparse.Namespace) -> list[dict[str, object]]:
         available_specs = V5_VARIANT_SPECS
     elif args.preset == "v6":
         available_specs = V6_VARIANT_SPECS
-    else:
+    elif args.preset == "v7":
         available_specs = V7_VARIANT_SPECS
+    else:
+        available_specs = V8_VARIANT_SPECS
     if not args.variants.strip():
         return available_specs
     selected = {item.strip() for item in args.variants.split(",") if item.strip()}

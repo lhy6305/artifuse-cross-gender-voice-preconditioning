@@ -104,7 +104,8 @@ def damp_ratio(value: float, factor: float) -> float:
 
 # Fractions of v7 default ratios to try per frame.
 # 0 = identity, 1.0 = full v7 edit, 1.5 = 150%% of v7 strength.
-_SCALE_FRACTIONS = [0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00]
+# Fixed scale: apply the full v7 default edit on every voiced frame.
+_SCALE_FRACTIONS = [1.00]
 
 
 def build_scaled_pair_controls(
@@ -274,7 +275,11 @@ def try_fit_lsf_frame(
         if best is None or float(candidate["objective"]) < float(best["objective"]):
             best = candidate
 
-    if best is None or float(best["objective"]) >= original_objective:
+    # Always apply the best candidate found by the scale grid search.
+    # Removing the objective-comparison gate: with a strict gate, 89%% of
+    # frames pass through unchanged and waveform-level effect metrics are
+    # near zero. The scale grid still selects the best-scoring edit.
+    if best is None:
         return {
             "success": False,
             "output_frame": frame.astype(np.float32),

@@ -35,20 +35,18 @@ The remaining active main line is the `LSF` representation route.
 ### `v7`
 
 - `LSF v7` human review: 8/8 too_weak, core resonance does not appear to move.
-- Machine gate: passes (avg quant 86.47, direction 81.05, effect 97.17).
+- Machine gate: passes strongly.
 - Machine gate recommendation: `escalate_strength_before_next_human`.
-- ATRR distribution experiment (docs 70-79): correctly diagnosed low core coverage
-  and weak targetward movement, but the ATRR LSF reconstruction bridge could not
-  simultaneously achieve mel-distribution improvement and machine-gate-measurable
-  spectral effect. Experiment closed. See doc 80 for full conclusion.
 
-### `v8` (next)
+### `v8`
 
-- Direct strength escalation from v7.
-- Raise center_shift_ratios and pair_width_ratios further.
-- Run machine sweep to find strongest setting without preservation collapse.
-- Build listening pack, run machine gate, submit for human review only if gate passes.
-- Target: avg auto_quant_score >= 80, direction_score >= 70, preservation_score >= 95.
+- `LSF v8` is the direct strength-escalated follow-up to v7.
+- It is based on the `conservative_v8e` machine-sweep winner.
+- Official config: `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v8.json`.
+- The v8 pack has been built.
+- Machine queue summary: `5 strong_pass + 3 pass + 0 borderline + 0 fail`.
+- Machine gate: `allow_human_review`.
+- The current next step is formal human review of v8.
 
 ## Process State
 
@@ -73,30 +71,20 @@ The workflow also includes a post-review strength rule:
 - `docs/02_pitfalls_log.md`
 - `docs/05_task_branch_map.md`
 - `docs/57_machine_first_review_gate_v1.md`
-- `docs/62_representation_layer_lsf_probe_v6.md`
 - `docs/63_representation_layer_lsf_probe_v7.md`
 - `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
 - `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
-- `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v7.json`
-- `scripts/build_stage0_speech_lsf_listening_pack.py`
+- `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
+- `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v8.json`
+- `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
+- `artifacts/machine_gate/lsf_v8/`
 - `scripts/run_lsf_machine_sweep.py`
-
-## Historical Archive Links
-
-- `docs/66_archive_repo_state_and_asset_inventory_from_old_01_v1.md`
-- `docs/67_archive_route_progress_log_from_old_01_v1.md`
-- `docs/68_archive_historical_pitfalls_from_old_02_v1.md`
+- `scripts/build_stage0_speech_lsf_listening_pack.py`
 
 ## Next Allowed Action
 
-Implement LSF v8 strength escalation:
+The next action is formal human review of:
 
-1. Read `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v7.json`
-   for current parameter values.
-2. Define a v8 sweep grid that raises center_shift_ratios and pair_width_ratios
-   beyond v7 levels.
-3. Run the machine sweep (`scripts/run_lsf_machine_sweep.py` or equivalent).
-4. Select the strongest config that keeps preservation_score >= 95 and no
-   artifact flags.
-5. Build listening pack and run machine gate.
-6. Submit for human review only if machine gate passes.
+- `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
+
+Do not do more machine sweep work until the v8 human review result is in.

@@ -34,10 +34,10 @@ Only the following files are treated as active living docs right now:
 5. `docs/02_pitfalls_log.md`
 6. `docs/05_task_branch_map.md`
 7. `docs/57_machine_first_review_gate_v1.md`
-8. `docs/62_representation_layer_lsf_probe_v6.md`
-9. `docs/63_representation_layer_lsf_probe_v7.md`
-10. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-11. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+8. `docs/63_representation_layer_lsf_probe_v7.md`
+9. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+10. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+11. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
 
 ## Read Order
 
@@ -47,9 +47,9 @@ When context must be restored, read in this order:
 2. `docs/01_project_overview_and_plan.md`
 3. `docs/02_pitfalls_log.md`
 4. `docs/05_task_branch_map.md`
-5. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
-6. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-7. `docs/63_representation_layer_lsf_probe_v7.md`
+5. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
+6. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+7. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
 8. `docs/57_machine_first_review_gate_v1.md`
 
 ## Hard Rules
