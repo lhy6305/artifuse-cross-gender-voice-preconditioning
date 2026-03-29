@@ -36,44 +36,21 @@ Only the following files are treated as active living docs right now:
 7. `docs/57_machine_first_review_gate_v1.md`
 8. `docs/62_representation_layer_lsf_probe_v6.md`
 9. `docs/63_representation_layer_lsf_probe_v7.md`
-10. `docs/69_post_lsf_v7_review_and_resonance_distribution_hypothesis_v1.md`
-11. `docs/70_resonance_distribution_quantization_plan_v1.md`
-12. `docs/71_lsf_v7_resonance_distribution_diagnostic_first_pass_v1.md`
-13. `docs/72_lsf_v7_resonance_distribution_diagnostic_refined_v2.md`
-14. `docs/73_targetward_resonance_distribution_edit_object_v1.md`
-15. `docs/74_additive_targetward_resonance_residual_method_v1.md`
-16. `docs/75_atrr_offline_simulator_and_scoring_loop_v1.md`
-17. `docs/76_atrr_offline_simulator_first_run_and_narrow_sweep_v1.md`
-18. `docs/77_atrr_focused_sweep_candidate_band_v1.md`
-19. `docs/78_atrr_conservative_reconstruction_bridge_v1.md`
-20. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-
-Historical docs and archive docs may remain in their original language until they become active again. If a historical doc is reactivated, it must be migrated to English ASCII before further maintenance.
+10. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+11. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
 
 ## Read Order
 
 When context must be restored, read in this order:
 
 1. `docs/00_context_bootstrap.md`
-2. `docs/64_documentation_language_and_encoding_policy_v1.md`
-3. `docs/65_active_handoff_docs_and_experiment_record_policy_v1.md`
-4. `docs/01_project_overview_and_plan.md`
-5. `docs/02_pitfalls_log.md`
-6. `docs/05_task_branch_map.md`
-7. `docs/57_machine_first_review_gate_v1.md`
-8. `docs/69_post_lsf_v7_review_and_resonance_distribution_hypothesis_v1.md`
-9. `docs/70_resonance_distribution_quantization_plan_v1.md`
-10. `docs/71_lsf_v7_resonance_distribution_diagnostic_first_pass_v1.md`
-11. `docs/72_lsf_v7_resonance_distribution_diagnostic_refined_v2.md`
-12. `docs/73_targetward_resonance_distribution_edit_object_v1.md`
-13. `docs/74_additive_targetward_resonance_residual_method_v1.md`
-14. `docs/75_atrr_offline_simulator_and_scoring_loop_v1.md`
-15. `docs/76_atrr_offline_simulator_first_run_and_narrow_sweep_v1.md`
-16. `docs/77_atrr_focused_sweep_candidate_band_v1.md`
-17. `docs/78_atrr_conservative_reconstruction_bridge_v1.md`
-18. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-19. `docs/63_representation_layer_lsf_probe_v7.md`
-20. `docs/62_representation_layer_lsf_probe_v6.md`
+2. `docs/01_project_overview_and_plan.md`
+3. `docs/02_pitfalls_log.md`
+4. `docs/05_task_branch_map.md`
+5. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+6. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+7. `docs/63_representation_layer_lsf_probe_v7.md`
+8. `docs/57_machine_first_review_gate_v1.md`
 
 ## Hard Rules
 
@@ -100,7 +77,7 @@ When context must be restored, read in this order:
 
 - Do not rely on PowerShell text write cmdlets for repo doc edits.
 - In this environment, PowerShell UTF-8 writes may add a BOM, which is not wanted in this repo.
-- Prefer repo-safe editors or edit paths that preserve UTF-8 without BOM.
+- Prefer `[System.IO.File]::WriteAllText` with explicit UTF8 encoding, or Python file writes.
 
 ### 5. Python entry point
 
@@ -114,8 +91,8 @@ When context must be restored, read in this order:
 
 ### 7. PowerShell patch script discipline
 
-- Do not use PowerShell heredocs or `-c` inline strings for Python patch scripts with nested quotes.
-- Use `[System.IO.File]::WriteAllText` with a heredoc to write the patch file, then run it separately.
+- Do not use PowerShell `-c` inline strings for Python patch scripts with nested quotes.
+- Use `[System.IO.File]::WriteAllText` to write the patch file, then run it separately.
 - This avoids quote mangling that causes SyntaxError in the patch script.
 
 ## Maintenance Rule
