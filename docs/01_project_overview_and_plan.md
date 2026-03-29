@@ -1,4 +1,4 @@
-# Project Overview And Plan
+﻿# Project Overview And Plan
 
 ## Scope
 
@@ -13,6 +13,7 @@ This file is a handoff summary only. Detailed experiment history is stored in nu
 - Avoid PowerShell text write cmdlets for repo docs because of BOM risk in this environment.
 - User-facing assistant replies must remain in Simplified Chinese.
 - Use repo root `.\python.exe` for project scripts.
+- For patch scripts with nested quotes, write via `[System.IO.File]::WriteAllText` then run separately.
 
 ## Route Summary
 
@@ -55,6 +56,7 @@ The remaining active main line is the `LSF` representation route.
 - The first actual simulator run and narrow follow-up sweep are now captured in `docs/76_atrr_offline_simulator_first_run_and_narrow_sweep_v1.md`.
 - The focused conservative sweep and current candidate band are now captured in `docs/77_atrr_focused_sweep_candidate_band_v1.md`.
 - The first conservative reconstruction bridge is now captured in `docs/78_atrr_conservative_reconstruction_bridge_v1.md`.
+- The first machine-only reconstruction prototype results are now captured in `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`.
 
 ## Process State
 
@@ -91,6 +93,7 @@ The workflow also includes a post-review strength rule:
 - `docs/76_atrr_offline_simulator_first_run_and_narrow_sweep_v1.md`
 - `docs/77_atrr_focused_sweep_candidate_band_v1.md`
 - `docs/78_atrr_conservative_reconstruction_bridge_v1.md`
+- `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
 - `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v7.json`
 - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v7/`
 - `artifacts/diagnostics/lsf_v7_resonance_distribution_v1/`
@@ -99,6 +102,8 @@ The workflow also includes a post-review strength rule:
 - `artifacts/diagnostics/atrr_offline_simulator_v1/`
 - `artifacts/diagnostics/atrr_offline_simulator_sweep/`
 - `artifacts/diagnostics/atrr_offline_simulator_focused_sweep/`
+- `scripts/reconstruct_atrr_lsf_prototype.py`
+- `artifacts/diagnostics/atrr_lsf_reconstruction_prototype_v5/`
 - `scripts/build_stage0_speech_lsf_listening_pack.py`
 - `scripts/build_stage0_speech_cepstral_listening_pack.py`
 
@@ -110,16 +115,13 @@ The workflow also includes a post-review strength rule:
 
 ## Next Allowed Action
 
-The next logical step is not another blind strength increase.
+The ATRR LSF reconstruction prototype is now machine-viable.
 
-The offline simulator has now been run against the known `v7` failure case, the focused sweep has narrowed the current `ATRR` candidate band, and the first conservative reconstruction bridge has now been specified.
-
-The current next technical step is to implement that bridge in a machine-only prototype.
+The per-row metrics show that 6 of 8 rows improve shift score over observed v7,
+all 8 rows improve core coverage, and brilliance and presence are preserved.
 
 The next implementation-facing work is:
 
-- add an `ATRR -> LSF carrier` reconstruction prototype
-- keep the first reconstruction pass centered on `off_core_step_size = 0.15`
-- keep the first reconstruction pass centered on `max_bin_step = 0.0085` to `0.0100`
-- use the cepstral carrier only as a fallback diagnostic route
-- score the reconstructed result before any new listening pack work
+- build a listening pack from `atrr_lsf_reconstruction_prototype_v5` reconstructed audio
+- run the machine gate (`scripts/build_listening_machine_gate_report.py`) against that pack
+- only send to human review if the machine gate passes on all required checks

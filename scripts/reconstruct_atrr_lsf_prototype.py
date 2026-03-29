@@ -98,69 +98,27 @@ def nearest_indices(source_times: np.ndarray, target_times: np.ndarray) -> np.nd
     return np.where(choose_previous, previous, insertion).astype(np.int64)
 
 
-def weighted_centroid_and_width(freqs_hz: np.ndarray, values: np.ndarray) -> tuple[float, float]:
-    total = float(np.sum(values))
-    if total <= 1e-12:
-        return float(np.mean(freqs_hz)), 1.0
-    centroid = float(np.sum(freqs_hz * values) / total)
-    variance = float(np.sum(values * np.square(freqs_hz - centroid)) / total)
-    return centroid, math.sqrt(max(variance, 1.0))
-
-
 def damp_ratio(value: float, factor: float) -> float:
     return 1.0 + factor * (value - 1.0)
 
 
-def build_dynamic_pair_controls(
+# Fractions of v7 default ratios to try per frame.
+# 0 = identity, 1.0 = full v7 edit, 1.5 = 150%% of v7 strength.
+_SCALE_FRACTIONS = [0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00]
+
+
+def build_scaled_pair_controls(
     *,
-    source_distribution: np.ndarray,
-    target_distribution: np.ndarray,
-    mel_freqs_hz: np.ndarray,
-    search_ranges_hz: list[list[float]],
     default_center_shift_ratios: list[float],
     default_pair_width_ratios: list[float] | None,
-    damping: float,
+    scale: float,
 ) -> tuple[list[float], list[float]]:
-    width_defaults = default_pair_width_ratios if default_pair_width_ratios is not None else [1.0] * len(search_ranges_hz)
-    center_ratios: list[float] = []
-    width_ratios: list[float] = []
-    for search_range_hz, default_center_ratio, default_width_ratio in zip(
-        search_ranges_hz,
-        default_center_shift_ratios,
-        width_defaults,
-        strict=False,
-    ):
-        low_hz, high_hz = float(search_range_hz[0]), float(search_range_hz[1])
-        mask = (mel_freqs_hz >= low_hz) & (mel_freqs_hz <= high_hz)
-        if not np.any(mask):
-            center_ratios.append(1.0)
-            width_ratios.append(1.0)
-            continue
-        source_slice = source_distribution[mask]
-        target_slice = target_distribution[mask]
-        slice_freqs_hz = mel_freqs_hz[mask]
-        slice_delta = float(np.sum(np.abs(target_slice - source_slice)))
-        local_strength = clamp(slice_delta / 0.12, 0.0, 1.0)
-        source_centroid, source_width = weighted_centroid_and_width(slice_freqs_hz, source_slice)
-        target_centroid, target_width = weighted_centroid_and_width(slice_freqs_hz, target_slice)
-        raw_center_ratio = target_centroid / max(source_centroid, 1.0)
-        raw_width_ratio = target_width / max(source_width, 1.0)
-        dynamic_center_ratio = 1.0 + local_strength * clamp(raw_center_ratio - 1.0, -0.12, 0.12)
-        dynamic_width_ratio = 1.0 + local_strength * clamp(raw_width_ratio - 1.0, -0.18, 0.18)
-        if default_center_ratio > 1.0:
-            dynamic_center_ratio = clamp(dynamic_center_ratio, 1.0, max(1.0, default_center_ratio))
-        elif default_center_ratio < 1.0:
-            dynamic_center_ratio = clamp(dynamic_center_ratio, min(1.0, default_center_ratio), 1.0)
-        else:
-            dynamic_center_ratio = clamp(dynamic_center_ratio, 0.94, 1.06)
-        if default_width_ratio > 1.0:
-            dynamic_width_ratio = clamp(dynamic_width_ratio, 1.0, max(1.0, default_width_ratio))
-        elif default_width_ratio < 1.0:
-            dynamic_width_ratio = clamp(dynamic_width_ratio, min(1.0, default_width_ratio), 1.0)
-        else:
-            dynamic_width_ratio = clamp(dynamic_width_ratio, 0.92, 1.08)
-        center_ratios.append(damp_ratio(dynamic_center_ratio, damping))
-        width_ratios.append(damp_ratio(dynamic_width_ratio, damping))
+    # Scale v7 default ratios by `scale` so the fit objective selects
+    # effective edit strength directly in LSF space.
+    n = len(default_center_shift_ratios)
+    width_defaults = default_pair_width_ratios if default_pair_width_ratios is not None else [1.0] * n
+    center_ratios = [damp_ratio(r, scale) for r in default_center_shift_ratios]
+    width_ratios = [damp_ratio(r, scale) for r in width_defaults]
     return center_ratios, width_ratios
 
 
@@ -241,14 +199,12 @@ def try_fit_lsf_frame(
     frame: np.ndarray,
     coeffs: np.ndarray,
     lsf: np.ndarray,
-    source_distribution: np.ndarray,
-    target_distribution: np.ndarray,
+    target_prototype: np.ndarray,
     combined_core: np.ndarray,
     rule_params: dict,
     sample_rate: int,
     n_fft: int,
     mel_filter: np.ndarray,
-    mel_freqs_hz: np.ndarray,
     preserve_highband_from_hz: float,
 ) -> dict[str, object]:
     original_distribution, original_log_power = lpc_response_distribution(
@@ -257,23 +213,21 @@ def try_fit_lsf_frame(
         n_fft=n_fft,
         mel_filter=mel_filter,
     )
-    original_fit = weighted_l1(original_distribution, target_distribution)
-    original_core_fit = weighted_l1(original_distribution, target_distribution, weights=combined_core)
+    # Use utterance-level target prototype for the fit objective so LPC envelope
+    # is compared against a smooth prototype rather than a peaky ATRR mel target.
+    original_fit = weighted_l1(original_distribution, target_prototype)
+    original_core_fit = weighted_l1(original_distribution, target_prototype, weights=combined_core)
     original_objective = original_fit + 0.4 * original_core_fit
 
     best: dict[str, object] | None = None
     default_centers = [float(value) for value in rule_params["center_shift_ratios"]]
     default_widths = [float(value) for value in rule_params["pair_width_ratios"]] if "pair_width_ratios" in rule_params else None
 
-    for damping in [1.0, 0.8, 0.6, 0.4]:
-        center_ratios, width_ratios = build_dynamic_pair_controls(
-            source_distribution=source_distribution,
-            target_distribution=target_distribution,
-            mel_freqs_hz=mel_freqs_hz,
-            search_ranges_hz=rule_params["search_ranges_hz"],
+    for scale in _SCALE_FRACTIONS:
+        center_ratios, width_ratios = build_scaled_pair_controls(
             default_center_shift_ratios=default_centers,
             default_pair_width_ratios=default_widths,
-            damping=damping,
+            scale=scale,
         )
         edited_lsf = edit_lsf_pairs(
             lsf,
@@ -295,8 +249,8 @@ def try_fit_lsf_frame(
             n_fft=n_fft,
             mel_filter=mel_filter,
         )
-        fit_error = weighted_l1(edited_distribution, target_distribution)
-        core_fit_error = weighted_l1(edited_distribution, target_distribution, weights=combined_core)
+        fit_error = weighted_l1(edited_distribution, target_prototype)
+        core_fit_error = weighted_l1(edited_distribution, target_prototype, weights=combined_core)
         freqs_hz = np.linspace(0.0, sample_rate / 2.0, edited_log_power.shape[0], dtype=np.float64)
         highband_mask = freqs_hz >= preserve_highband_from_hz
         if np.any(highband_mask):
@@ -304,7 +258,7 @@ def try_fit_lsf_frame(
         else:
             highband_error = 0.0
         lsf_movement_hz = float(np.mean(np.abs((edited_lsf - lsf) * sample_rate / (2.0 * math.pi))))
-        objective = fit_error + 0.4 * core_fit_error + 0.08 * highband_error + 0.0007 * lsf_movement_hz
+        objective = fit_error + 0.4 * core_fit_error + 0.005 * highband_error + 0.0007 * lsf_movement_hz
         candidate = {
             "edited_coeffs": edited_coeffs,
             "edited_distribution": edited_distribution,
@@ -315,12 +269,12 @@ def try_fit_lsf_frame(
             "objective": objective,
             "center_ratios": center_ratios,
             "width_ratios": width_ratios,
-            "damping": damping,
+            "scale": scale,
         }
         if best is None or float(candidate["objective"]) < float(best["objective"]):
             best = candidate
 
-    if best is None or float(best["objective"]) >= original_objective * 0.995:
+    if best is None or float(best["objective"]) >= original_objective:
         return {
             "success": False,
             "output_frame": frame.astype(np.float32),
@@ -331,7 +285,7 @@ def try_fit_lsf_frame(
             "edited_distribution": original_distribution,
             "center_ratios": [1.0] * len(rule_params["search_ranges_hz"]),
             "width_ratios": [1.0] * len(rule_params["search_ranges_hz"]),
-            "damping": 0.0,
+            "scale": 0.0,
         }
 
     output_frame = synthesize_frame(
@@ -350,7 +304,7 @@ def try_fit_lsf_frame(
         "edited_distribution": np.asarray(best["edited_distribution"], dtype=np.float64),
         "center_ratios": [float(value) for value in best["center_ratios"]],
         "width_ratios": [float(value) for value in best["width_ratios"]],
-        "damping": float(best["damping"]),
+        "scale": float(best["scale"]),
     }
 
 
@@ -595,14 +549,12 @@ def main() -> None:
                 frame=frame.astype(np.float32),
                 coeffs=coeffs,
                 lsf=lsf,
-                source_distribution=mapped_source_distributions[frame_idx],
-                target_distribution=mapped_target_distributions[frame_idx],
+                target_prototype=target_prototype,
                 combined_core=combined_core,
                 rule_params=rule_params,
                 sample_rate=sample_rate,
                 n_fft=args.n_fft,
                 mel_filter=mel_filter,
-                mel_freqs_hz=mel_freqs_hz,
                 preserve_highband_from_hz=args.preserve_highband_from_hz,
             )
             output_frames.append(np.asarray(fit_result["output_frame"], dtype=np.float32))

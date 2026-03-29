@@ -1,4 +1,4 @@
-# Project Context Bootstrap
+﻿# Project Context Bootstrap
 
 ## Repo Identity
 
@@ -46,6 +46,7 @@ Only the following files are treated as active living docs right now:
 17. `docs/76_atrr_offline_simulator_first_run_and_narrow_sweep_v1.md`
 18. `docs/77_atrr_focused_sweep_candidate_band_v1.md`
 19. `docs/78_atrr_conservative_reconstruction_bridge_v1.md`
+20. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
 
 Historical docs and archive docs may remain in their original language until they become active again. If a historical doc is reactivated, it must be migrated to English ASCII before further maintenance.
 
@@ -70,8 +71,9 @@ When context must be restored, read in this order:
 15. `docs/76_atrr_offline_simulator_first_run_and_narrow_sweep_v1.md`
 16. `docs/77_atrr_focused_sweep_candidate_band_v1.md`
 17. `docs/78_atrr_conservative_reconstruction_bridge_v1.md`
-18. `docs/63_representation_layer_lsf_probe_v7.md`
-19. `docs/62_representation_layer_lsf_probe_v6.md`
+18. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+19. `docs/63_representation_layer_lsf_probe_v7.md`
+20. `docs/62_representation_layer_lsf_probe_v6.md`
 
 ## Hard Rules
 
@@ -109,6 +111,12 @@ When context must be restored, read in this order:
 
 - Keep raw audio, large model assets, and local work dirs out of Git.
 - Keep only lightweight configs, summaries, scripts, and small milestone checkpoints in Git.
+
+### 7. PowerShell patch script discipline
+
+- Do not use PowerShell heredocs or `-c` inline strings for Python patch scripts with nested quotes.
+- Use `[System.IO.File]::WriteAllText` with a heredoc to write the patch file, then run it separately.
+- This avoids quote mangling that causes SyntaxError in the patch script.
 
 ## Maintenance Rule
 
