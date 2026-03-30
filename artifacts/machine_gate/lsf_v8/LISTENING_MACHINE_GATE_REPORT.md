@@ -24,7 +24,7 @@
 - avg quant / direction / effect: `87.77` / `83.33` / `98.81`
 - top score: `100.00`
 - strong/pass/borderline/fail: `5` / `3` / `0` / `0`
-- reviewed outcome: `not_reviewed`
-- reviewed too_weak rows: `0`
-- strength escalation: `not_reviewed`
+- reviewed outcome: `reviewed_non_null`
+- reviewed too_weak rows: `3`
+- strength escalation: `no_strength_escalation_flag`
 

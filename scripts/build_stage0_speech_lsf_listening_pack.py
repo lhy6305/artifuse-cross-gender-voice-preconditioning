@@ -9,10 +9,10 @@ import numpy as np
 import scipy.signal
 
 from apply_stage0_rule_preconditioner import load_audio, resolve_path, save_audio
+from select_stage0_candidate_rules import parse_float, select_rules
 from build_stage0_speech_listening_pack import TARGET_DIRECTION_BY_SOURCE_GENDER, load_source_rows, select_rows
 from stage0_speech_resonance_pack_common import (
     analyze_f0,
-    build_enabled_directional_rule_lookup,
     build_output_stem,
     build_summary_row,
     frame_centers_sec,
@@ -38,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     parser.add_argument("--samples-per-cell", type=int, default=2)
+    parser.add_argument("--selection-mode", choices=["central", "f0_span"], default="central")
     parser.add_argument("--audio-format", choices=["wav", "flac"], default="wav")
     parser.add_argument("--peak-limit", type=float, default=0.98)
     parser.add_argument("--world-sr", type=int, default=16000)
@@ -296,8 +297,16 @@ def main() -> None:
     args = parse_args()
     rule_config_path = resolve_path(args.rule_config)
     rule_config = load_json(rule_config_path)
-    rule_lookup = build_enabled_directional_rule_lookup(rule_config)
-    selected_rows = select_rows(load_source_rows(resolve_path(args.input_csv)), samples_per_cell=args.samples_per_cell)
+    input_csv_path = resolve_path(args.input_csv)
+    try:
+        input_csv_rel = input_csv_path.relative_to(ROOT).as_posix()
+    except ValueError:
+        input_csv_rel = str(input_csv_path)
+    selected_rows = select_rows(
+        load_source_rows(input_csv_path),
+        samples_per_cell=args.samples_per_cell,
+        selection_mode=args.selection_mode,
+    )
     output_dir = resolve_path(args.output_dir)
     originals_dir = output_dir / "original"
     processed_dir = output_dir / "processed"
@@ -305,7 +314,19 @@ def main() -> None:
 
     for row in selected_rows:
         target_direction = TARGET_DIRECTION_BY_SOURCE_GENDER[row["gender"]]
-        rule = rule_lookup[(row["dataset_name"], target_direction)]
+        matched_rules = select_rules(
+            rule_config,
+            domain=row["domain"],
+            group_value=row["dataset_name"],
+            target_direction=target_direction,
+            f0_median_hz=parse_float(row.get("f0_median_hz")),
+        )
+        if not matched_rules:
+            raise RuntimeError(
+                f"No matching LSF rule for utt_id={row['utt_id']} dataset={row['dataset_name']} "
+                f"target={target_direction} f0={row.get('f0_median_hz', '')}"
+            )
+        rule = matched_rules[0]
         params = rule["method_params"]
         input_audio = resolve_path(row["path_raw"])
         stem = build_output_stem(row, target_direction=target_direction, method_token="lsf")
@@ -355,6 +376,11 @@ def main() -> None:
         purpose="lsf pair-shift residual-preserving probe after lpc pole-edit rejection",
         script_name="build_stage0_speech_lsf_listening_pack.py",
         rule_config_path=rule_config_path,
+        rebuild_extra_lines=[
+            f"  --input-csv {input_csv_rel} `",
+            f"  --samples-per-cell {args.samples_per_cell} `",
+            f"  --selection-mode {args.selection_mode} `",
+        ],
     )
     print(f"Wrote {summary_path}")
     print(f"Selected rows: {len(summary_rows)}")

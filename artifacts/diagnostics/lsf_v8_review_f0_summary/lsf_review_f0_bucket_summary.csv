@@ -1,0 +1,9 @@
+dataset_name,target_direction,f0_bucket,rows,reviewed_rows,direction_yes_rows,direction_maybe_rows,audible_yes_rows,artifact_flagged_rows,too_weak_rows,avg_auto_quant_score
+LibriTTS-R,feminine,high_f0,1,1,0,1,1,0,0,96.95
+LibriTTS-R,feminine,mid_f0,1,1,0,1,1,1,1,100.00
+LibriTTS-R,masculine,low_f0,1,1,0,0,1,0,1,80.50
+LibriTTS-R,masculine,mid_f0,1,1,0,0,1,1,1,78.60
+VCTK Corpus 0.92,feminine,high_f0,1,1,0,1,1,1,0,98.11
+VCTK Corpus 0.92,feminine,mid_f0,1,1,0,1,1,1,0,93.50
+VCTK Corpus 0.92,masculine,low_f0,1,1,0,0,0,0,0,78.75
+VCTK Corpus 0.92,masculine,mid_f0,1,1,0,0,0,1,0,75.78

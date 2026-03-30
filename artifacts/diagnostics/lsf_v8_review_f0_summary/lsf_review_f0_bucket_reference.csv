@@ -1,0 +1,5 @@
+dataset_name,target_direction,source_gender,row_count,f0_bucket_low_upper_hz,f0_bucket_mid_upper_hz,f0_min_hz,f0_max_hz
+LibriTTS-R,feminine,male,12,108.182885,121.500654,98.816335,158.954898
+LibriTTS-R,masculine,female,11,188.323017,208.880086,157.576575,232.006399
+VCTK Corpus 0.92,feminine,male,12,107.553647,116.808010,81.949200,132.382520
+VCTK Corpus 0.92,masculine,female,12,189.132101,199.466622,174.016105,233.589445

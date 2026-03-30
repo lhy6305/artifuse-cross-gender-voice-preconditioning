@@ -1,4 +1,4 @@
-﻿# Project Overview And Plan
+# Project Overview And Plan
 
 ## Scope
 
@@ -46,7 +46,28 @@ The remaining active main line is the `LSF` representation route.
 - The v8 pack has been built.
 - Machine queue summary: `5 strong_pass + 3 pass + 0 borderline + 0 fail`.
 - Machine gate: `allow_human_review`.
-- The current next step is formal human review of v8.
+- Human review is now complete.
+- Review summary: audible but still not moving core resonance correctly.
+- Female to male still sounds muffled and bottle like, with uneven effect across `f0`.
+- Male to female now shows excess upper band texture and plastic like noise.
+- The post review machine report does not recommend another direct strength escalation.
+
+### `v9`
+
+- `LSF v9` is now implemented as a conditioned family, not a plain stronger `v8`.
+- The code path now supports true `f0` conditioned rule dispatch and `f0` span
+  sample selection.
+- `v9` machine sweep outputs are in
+  `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9/`.
+- Machine-pass candidates:
+  - `split_core_focus_v9a`
+  - `f0_evening_v9b`
+- Rejected control:
+  - `conservative_conditioned_v9c`
+- Current recommendation: send `split_core_focus_v9a` to human review first and
+  keep `f0_evening_v9b` as the comparison pack if a second pass is allowed.
+- The immediate technical goal remains to move core resonance more cleanly while
+  reducing bottle like male artifacts and plastic like female artifacts.
 
 ## Process State
 
@@ -75,16 +96,25 @@ The workflow also includes a post-review strength rule:
 - `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
 - `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
 - `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
+- `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`
+- `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`
 - `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v8.json`
 - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
+- `artifacts/diagnostics/lsf_v8_review_f0_summary/`
 - `artifacts/machine_gate/lsf_v8/`
+- `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9/`
+- `artifacts/listening_review/stage0_speech_lsf_machine_sweep_v9/`
 - `scripts/run_lsf_machine_sweep.py`
 - `scripts/build_stage0_speech_lsf_listening_pack.py`
+- `scripts/summarize_lsf_review_by_f0.py`
 
 ## Next Allowed Action
 
-The next action is formal human review of:
+The next action is to run conditioned `LSF v9` human review:
 
-- `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
-
-Do not do more machine sweep work until the v8 human review result is in.
+1. review `split_core_focus_v9a`
+2. optionally review `f0_evening_v9b` as the comparison pack
+3. decide whether conditioned `LSF` is now moving core resonance or still only
+   moving edge color
+4. if both conditioned packs fail on the same subjective issue, pivot synthesis
+   family instead of escalating to `LSF v10`

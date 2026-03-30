@@ -792,14 +792,286 @@ V8_VARIANT_SPECS: list[dict[str, object]] = [
     },
 ]
 
+
+V9_F0_BUCKETS: dict[tuple[str, str], dict[str, float | None]] = {
+    ("LibriTTS-R", "masculine"): {
+        "low_upper_hz": 188.32,
+        "mid_upper_hz": 208.88,
+    },
+    ("VCTK Corpus 0.92", "masculine"): {
+        "low_upper_hz": 189.13,
+        "mid_upper_hz": 199.47,
+    },
+    ("LibriTTS-R", "feminine"): {
+        "low_upper_hz": 108.18,
+        "mid_upper_hz": 121.50,
+    },
+    ("VCTK Corpus 0.92", "feminine"): {
+        "low_upper_hz": 107.55,
+        "mid_upper_hz": 116.81,
+    },
+}
+
+
+V9_VARIANT_SPECS: list[dict[str, object]] = [
+    {
+        "variant_id": "split_core_focus_v9a",
+        "description": "Direction-split conditioned LSF: masculine narrows width growth to avoid bottle/muffle, feminine trims top-band push and preserves more original air.",
+        "expand_f0_buckets": True,
+        "overrides": {
+            ("LibriTTS-R", "masculine", "low_f0"): {
+                "center_shift_ratios": [0.98, 0.88, 1.00],
+                "pair_width_ratios": [1.04, 1.10, 1.00],
+                "blend": 0.86,
+            },
+            ("LibriTTS-R", "masculine", "mid_f0"): {
+                "center_shift_ratios": [0.98, 0.86, 1.00],
+                "pair_width_ratios": [1.05, 1.14, 1.00],
+                "blend": 0.88,
+            },
+            ("LibriTTS-R", "masculine", "high_f0"): {
+                "center_shift_ratios": [0.97, 0.84, 1.00],
+                "pair_width_ratios": [1.06, 1.16, 1.00],
+                "blend": 0.90,
+            },
+            ("VCTK Corpus 0.92", "masculine", "low_f0"): {
+                "center_shift_ratios": [0.97, 0.88, 1.00],
+                "pair_width_ratios": [1.04, 1.10, 1.00],
+                "blend": 0.86,
+                "min_gap_hz": 60.0,
+            },
+            ("VCTK Corpus 0.92", "masculine", "mid_f0"): {
+                "center_shift_ratios": [0.97, 0.85, 1.00],
+                "pair_width_ratios": [1.05, 1.14, 1.00],
+                "blend": 0.89,
+                "min_gap_hz": 60.0,
+            },
+            ("VCTK Corpus 0.92", "masculine", "high_f0"): {
+                "center_shift_ratios": [0.96, 0.83, 1.00],
+                "pair_width_ratios": [1.06, 1.18, 1.00],
+                "blend": 0.91,
+                "min_gap_hz": 60.0,
+            },
+            ("LibriTTS-R", "feminine", "low_f0"): {
+                "center_shift_ratios": [1.13, 1.09, 1.04],
+                "blend": 0.78,
+                "preserve_original_from_hz": 2400.0,
+                "preserve_original_full_hz": 3600.0,
+                "preserve_original_mix": 0.55,
+            },
+            ("LibriTTS-R", "feminine", "mid_f0"): {
+                "center_shift_ratios": [1.12, 1.08, 1.03],
+                "blend": 0.76,
+                "preserve_original_from_hz": 2300.0,
+                "preserve_original_full_hz": 3500.0,
+                "preserve_original_mix": 0.62,
+            },
+            ("LibriTTS-R", "feminine", "high_f0"): {
+                "center_shift_ratios": [1.11, 1.07, 1.02],
+                "blend": 0.72,
+                "preserve_original_from_hz": 2200.0,
+                "preserve_original_full_hz": 3400.0,
+                "preserve_original_mix": 0.72,
+            },
+            ("VCTK Corpus 0.92", "feminine", "low_f0"): {
+                "center_shift_ratios": [1.14, 1.10, 1.04],
+                "blend": 0.80,
+                "preserve_original_from_hz": 2500.0,
+                "preserve_original_full_hz": 3700.0,
+                "preserve_original_mix": 0.58,
+            },
+            ("VCTK Corpus 0.92", "feminine", "mid_f0"): {
+                "center_shift_ratios": [1.13, 1.08, 1.03],
+                "blend": 0.76,
+                "preserve_original_from_hz": 2350.0,
+                "preserve_original_full_hz": 3550.0,
+                "preserve_original_mix": 0.68,
+            },
+            ("VCTK Corpus 0.92", "feminine", "high_f0"): {
+                "center_shift_ratios": [1.11, 1.06, 1.02],
+                "blend": 0.72,
+                "preserve_original_from_hz": 2250.0,
+                "preserve_original_full_hz": 3450.0,
+                "preserve_original_mix": 0.78,
+            },
+        },
+    },
+    {
+        "variant_id": "f0_evening_v9b",
+        "description": "Spend more budget on the under-responsive buckets: high-f0 masculine gets extra F2/core push, low-f0 feminine keeps more motion before the air guard ramps up.",
+        "expand_f0_buckets": True,
+        "overrides": {
+            ("LibriTTS-R", "masculine", "low_f0"): {
+                "center_shift_ratios": [0.99, 0.89, 1.00],
+                "pair_width_ratios": [1.03, 1.08, 1.00],
+                "blend": 0.84,
+            },
+            ("LibriTTS-R", "masculine", "mid_f0"): {
+                "center_shift_ratios": [0.98, 0.86, 1.00],
+                "pair_width_ratios": [1.05, 1.14, 1.00],
+                "blend": 0.88,
+            },
+            ("LibriTTS-R", "masculine", "high_f0"): {
+                "center_shift_ratios": [0.96, 0.82, 1.00],
+                "pair_width_ratios": [1.08, 1.18, 1.00],
+                "blend": 0.92,
+            },
+            ("VCTK Corpus 0.92", "masculine", "low_f0"): {
+                "center_shift_ratios": [0.98, 0.89, 1.00],
+                "pair_width_ratios": [1.03, 1.08, 1.00],
+                "blend": 0.84,
+                "min_gap_hz": 60.0,
+            },
+            ("VCTK Corpus 0.92", "masculine", "mid_f0"): {
+                "center_shift_ratios": [0.97, 0.85, 1.00],
+                "pair_width_ratios": [1.05, 1.14, 1.00],
+                "blend": 0.89,
+                "min_gap_hz": 60.0,
+            },
+            ("VCTK Corpus 0.92", "masculine", "high_f0"): {
+                "center_shift_ratios": [0.95, 0.81, 1.00],
+                "pair_width_ratios": [1.08, 1.20, 1.00],
+                "blend": 0.93,
+                "min_gap_hz": 60.0,
+            },
+            ("LibriTTS-R", "feminine", "low_f0"): {
+                "center_shift_ratios": [1.14, 1.10, 1.04],
+                "blend": 0.80,
+                "preserve_original_from_hz": 2500.0,
+                "preserve_original_full_hz": 3650.0,
+                "preserve_original_mix": 0.52,
+            },
+            ("LibriTTS-R", "feminine", "mid_f0"): {
+                "center_shift_ratios": [1.12, 1.08, 1.03],
+                "blend": 0.75,
+                "preserve_original_from_hz": 2350.0,
+                "preserve_original_full_hz": 3500.0,
+                "preserve_original_mix": 0.64,
+            },
+            ("LibriTTS-R", "feminine", "high_f0"): {
+                "center_shift_ratios": [1.10, 1.06, 1.02],
+                "blend": 0.70,
+                "preserve_original_from_hz": 2200.0,
+                "preserve_original_full_hz": 3350.0,
+                "preserve_original_mix": 0.78,
+            },
+            ("VCTK Corpus 0.92", "feminine", "low_f0"): {
+                "center_shift_ratios": [1.15, 1.10, 1.04],
+                "blend": 0.81,
+                "preserve_original_from_hz": 2550.0,
+                "preserve_original_full_hz": 3700.0,
+                "preserve_original_mix": 0.56,
+            },
+            ("VCTK Corpus 0.92", "feminine", "mid_f0"): {
+                "center_shift_ratios": [1.13, 1.08, 1.03],
+                "blend": 0.76,
+                "preserve_original_from_hz": 2400.0,
+                "preserve_original_full_hz": 3550.0,
+                "preserve_original_mix": 0.68,
+            },
+            ("VCTK Corpus 0.92", "feminine", "high_f0"): {
+                "center_shift_ratios": [1.10, 1.05, 1.02],
+                "blend": 0.70,
+                "preserve_original_from_hz": 2250.0,
+                "preserve_original_full_hz": 3400.0,
+                "preserve_original_mix": 0.80,
+            },
+        },
+    },
+    {
+        "variant_id": "conservative_conditioned_v9c",
+        "description": "Lower-risk conditioned control: keep the direction split and F0 buckets, but reduce overall blend so the new family can be compared against a safer baseline.",
+        "expand_f0_buckets": True,
+        "overrides": {
+            ("LibriTTS-R", "masculine", "low_f0"): {
+                "center_shift_ratios": [0.99, 0.90, 1.00],
+                "pair_width_ratios": [1.02, 1.06, 1.00],
+                "blend": 0.82,
+            },
+            ("LibriTTS-R", "masculine", "mid_f0"): {
+                "center_shift_ratios": [0.99, 0.88, 1.00],
+                "pair_width_ratios": [1.03, 1.10, 1.00],
+                "blend": 0.84,
+            },
+            ("LibriTTS-R", "masculine", "high_f0"): {
+                "center_shift_ratios": [0.98, 0.86, 1.00],
+                "pair_width_ratios": [1.04, 1.12, 1.00],
+                "blend": 0.86,
+            },
+            ("VCTK Corpus 0.92", "masculine", "low_f0"): {
+                "center_shift_ratios": [0.99, 0.90, 1.00],
+                "pair_width_ratios": [1.02, 1.06, 1.00],
+                "blend": 0.82,
+                "min_gap_hz": 60.0,
+            },
+            ("VCTK Corpus 0.92", "masculine", "mid_f0"): {
+                "center_shift_ratios": [0.98, 0.87, 1.00],
+                "pair_width_ratios": [1.03, 1.10, 1.00],
+                "blend": 0.85,
+                "min_gap_hz": 60.0,
+            },
+            ("VCTK Corpus 0.92", "masculine", "high_f0"): {
+                "center_shift_ratios": [0.97, 0.85, 1.00],
+                "pair_width_ratios": [1.04, 1.12, 1.00],
+                "blend": 0.87,
+                "min_gap_hz": 60.0,
+            },
+            ("LibriTTS-R", "feminine", "low_f0"): {
+                "center_shift_ratios": [1.11, 1.07, 1.03],
+                "blend": 0.74,
+                "preserve_original_from_hz": 2400.0,
+                "preserve_original_full_hz": 3550.0,
+                "preserve_original_mix": 0.60,
+            },
+            ("LibriTTS-R", "feminine", "mid_f0"): {
+                "center_shift_ratios": [1.10, 1.06, 1.02],
+                "blend": 0.71,
+                "preserve_original_from_hz": 2300.0,
+                "preserve_original_full_hz": 3450.0,
+                "preserve_original_mix": 0.68,
+            },
+            ("LibriTTS-R", "feminine", "high_f0"): {
+                "center_shift_ratios": [1.09, 1.05, 1.02],
+                "blend": 0.68,
+                "preserve_original_from_hz": 2200.0,
+                "preserve_original_full_hz": 3350.0,
+                "preserve_original_mix": 0.76,
+            },
+            ("VCTK Corpus 0.92", "feminine", "low_f0"): {
+                "center_shift_ratios": [1.12, 1.08, 1.03],
+                "blend": 0.75,
+                "preserve_original_from_hz": 2450.0,
+                "preserve_original_full_hz": 3600.0,
+                "preserve_original_mix": 0.62,
+            },
+            ("VCTK Corpus 0.92", "feminine", "mid_f0"): {
+                "center_shift_ratios": [1.11, 1.06, 1.02],
+                "blend": 0.71,
+                "preserve_original_from_hz": 2325.0,
+                "preserve_original_full_hz": 3475.0,
+                "preserve_original_mix": 0.70,
+            },
+            ("VCTK Corpus 0.92", "feminine", "high_f0"): {
+                "center_shift_ratios": [1.09, 1.05, 1.02],
+                "blend": 0.67,
+                "preserve_original_from_hz": 2225.0,
+                "preserve_original_full_hz": 3375.0,
+                "preserve_original_mix": 0.78,
+            },
+        },
+    },
+]
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--preset", choices=["v2", "v3", "v4", "v5", "v6", "v7", "v8"], default="v2")
+    parser.add_argument("--preset", choices=["v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9"], default="v2")
     parser.add_argument("--base-config", default=str(DEFAULT_BASE_CONFIG))
     parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
     parser.add_argument("--sweep-dir", default=str(DEFAULT_SWEEP_DIR))
     parser.add_argument("--pack-root", default=str(DEFAULT_PACK_ROOT))
     parser.add_argument("--variants", default="", help="Comma-separated variant ids. Empty means all.")
+    parser.add_argument("--samples-per-cell", type=int, default=2)
+    parser.add_argument("--selection-mode", choices=["central", "f0_span"], default="central")
     parser.add_argument("--force-rebuild", action="store_true")
     parser.add_argument("--min-avg-quant", type=float, default=65.0)
     parser.add_argument("--min-avg-direction", type=float, default=45.0)
@@ -838,12 +1110,88 @@ def variant_selection(args: argparse.Namespace) -> list[dict[str, object]]:
         available_specs = V6_VARIANT_SPECS
     elif args.preset == "v7":
         available_specs = V7_VARIANT_SPECS
-    else:
+    elif args.preset == "v8":
         available_specs = V8_VARIANT_SPECS
+    else:
+        available_specs = V9_VARIANT_SPECS
     if not args.variants.strip():
         return available_specs
     selected = {item.strip() for item in args.variants.split(",") if item.strip()}
     return [spec for spec in available_specs if spec["variant_id"] in selected]
+
+
+def bucket_match_fields(
+    dataset_name: str,
+    target_direction: str,
+    bucket_id: str,
+) -> dict[str, object]:
+    thresholds = V9_F0_BUCKETS[(dataset_name, target_direction)]
+    low_upper = thresholds["low_upper_hz"]
+    mid_upper = thresholds["mid_upper_hz"]
+    if bucket_id == "low_f0":
+        return {
+            "f0_condition": bucket_id,
+            "f0_lower_hz": None,
+            "f0_upper_hz": low_upper,
+            "bucket_scheme": "v9_tercile",
+        }
+    if bucket_id == "mid_f0":
+        return {
+            "f0_condition": bucket_id,
+            "f0_lower_hz": low_upper,
+            "f0_upper_hz": mid_upper,
+            "bucket_scheme": "v9_tercile",
+        }
+    if bucket_id == "high_f0":
+        return {
+            "f0_condition": bucket_id,
+            "f0_lower_hz": mid_upper,
+            "f0_upper_hz": None,
+            "bucket_scheme": "v9_tercile",
+        }
+    raise ValueError(f"Unsupported bucket id: {bucket_id}")
+
+
+def resolve_override(
+    overrides: dict[tuple[str, ...], dict[str, object]],
+    *,
+    dataset_name: str,
+    target_direction: str,
+    bucket_id: str | None = None,
+) -> dict[str, object]:
+    if bucket_id is not None and (dataset_name, target_direction, bucket_id) in overrides:
+        return overrides[(dataset_name, target_direction, bucket_id)]
+    if (dataset_name, target_direction) in overrides:
+        return overrides[(dataset_name, target_direction)]
+    return {}
+
+
+def expand_rules_for_f0_buckets(payload: dict, spec: dict[str, object]) -> list[dict]:
+    overrides: dict[tuple[str, ...], dict[str, object]] = spec["overrides"]  # type: ignore[assignment]
+    expanded_rules: list[dict] = []
+    bucket_order = ["low_f0", "mid_f0", "high_f0"]
+    priority_offsets = {"low_f0": 2, "mid_f0": 1, "high_f0": 0}
+    for rule in payload["rules"]:
+        dataset_name = rule["match"]["group_value"]
+        target_direction = rule["target_direction"]
+        for bucket_id in bucket_order:
+            bucket_rule = deepcopy(rule)
+            bucket_rule["match"].update(bucket_match_fields(dataset_name, target_direction, bucket_id))
+            bucket_rule["rule_id"] = f"{bucket_rule['rule_id']}__{bucket_id}"
+            bucket_rule["priority"] = int(bucket_rule["priority"]) + priority_offsets[bucket_id]
+            override_values = resolve_override(
+                overrides,
+                dataset_name=dataset_name,
+                target_direction=target_direction,
+                bucket_id=bucket_id,
+            )
+            for param_name, param_value in override_values.items():
+                if param_name in {"action_family", "signal_name"}:
+                    bucket_rule[param_name] = param_value
+                else:
+                    bucket_rule["method_params"][param_name] = param_value
+            expanded_rules.append(bucket_rule)
+    return expanded_rules
 
 
 def apply_variant(base_config: dict, spec: dict[str, object], *, preset: str) -> dict:
@@ -853,16 +1201,19 @@ def apply_variant(base_config: dict, spec: dict[str, object], *, preset: str) ->
     payload["selection_policy"]["purpose"] = f"lsf_machine_sweep_{spec['variant_id']}"
     payload["variant_description"] = spec["description"]
 
-    overrides: dict[tuple[str, str], dict[str, object]] = spec["overrides"]  # type: ignore[assignment]
+    overrides: dict[tuple[str, ...], dict[str, object]] = spec["overrides"]  # type: ignore[assignment]
+    if spec.get("expand_f0_buckets", False):
+        payload["rules"] = expand_rules_for_f0_buckets(payload, spec)
+
     for rule in payload["rules"]:
         key = (rule["match"]["group_value"], rule["target_direction"])
         params = rule["method_params"]
-        if key in overrides:
-            for param_name, param_value in overrides[key].items():
-                if param_name in {"action_family", "signal_name"}:
-                    rule[param_name] = param_value
-                else:
-                    params[param_name] = param_value
+        override_values = resolve_override(overrides, dataset_name=key[0], target_direction=key[1], bucket_id=rule["match"].get("f0_condition"))
+        for param_name, param_value in override_values.items():
+            if param_name in {"action_family", "signal_name"}:
+                rule[param_name] = param_value
+            else:
+                params[param_name] = param_value
         rule["rule_id"] = re.sub(r"_v\d+$", "", rule["rule_id"]) + f"_{spec['variant_id']}"
         rule["strength"]["label"] = spec["variant_id"]
         rule["notes"] = f"{rule.get('notes', '')} [machine_sweep={spec['variant_id']}]".strip()
@@ -1009,6 +1360,10 @@ def main() -> None:
                     str(resolve_path(args.input_csv)),
                     "--output-dir",
                     str(pack_dir),
+                    "--samples-per-cell",
+                    str(args.samples_per_cell),
+                    "--selection-mode",
+                    args.selection_mode,
                 ]
             )
 

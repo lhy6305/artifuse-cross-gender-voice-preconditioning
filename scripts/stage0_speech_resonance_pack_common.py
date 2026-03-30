@@ -182,6 +182,7 @@ def write_pack_readme(
     purpose: str,
     script_name: str,
     rule_config_path: Path,
+    rebuild_extra_lines: list[str] | None = None,
 ) -> None:
     pack_dir = path.parent
     pack_version = pack_dir.name
@@ -213,4 +214,8 @@ def write_pack_readme(
         "```",
         "",
     ]
+    if rebuild_extra_lines:
+        insert_at = 9
+        for extra_line in reversed(rebuild_extra_lines):
+            lines.insert(insert_at, extra_line)
     path.write_text("\n".join(lines), encoding="utf-8")

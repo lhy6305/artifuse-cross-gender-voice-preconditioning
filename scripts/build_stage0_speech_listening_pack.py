@@ -101,7 +101,47 @@ def row_distance_score(
     return score
 
 
-def select_rows(rows: list[dict[str, str]], samples_per_cell: int) -> list[dict[str, str]]:
+def select_rows_for_f0_span(rows: list[dict[str, str]], samples_per_cell: int) -> list[dict[str, str]]:
+    if not rows or samples_per_cell <= 0:
+        return []
+    sorted_rows = sorted(rows, key=lambda row: ((parse_float(row.get("f0_median_hz")) or 0.0), row["utt_id"]))
+    if len(sorted_rows) <= samples_per_cell:
+        selected_rows: list[dict[str, str]] = []
+        for rank, row in enumerate(sorted_rows, start=1):
+            selected = dict(row)
+            selected["selection_rank"] = str(rank)
+            selected["selection_score"] = "0.000000"
+            selected_rows.append(selected)
+        return selected_rows
+
+    target_positions = []
+    if samples_per_cell == 1:
+        target_positions = [0.5 * (len(sorted_rows) - 1)]
+    else:
+        target_positions = [
+            idx * (len(sorted_rows) - 1) / (samples_per_cell - 1)
+            for idx in range(samples_per_cell)
+        ]
+
+    chosen_indices: list[int] = []
+    for target in target_positions:
+        candidate_indices = sorted(
+            range(len(sorted_rows)),
+            key=lambda idx: (abs(idx - target), idx),
+        )
+        selected_idx = next(idx for idx in candidate_indices if idx not in chosen_indices)
+        chosen_indices.append(selected_idx)
+
+    selected_rows = []
+    for rank, idx in enumerate(chosen_indices, start=1):
+        row = dict(sorted_rows[idx])
+        row["selection_rank"] = str(rank)
+        row["selection_score"] = f"{abs(idx - target_positions[rank - 1]):.6f}"
+        selected_rows.append(row)
+    return selected_rows
+
+
+def select_rows(rows: list[dict[str, str]], samples_per_cell: int, selection_mode: str = "central") -> list[dict[str, str]]:
     grouped: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
     for row in rows:
         grouped[(row["dataset_name"], row["gender"])].append(row)
@@ -109,6 +149,9 @@ def select_rows(rows: list[dict[str, str]], samples_per_cell: int) -> list[dict[
     selected: list[dict[str, str]] = []
     for key in sorted(grouped):
         group_rows = grouped[key]
+        if selection_mode == "f0_span":
+            selected.extend(select_rows_for_f0_span(group_rows, samples_per_cell))
+            continue
         durations = [parse_float(row["duration_sec"]) or 0.0 for row in group_rows]
         f0_values = [parse_float(row["f0_median_hz"]) or 0.0 for row in group_rows]
         centroids = [parse_float(row["spectral_centroid_hz_mean"]) or 0.0 for row in group_rows]
