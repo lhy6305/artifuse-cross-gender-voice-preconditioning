@@ -68,6 +68,14 @@ The remaining active main line is the `LSF` representation route.
   keep `f0_evening_v9b` as the comparison pack if a second pass is allowed.
 - The immediate technical goal remains to move core resonance more cleanly while
   reducing bottle like male artifacts and plastic like female artifacts.
+- Important correction: the first `v9` human pass drifted away from the old
+  `v8` listening set and is not a valid cross-round comparison.
+- The user judged that drifted pass as functionally imperceptible and not worth
+  re-listening.
+- Comparative human review must now reuse the fixed manifest
+  `experiments/stage0_baseline/v1_full/speech_lsf_fixed_review_manifest_v8.csv`.
+- A fixed8 rerun is now available in
+  `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9_fixed8/`.
 
 ## Process State
 
@@ -98,23 +106,28 @@ The workflow also includes a post-review strength rule:
 - `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
 - `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`
 - `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`
+- `docs/84_v9_sample_drift_invalidation_and_fixed8_review_policy_v1.md`
 - `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v8.json`
+- `experiments/stage0_baseline/v1_full/speech_lsf_fixed_review_manifest_v8.csv`
 - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
 - `artifacts/diagnostics/lsf_v8_review_f0_summary/`
 - `artifacts/machine_gate/lsf_v8/`
 - `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9/`
+- `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9_fixed8/`
 - `artifacts/listening_review/stage0_speech_lsf_machine_sweep_v9/`
+- `artifacts/listening_review/stage0_speech_lsf_machine_sweep_v9_fixed8/`
 - `scripts/run_lsf_machine_sweep.py`
 - `scripts/build_stage0_speech_lsf_listening_pack.py`
 - `scripts/summarize_lsf_review_by_f0.py`
 
 ## Next Allowed Action
 
-The next action is to run conditioned `LSF v9` human review:
+The next action is conditional:
 
-1. review `split_core_focus_v9a`
-2. optionally review `f0_evening_v9b` as the comparison pack
-3. decide whether conditioned `LSF` is now moving core resonance or still only
-   moving edge color
-4. if both conditioned packs fail on the same subjective issue, pivot synthesis
-   family instead of escalating to `LSF v10`
+1. do not rely on the first drifted `v9` human pass as a valid comparison
+2. if human review continues, use the fixed8 pack only
+3. review `split_core_focus_v9a` fixed8 first
+4. use `f0_evening_v9b` fixed8 only as an optional comparison pack
+5. if the fixed8 comparison still comes back effectively imperceptible or still
+   misses core resonance, pivot synthesis family instead of escalating to
+   `LSF v10`

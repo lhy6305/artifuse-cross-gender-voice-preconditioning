@@ -8,7 +8,7 @@
 | Handoff-doc and experiment-record separation | Completed | `docs/01` and `docs/02` limited to global handoff state. Historical content split into archive docs. | `docs/65_active_handoff_docs_and_experiment_record_policy_v1.md` |
 | ATRR distribution experiment | Closed | Offline simulator proved directional. LSF reconstruction bridge implemented and debugged (docs 74-79). Fundamental tension found: ATRR mel-distribution improvement and machine-gate spectral centroid effect cannot be satisfied simultaneously by the LSF carrier. Experiment closed. See doc 80. | `docs/74_additive_targetward_resonance_residual_method_v1.md` through `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`, `scripts/reconstruct_atrr_lsf_prototype.py` |
 | LSF v8 review checkpoint | Completed | v8 machine results stayed strong, but human review showed that core resonance still does not move correctly. Female to male is still muffled and bottle like, with uneven effect across `f0`. Male to female overproduces upper band texture and plastic like noise. | `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`, `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`, `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`, `artifacts/machine_gate/lsf_v8/` |
-| LSF conditioned priors pivot (v9) | Active - ready for human review | The conditioned `v9` family is implemented. `split_core_focus_v9a` and `f0_evening_v9b` passed the machine gate. `conservative_conditioned_v9c` did not. | `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`, `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`, `artifacts/diagnostics/lsf_v8_review_f0_summary/`, `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9/`, `scripts/run_lsf_machine_sweep.py`, `scripts/build_stage0_speech_lsf_listening_pack.py`, `scripts/summarize_lsf_review_by_f0.py` |
+| LSF conditioned priors pivot (v9) | Active - fixed8 comparison only | The first `v9` human pass drifted to a different listening set and is not a valid continuation of the old `v8` comparison track. Future human comparison must reuse the fixed legacy 8-sample manifest. Fixed8 reruns are prepared. | `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`, `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`, `docs/84_v9_sample_drift_invalidation_and_fixed8_review_policy_v1.md`, `experiments/stage0_baseline/v1_full/speech_lsf_fixed_review_manifest_v8.csv`, `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9_fixed8/`, `artifacts/listening_review/stage0_speech_lsf_machine_sweep_v9_fixed8/`, `scripts/run_lsf_machine_sweep.py`, `scripts/build_stage0_speech_lsf_listening_pack.py`, `scripts/summarize_lsf_review_by_f0.py` |
 | Machine-first review process | Active and stable | Human review gated by machine metrics. Post-review strength escalation rule active. | `docs/57_machine_first_review_gate_v1.md`, `scripts/build_listening_machine_gate_report.py` |
 
 ## Current Operational Rule
@@ -18,7 +18,8 @@
 - The ATRR experiment is closed. Do not restart it without a new synthesis method.
 - Do not do another direct strength escalation off `v8`.
 - Conditioned `LSF v9` has already been built and machine-ranked.
-- The immediate next step is human review on `split_core_focus_v9a`, with `f0_evening_v9b` as the optional comparison pack.
+- The first `v9` human pass is invalid as a cross-round comparison because the listening set drifted.
+- The immediate next valid human step is fixed8 review on `split_core_focus_v9a`, with `f0_evening_v9b` fixed8 as the optional comparison pack.
 
 ## Branch Policy
 

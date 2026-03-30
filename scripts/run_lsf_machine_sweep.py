@@ -1070,6 +1070,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sweep-dir", default=str(DEFAULT_SWEEP_DIR))
     parser.add_argument("--pack-root", default=str(DEFAULT_PACK_ROOT))
     parser.add_argument("--variants", default="", help="Comma-separated variant ids. Empty means all.")
+    parser.add_argument("--selection-manifest", default="")
     parser.add_argument("--samples-per-cell", type=int, default=2)
     parser.add_argument("--selection-mode", choices=["central", "f0_span"], default="central")
     parser.add_argument("--force-rebuild", action="store_true")
@@ -1351,21 +1352,32 @@ def main() -> None:
         save_json(config_path, config_payload)
 
         if args.force_rebuild or not summary_csv.exists():
-            run_python(
-                [
-                    str(ROOT / "scripts" / "build_stage0_speech_lsf_listening_pack.py"),
-                    "--rule-config",
-                    str(config_path),
-                    "--input-csv",
-                    str(resolve_path(args.input_csv)),
-                    "--output-dir",
-                    str(pack_dir),
-                    "--samples-per-cell",
-                    str(args.samples_per_cell),
-                    "--selection-mode",
-                    args.selection_mode,
-                ]
-            )
+            build_arguments = [
+                str(ROOT / "scripts" / "build_stage0_speech_lsf_listening_pack.py"),
+                "--rule-config",
+                str(config_path),
+                "--input-csv",
+                str(resolve_path(args.input_csv)),
+                "--output-dir",
+                str(pack_dir),
+            ]
+            if args.selection_manifest.strip():
+                build_arguments.extend(
+                    [
+                        "--selection-manifest",
+                        str(resolve_path(args.selection_manifest)),
+                    ]
+                )
+            else:
+                build_arguments.extend(
+                    [
+                        "--samples-per-cell",
+                        str(args.samples_per_cell),
+                        "--selection-mode",
+                        args.selection_mode,
+                    ]
+                )
+            run_python(build_arguments)
 
         run_python(
             [

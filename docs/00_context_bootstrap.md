@@ -40,6 +40,7 @@ Only the following files are treated as active living docs right now:
 11. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
 12. `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`
 13. `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`
+14. `docs/84_v9_sample_drift_invalidation_and_fixed8_review_policy_v1.md`
 
 ## Read Order
 
@@ -51,10 +52,11 @@ When context must be restored, read in this order:
 4. `docs/05_task_branch_map.md`
 5. `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`
 6. `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`
-7. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
-8. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
-9. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-10. `docs/57_machine_first_review_gate_v1.md`
+7. `docs/84_v9_sample_drift_invalidation_and_fixed8_review_policy_v1.md`
+8. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
+9. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+10. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+11. `docs/57_machine_first_review_gate_v1.md`
 
 ## Hard Rules
 

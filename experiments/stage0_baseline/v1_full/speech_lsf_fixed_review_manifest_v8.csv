@@ -1,0 +1,9 @@
+dataset_name,source_gender,target_direction,utt_id,selection_rank,selection_score,manifest_label
+LibriTTS-R,female,masculine,1919_142785_000089_000003,1,0.792805,legacy_v8_fixed8
+LibriTTS-R,female,masculine,1995_1826_000022_000000,2,1.286012,legacy_v8_fixed8
+LibriTTS-R,male,feminine,174_50561_000024_000000,1,0.726998,legacy_v8_fixed8
+LibriTTS-R,male,feminine,2086_149214_000006_000002,2,0.854866,legacy_v8_fixed8
+VCTK Corpus 0.92,female,masculine,p231_011_mic1,1,0.907249,legacy_v8_fixed8
+VCTK Corpus 0.92,female,masculine,p230_107_mic1,2,1.347617,legacy_v8_fixed8
+VCTK Corpus 0.92,male,feminine,p241_005_mic1,1,0.598308,legacy_v8_fixed8
+VCTK Corpus 0.92,male,feminine,p226_011_mic1,2,1.349585,legacy_v8_fixed8

@@ -65,6 +65,39 @@ def load_source_rows(path: Path) -> list[dict[str, str]]:
     ]
 
 
+def load_selection_manifest(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def select_rows_from_manifest(
+    rows: list[dict[str, str]],
+    manifest_rows: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    row_lookup: dict[tuple[str, str, str], dict[str, str]] = {}
+    for row in rows:
+        key = (row["dataset_name"], row["gender"], row["utt_id"])
+        if key in row_lookup:
+            raise ValueError(f"Duplicate source row for manifest key: {key}")
+        row_lookup[key] = row
+
+    selected_rows: list[dict[str, str]] = []
+    for order, manifest_row in enumerate(manifest_rows, start=1):
+        key = (
+            manifest_row["dataset_name"],
+            manifest_row["source_gender"],
+            manifest_row["utt_id"],
+        )
+        if key not in row_lookup:
+            raise ValueError(f"Manifest row not found in source CSV: {key}")
+        row = dict(row_lookup[key])
+        row["selection_rank"] = manifest_row.get("selection_rank") or str(order)
+        row["selection_score"] = manifest_row.get("selection_score") or "0.000000"
+        row["selection_group"] = manifest_row.get("selection_group") or ""
+        selected_rows.append(row)
+    return selected_rows
+
+
 def robust_scale(values: list[float], fallback: float) -> float:
     if not values:
         return fallback

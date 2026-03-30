@@ -17,6 +17,18 @@ That means:
 
 The handoff docs must not accumulate routine experiment logs.
 
+## Stable Human Review Set Rule
+
+If a route enters repeated human comparison across iterations, the listening set
+must be frozen through an explicit manifest.
+
+That rule exists because changing both:
+
+- the method
+- the listened sample set
+
+at the same time breaks cross-round interpretability.
+
 ## What `docs/01_project_overview_and_plan.md` Is Allowed To Hold
 
 `docs/01_project_overview_and_plan.md` may hold:

@@ -10,7 +10,13 @@ import scipy.signal
 
 from apply_stage0_rule_preconditioner import load_audio, resolve_path, save_audio
 from select_stage0_candidate_rules import parse_float, select_rules
-from build_stage0_speech_listening_pack import TARGET_DIRECTION_BY_SOURCE_GENDER, load_source_rows, select_rows
+from build_stage0_speech_listening_pack import (
+    TARGET_DIRECTION_BY_SOURCE_GENDER,
+    load_selection_manifest,
+    load_source_rows,
+    select_rows,
+    select_rows_from_manifest,
+)
 from stage0_speech_resonance_pack_common import (
     analyze_f0,
     build_output_stem,
@@ -37,6 +43,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rule-config", default=str(DEFAULT_RULE_CONFIG))
     parser.add_argument("--input-csv", default=str(DEFAULT_INPUT_CSV))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
+    parser.add_argument("--selection-manifest", default="")
     parser.add_argument("--samples-per-cell", type=int, default=2)
     parser.add_argument("--selection-mode", choices=["central", "f0_span"], default="central")
     parser.add_argument("--audio-format", choices=["wav", "flac"], default="wav")
@@ -298,15 +305,25 @@ def main() -> None:
     rule_config_path = resolve_path(args.rule_config)
     rule_config = load_json(rule_config_path)
     input_csv_path = resolve_path(args.input_csv)
+    selection_manifest_path = resolve_path(args.selection_manifest) if args.selection_manifest else None
     try:
         input_csv_rel = input_csv_path.relative_to(ROOT).as_posix()
     except ValueError:
         input_csv_rel = str(input_csv_path)
-    selected_rows = select_rows(
-        load_source_rows(input_csv_path),
-        samples_per_cell=args.samples_per_cell,
-        selection_mode=args.selection_mode,
-    )
+    source_rows = load_source_rows(input_csv_path)
+    if selection_manifest_path is not None:
+        selected_rows = select_rows_from_manifest(source_rows, load_selection_manifest(selection_manifest_path))
+        try:
+            selection_manifest_rel = selection_manifest_path.relative_to(ROOT).as_posix()
+        except ValueError:
+            selection_manifest_rel = str(selection_manifest_path)
+    else:
+        selected_rows = select_rows(
+            source_rows,
+            samples_per_cell=args.samples_per_cell,
+            selection_mode=args.selection_mode,
+        )
+        selection_manifest_rel = ""
     output_dir = resolve_path(args.output_dir)
     originals_dir = output_dir / "original"
     processed_dir = output_dir / "processed"
@@ -376,11 +393,18 @@ def main() -> None:
         purpose="lsf pair-shift residual-preserving probe after lpc pole-edit rejection",
         script_name="build_stage0_speech_lsf_listening_pack.py",
         rule_config_path=rule_config_path,
-        rebuild_extra_lines=[
-            f"  --input-csv {input_csv_rel} `",
-            f"  --samples-per-cell {args.samples_per_cell} `",
-            f"  --selection-mode {args.selection_mode} `",
-        ],
+        rebuild_extra_lines=(
+            [
+                f"  --input-csv {input_csv_rel} `",
+                f"  --selection-manifest {selection_manifest_rel} `",
+            ]
+            if selection_manifest_rel
+            else [
+                f"  --input-csv {input_csv_rel} `",
+                f"  --samples-per-cell {args.samples_per_cell} `",
+                f"  --selection-mode {args.selection_mode} `",
+            ]
+        ),
     )
     print(f"Wrote {summary_path}")
     print(f"Selected rows: {len(summary_rows)}")

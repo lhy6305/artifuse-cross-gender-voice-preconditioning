@@ -1,4 +1,4 @@
-﻿# Pitfalls Log
+# Pitfalls Log
 
 ## Active Global Pitfalls
 
@@ -70,6 +70,15 @@
 - Impact: all dynamic edits collapse to near-identity, zero audible change.
 - Rule: normalize local_strength by the maximum possible mass for the slice
   (slice bin count / total bins) rather than a hardcoded constant.
+
+### 11. Human comparison packs must keep a stable listening set across rounds
+
+- Problem: changing the human listening pack sample set mid-series changes both
+  the method and the evaluation set at the same time.
+- Impact: cross-round listening conclusions become non-comparable and can look
+  like a user mistake even when the pack itself drifted.
+- Rule: once a human comparison track starts, freeze the listening set through
+  an explicit manifest until a deliberate review-set reset is declared.
 
 ## Archived Historical Pitfalls
 
