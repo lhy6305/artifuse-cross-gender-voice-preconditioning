@@ -35,6 +35,7 @@ git-*.sh
 # Local third-party worktrees / bundled runtimes
 pretrained_rvc_firefly_fp32/
 Retrieval-based-Voice-Conversion-WebUI-7ef1986/
+external_models/
 python.exe
 pythonw.exe
 codex_perm_cleanup_static.exe

@@ -41,6 +41,14 @@ Only the following files are treated as active living docs right now:
 12. `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`
 13. `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`
 14. `docs/84_v9_sample_drift_invalidation_and_fixed8_review_policy_v1.md`
+15. `docs/85_lsf_route_closure_and_vocoder_pivot_prep_v1.md`
+16. `docs/86_new_carrier_requirements_and_first_vocoder_bridge_prototype_v1.md`
+17. `docs/87_vocoder_carrier_adapter_probe_v1.md`
+18. `docs/88_local_rvc_posterior_bridge_probe_rejected_v1.md`
+19. `docs/89_torchaudio_wavernn_domain_adapt_probe_rejected_v1.md`
+20. `docs/90_local_bigvgan_probe_and_vocos_rejection_v1.md`
+21. `docs/91_bigvgan_bounded_pitch_correction_probe_v1.md`
+22. `docs/92_vctk_bigvgan_weak_row_diagnostics_v1.md`
 
 ## Read Order
 
@@ -53,10 +61,18 @@ When context must be restored, read in this order:
 5. `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`
 6. `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`
 7. `docs/84_v9_sample_drift_invalidation_and_fixed8_review_policy_v1.md`
-8. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
-9. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
-10. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-11. `docs/57_machine_first_review_gate_v1.md`
+8. `docs/85_lsf_route_closure_and_vocoder_pivot_prep_v1.md`
+9. `docs/86_new_carrier_requirements_and_first_vocoder_bridge_prototype_v1.md`
+10. `docs/87_vocoder_carrier_adapter_probe_v1.md`
+11. `docs/88_local_rvc_posterior_bridge_probe_rejected_v1.md`
+12. `docs/89_torchaudio_wavernn_domain_adapt_probe_rejected_v1.md`
+13. `docs/90_local_bigvgan_probe_and_vocos_rejection_v1.md`
+14. `docs/91_bigvgan_bounded_pitch_correction_probe_v1.md`
+15. `docs/92_vctk_bigvgan_weak_row_diagnostics_v1.md`
+16. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
+17. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+18. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+19. `docs/57_machine_first_review_gate_v1.md`
 
 ## Hard Rules
 

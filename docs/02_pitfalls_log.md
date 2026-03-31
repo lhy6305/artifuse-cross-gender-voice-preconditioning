@@ -26,11 +26,14 @@
 - Impact: Git history can become heavy, noisy, or unsafe.
 - Rule: keep those assets ignored by default and keep only lightweight recoverable artifacts in Git.
 
-### 5. Use stable `record_id`, not `utt_id`, for joins
+### 5. Use stable `record_id`, not `utt_id` or `rule_id`, for joins
 
-- Problem: `utt_id` is not globally unique in the full manifest.
-- Impact: cache joins and resume logic can silently misalign records.
+- Problem: `utt_id` is not globally unique in the full manifest, and `rule_id`
+  is a candidate-level label reused across multiple rows in a pack.
+- Impact: cache joins, resume logic, and output file naming can silently
+  misalign records or overwrite artifacts.
 - Rule: use stable `record_id` for joins, cache keys, and resume logic.
+  Use `record_id` plus `utt_id` for row-level artifact names when needed.
 
 ### 6. Use repo root `.\python.exe` for project scripts
 
@@ -79,6 +82,44 @@
   like a user mistake even when the pack itself drifted.
 - Rule: once a human comparison track starts, freeze the listening set through
   an explicit manifest until a deliberate review-set reset is declared.
+
+### 12. External vocoder backends must use their own mel frontend domain
+
+- Problem: exported target packages currently store project-domain mel objects,
+  but external neural vocoders are often trained on a different mel frontend
+  with different sample rate, hop length, window length, and mel limits.
+- Impact: feeding project-domain `target_log_mel` directly into a backend can
+  produce false-negative results that look like a backend failure but are
+  actually frontend-domain mismatch.
+- Rule: before judging an external mel-native backend, rebuild source and target
+  mel in that backend's own frontend domain, then run the carrier probe.
+
+### 13. HuggingFace-hosted backend fetches may time out in this environment
+
+- Problem: model downloads from `huggingface.co` can time out repeatedly here,
+  even when other hosts such as `download.pytorch.org` still work.
+- Impact: a backend integration attempt can fail before any model code runs.
+- Rule: treat repeated HuggingFace fetch timeout as an environment access issue,
+  not as proof that the backend API is unusable.
+
+### 14. External backend mel bin counts may differ from exported frame edits
+
+- Problem: exported target packages currently store frame-level edited
+  distributions in the project mel dimension, but external backends can require
+  a different mel bin count.
+- Impact: direct reuse of frame edits can fail at runtime or silently distort
+  the rebuilt backend-domain target mel.
+- Rule: when rebuilding backend-domain target mel, resample edited frame
+  distributions into the backend mel bin count before per-frame energy restore.
+
+### 15. Unbounded post-vocoder pitch correction can destroy weak rows
+
+- Problem: a full median-`F0` correction step after backend synthesis can
+  reduce average pitch drift but over-correct already unstable rows.
+- Impact: some weak rows can collapse to near-zero target shift even though the
+  average `F0` metric looks better.
+- Rule: if post-vocoder pitch correction is used on this route, keep it bounded
+  with both a drift trigger and a correction cap.
 
 ## Archived Historical Pitfalls
 

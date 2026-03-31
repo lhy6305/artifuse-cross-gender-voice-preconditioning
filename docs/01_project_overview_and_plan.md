@@ -28,7 +28,12 @@ The project has already ruled out or deprioritized multiple route families, incl
 - source-filter residual v1 as a viable main line
 - ATRR LSF reconstruction as a standalone upgrade path
 
-The remaining active main line is the `LSF` representation route.
+There is currently no active synthesis main line.
+
+The `LSF` representation route has now been closed after the fixed8 `v9a`
+human result.
+
+The next active route-selection task is a new synthesis-family pivot.
 
 ## Current LSF State
 
@@ -76,6 +81,66 @@ The remaining active main line is the `LSF` representation route.
   `experiments/stage0_baseline/v1_full/speech_lsf_fixed_review_manifest_v8.csv`.
 - A fixed8 rerun is now available in
   `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9_fixed8/`.
+- Fixed8 human review is now complete for `split_core_focus_v9a`.
+- Human result: effectively indistinguishable; no further relisten needed.
+- Route decision: close `LSF` and do not continue to `LSF v10`.
+
+## Current Pivot State
+
+- `LSF` is closed as an active synthesis route.
+- The next route should use a new synthesis family rather than another
+  `LSF` carrier retune.
+- The most grounded next candidate is a vocoder-based carrier family, because
+  `docs/80` already recorded that the `ATRR` design could remain viable under a
+  tighter synthesis surface than `LSF`.
+- The next work item is route-definition and first-prototype planning, not a
+  broad sweep.
+- The first follow-up prototype is now defined as an `ATRR` vocoder-bridge
+  target export plus a future narrow carrier adapter.
+- The target-export stage is already implemented and has produced fixed8 target
+  packages under `artifacts/diagnostics/atrr_vocoder_bridge_target_export/`.
+- The first narrow carrier adapter is now implemented and has been run on the
+  fixed8 target packages.
+- Current adapter backend: `griffinlim_mel_probe`.
+- Current reading: adapter boundary is validated, but backend quality is still
+  blocked by weak `F0` preservation.
+- A first local `F0`-aware neural backend has now also been tested through a
+  local `RVC` posterior bridge.
+- That local `RVC` bridge is rejected as a route candidate because it regressed
+  on target shift, loudness drift, and `F0` drift versus the bounded
+  Griffin-Lim probe.
+- A first true mel-native neural vocoder backend has now also been tested via
+  `torchaudio WaveRNN`.
+- The adapter now supports backend-domain mel reconstruction for external
+  mel-native backends, and this is required for future backend judgments.
+- Even after backend-domain adaptation, `WaveRNN` is rejected for the active
+  route because pitch preservation is catastrophically weak.
+- A direct `SpeechT5HifiGan` integration attempt was blocked by repeated
+  `huggingface.co` fetch timeouts in this environment.
+- A local `Vocos mel 24khz` backend has now also been tested after backend-bin
+  adaptation and is rejected because source reconstruction and pitch stability
+  are both too weak.
+- Two local `BigVGAN` checkpoints have now also been tested.
+- The current provisional best backend is
+  `external_models/bigvgan_v2_22khz_80band_256x/` with explicit RMS matching.
+- A bounded post-vocoder median-`F0` correction layer has now also been tested
+  on top of that backend.
+- The best bounded setting currently uses a `150` cent trigger and a `300` cent
+  correction cap.
+- That mitigation materially improves average `F0` drift and targetward movement
+  versus the plain backend, but it also raises mel reconstruction error and
+  still leaves `VCTK` weaker than `LibriTTS`.
+- A focused weak-row diagnostics pass now shows the remaining `VCTK` failures
+  split into two classes:
+  weak target packages and backend-instability rows.
+- `p241_005_mic1` is the clearest backend-instability row still worth trying to
+  save.
+- The stack is therefore still machine-only even though it is now stronger than
+  the plain backend.
+- The next carrier task is therefore not another local `RVC` bridge variant,
+  not generic `WaveRNN`, and not `Vocos`.
+- The next carrier task is a narrow `VCTK`-focused BigVGAN diagnostics pass
+  that explains the remaining weak rows before any human review.
 
 ## Process State
 
@@ -107,6 +172,14 @@ The workflow also includes a post-review strength rule:
 - `docs/82_post_lsf_v8_review_and_conditioned_priors_pivot_v1.md`
 - `docs/83_conditioned_lsf_v9_machine_sweep_v1.md`
 - `docs/84_v9_sample_drift_invalidation_and_fixed8_review_policy_v1.md`
+- `docs/85_lsf_route_closure_and_vocoder_pivot_prep_v1.md`
+- `docs/86_new_carrier_requirements_and_first_vocoder_bridge_prototype_v1.md`
+- `docs/87_vocoder_carrier_adapter_probe_v1.md`
+- `docs/88_local_rvc_posterior_bridge_probe_rejected_v1.md`
+- `docs/89_torchaudio_wavernn_domain_adapt_probe_rejected_v1.md`
+- `docs/90_local_bigvgan_probe_and_vocos_rejection_v1.md`
+- `docs/91_bigvgan_bounded_pitch_correction_probe_v1.md`
+- `docs/92_vctk_bigvgan_weak_row_diagnostics_v1.md`
 - `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v8.json`
 - `experiments/stage0_baseline/v1_full/speech_lsf_fixed_review_manifest_v8.csv`
 - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
@@ -116,18 +189,34 @@ The workflow also includes a post-review strength rule:
 - `experiments/stage0_baseline/v1_full/lsf_machine_sweep_v9_fixed8/`
 - `artifacts/listening_review/stage0_speech_lsf_machine_sweep_v9/`
 - `artifacts/listening_review/stage0_speech_lsf_machine_sweep_v9_fixed8/`
+- `artifacts/listening_review_rollup/lsf_v9_fixed8_v9a/`
+- `artifacts/machine_gate/lsf_v9_fixed8_v9a/`
 - `scripts/run_lsf_machine_sweep.py`
 - `scripts/build_stage0_speech_lsf_listening_pack.py`
 - `scripts/summarize_lsf_review_by_f0.py`
+- `scripts/export_atrr_vocoder_bridge_targets.py`
+- `scripts/run_atrr_vocoder_carrier_adapter.py`
+- `artifacts/diagnostics/atrr_vocoder_bridge_target_export/v1_fixed8_v9a/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_gl_probe/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_rvc_bridge/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_wavernn_domainadapt_smoke2/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_vocos_smoke2/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_rmsmatch_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_rmsmatch_pitchcorr150_cap300_full8/`
 
 ## Next Allowed Action
 
-The next action is conditional:
+The next action is to continue the new synthesis-family route:
 
-1. do not rely on the first drifted `v9` human pass as a valid comparison
-2. if human review continues, use the fixed8 pack only
-3. review `split_core_focus_v9a` fixed8 first
-4. use `f0_evening_v9b` fixed8 only as an optional comparison pack
-5. if the fixed8 comparison still comes back effectively imperceptible or still
-   misses core resonance, pivot synthesis family instead of escalating to
-   `LSF v10`
+1. freeze the `LSF` route as closed
+2. keep the fixed8 comparison manifest as the human baseline
+3. use the exported `ATRR` target packages as the front half of the new route
+4. keep the current adapter machine-only and do not send it to human review
+5. keep the local `RVC` posterior bridge rejected as a direct carrier candidate
+6. keep generic `WaveRNN` rejected as a direct carrier candidate
+7. preserve backend-domain mel reconstruction as a required adapter step
+8. keep `external_models/bigvgan_v2_22khz_80band_256x/` as the active backend
+9. keep bounded pitch correction as the current best mitigation shape
+10. prioritize backend-stability diagnostics on `p241_005_mic1`
+11. do not expect backend-only fixes to rescue the weakest package-limited rows
+12. rerun machine probe before any new broad sweep or human pass
