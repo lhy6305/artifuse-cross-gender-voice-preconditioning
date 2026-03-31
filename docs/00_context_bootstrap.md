@@ -49,6 +49,18 @@ Only the following files are treated as active living docs right now:
 20. `docs/90_local_bigvgan_probe_and_vocos_rejection_v1.md`
 21. `docs/91_bigvgan_bounded_pitch_correction_probe_v1.md`
 22. `docs/92_vctk_bigvgan_weak_row_diagnostics_v1.md`
+23. `docs/93_p241_single_row_cap_sweep_nonmonotonicity_v1.md`
+24. `docs/94_bigvgan_pre_vocoder_voiced_blend_full8_probe_v1.md`
+25. `docs/95_first_atrr_vocoder_human_pack_ready_v1.md`
+26. `docs/96_atrr_first_human_review_structural_distortion_reject_and_structure_audit_v1.md`
+27. `docs/97_bigvgan_structure_first_anchor_sweep_v1.md`
+28. `docs/98_selective_anchor_and_p230_pitch_rescue_fail_v1.md`
+29. `docs/99_target_side_bin_gating_probe_v1.md`
+30. `docs/100_strength_conditioned_bin_gate_rejected_v1.md`
+31. `docs/101_f0_conditioned_bin_gate_probe_v1.md`
+32. `docs/102_shape_conditioned_gate_probe_v1.md`
+33. `docs/103_row_targeted_gate_baseline_and_second_human_pack_prep_v1.md`
+34. `docs/104_second_atrr_row_targeted_human_pack_ready_v1.md`
 
 ## Read Order
 
@@ -69,10 +81,22 @@ When context must be restored, read in this order:
 13. `docs/90_local_bigvgan_probe_and_vocos_rejection_v1.md`
 14. `docs/91_bigvgan_bounded_pitch_correction_probe_v1.md`
 15. `docs/92_vctk_bigvgan_weak_row_diagnostics_v1.md`
-16. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
-17. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
-18. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-19. `docs/57_machine_first_review_gate_v1.md`
+16. `docs/93_p241_single_row_cap_sweep_nonmonotonicity_v1.md`
+17. `docs/94_bigvgan_pre_vocoder_voiced_blend_full8_probe_v1.md`
+18. `docs/95_first_atrr_vocoder_human_pack_ready_v1.md`
+19. `docs/96_atrr_first_human_review_structural_distortion_reject_and_structure_audit_v1.md`
+20. `docs/97_bigvgan_structure_first_anchor_sweep_v1.md`
+21. `docs/98_selective_anchor_and_p230_pitch_rescue_fail_v1.md`
+22. `docs/99_target_side_bin_gating_probe_v1.md`
+23. `docs/100_strength_conditioned_bin_gate_rejected_v1.md`
+24. `docs/101_f0_conditioned_bin_gate_probe_v1.md`
+25. `docs/102_shape_conditioned_gate_probe_v1.md`
+26. `docs/103_row_targeted_gate_baseline_and_second_human_pack_prep_v1.md`
+27. `docs/104_second_atrr_row_targeted_human_pack_ready_v1.md`
+28. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
+29. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+30. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+31. `docs/57_machine_first_review_gate_v1.md`
 
 ## Hard Rules
 

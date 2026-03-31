@@ -9,14 +9,14 @@
 
 ## Pack Summary
 
-### `stage0_speech_lsf_listening_pack/v8`
+### `stage0_atrr_vocoder_bigvgan_fixed8/blend075_pc150_cap200_v1`
 
 - reviewed: `8/8`
-- audible: `yes=6` `maybe=2` `no=0`
-- direction: `yes=2` `maybe=4` `no=0` `n/a=2`
-- artifact: `yes=0` `slight=5` `no=2` `n/a=1`
-- keep: `yes=2` `maybe=0` `no=0` `n/a=6`
-- strength: `ok=3` `too_weak=3` `too_strong=0` `n/a=2`
-- proposed disposition: `watch_with_risk`
-- implicit fills from audible=yes: `direction_yes=2` `artifact_no=1` `strength_ok=3` `keep_yes=2`
+- audible: `yes=6` `maybe=0` `no=2`
+- direction: `yes=6` `maybe=0` `no=0` `n/a=2`
+- artifact: `yes=8` `slight=0` `no=0` `n/a=0`
+- keep: `yes=0` `maybe=0` `no=7` `n/a=1`
+- strength: `ok=6` `too_weak=0` `too_strong=0` `n/a=2`
+- proposed disposition: `reject`
+- implicit fills from audible=yes: `direction_yes=6` `artifact_no=0` `strength_ok=6` `keep_yes=0`
 

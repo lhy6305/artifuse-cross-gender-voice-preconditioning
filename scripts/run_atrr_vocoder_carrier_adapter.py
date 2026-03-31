@@ -53,8 +53,33 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--clip-threshold", type=float, default=0.999)
     parser.add_argument("--match-source-rms", action="store_true")
     parser.add_argument("--pitch-correct-source-median", action="store_true")
+    parser.add_argument("--pitch-correct-voiced-only", action="store_true")
     parser.add_argument("--pitch-correct-min-drift-cents", type=float, default=25.0)
     parser.add_argument("--pitch-correct-max-cents", type=float)
+    parser.add_argument("--pitch-correct-crossfade-ms", type=float, default=25.0)
+    parser.add_argument("--pitch-correct-min-span-ms", type=float, default=80.0)
+    parser.add_argument("--voiced-target-blend-alpha", type=float, default=1.0)
+    parser.add_argument("--frame-distribution-anchor-alpha", type=float, default=1.0)
+    parser.add_argument("--frame-anchor-l1-threshold", type=float)
+    parser.add_argument("--frame-anchor-min-alpha", type=float, default=0.0)
+    parser.add_argument("--target-bin-delta-threshold", type=float)
+    parser.add_argument("--target-bin-delta-threshold-masculine", type=float)
+    parser.add_argument("--target-bin-delta-threshold-feminine", type=float)
+    parser.add_argument("--target-bin-delta-threshold-masculine-low-f0", type=float)
+    parser.add_argument("--target-bin-delta-threshold-masculine-mid-f0", type=float)
+    parser.add_argument("--target-bin-delta-threshold-masculine-high-f0", type=float)
+    parser.add_argument("--target-bin-delta-threshold-feminine-low-f0", type=float)
+    parser.add_argument("--target-bin-delta-threshold-feminine-mid-f0", type=float)
+    parser.add_argument("--target-bin-delta-threshold-feminine-high-f0", type=float)
+    parser.add_argument("--target-bin-shape-topk-count", type=int, default=3)
+    parser.add_argument("--target-bin-shape-topk-sum-cutoff", type=float)
+    parser.add_argument("--target-bin-delta-threshold-feminine-sharp", type=float)
+    parser.add_argument("--target-bin-source-emd-cutoff", type=float)
+    parser.add_argument("--target-bin-delta-threshold-masculine-weak", type=float)
+    parser.add_argument("--target-bin-delta-threshold-feminine-weak", type=float)
+    parser.add_argument("--target-bin-record-override", action="append", default=[])
+    parser.add_argument("--target-bin-record-veto", action="append", default=[])
+    parser.add_argument("--target-bin-occupancy-threshold", type=float)
     parser.add_argument("--rvc-root", default=str(DEFAULT_RVC_ROOT))
     parser.add_argument("--rvc-config", default=str(DEFAULT_RVC_CONFIG))
     parser.add_argument("--rvc-weights", default=str(DEFAULT_RVC_WEIGHTS))
@@ -77,6 +102,21 @@ def scalar_string(value: np.ndarray) -> str:
         if value.size == 1:
             return str(value.reshape(-1)[0])
     return str(value)
+
+
+def parse_record_threshold_overrides(items: list[str]) -> dict[str, float]:
+    overrides: dict[str, float] = {}
+    for item in items:
+        if not item:
+            continue
+        if "=" not in item:
+            raise ValueError(f"Invalid record override '{item}'. Expected record_id=value.")
+        record_id, value_text = item.split("=", 1)
+        key = record_id.strip()
+        if not key:
+            raise ValueError(f"Invalid record override '{item}'. Empty record_id.")
+        overrides[key] = float(value_text)
+    return overrides
 
 
 def safe_rms_db(audio: np.ndarray) -> float:
@@ -171,6 +211,119 @@ def pitch_correct_to_reference_median(
         bins_per_octave=12,
     )
     return librosa.util.fix_length(corrected.astype(np.float32), size=audio.shape[0])
+
+
+def contiguous_true_spans(mask: np.ndarray) -> list[tuple[int, int]]:
+    spans: list[tuple[int, int]] = []
+    start: int | None = None
+    for idx, value in enumerate(np.asarray(mask, dtype=bool)):
+        if value and start is None:
+            start = idx
+        elif not value and start is not None:
+            spans.append((start, idx))
+            start = None
+    if start is not None:
+        spans.append((start, int(mask.shape[0])))
+    return spans
+
+
+def sample_mask_from_frame_voicing(
+    frame_voiced_mask: np.ndarray,
+    audio_length: int,
+    *,
+    hop_length: int,
+) -> np.ndarray:
+    frame_mask = np.asarray(frame_voiced_mask, dtype=np.float64).reshape(-1)
+    target_frames = max(1, int(math.ceil(audio_length / float(hop_length))))
+    aligned = align_vector_length(frame_mask, target_frames) > 0.5
+    sample_mask = np.repeat(aligned.astype(np.bool_), hop_length)
+    return sample_mask[:audio_length]
+
+
+def pitch_correct_to_reference_median_voiced_only(
+    audio: np.ndarray,
+    reference_audio: np.ndarray,
+    sample_rate: int,
+    *,
+    frame_voiced_mask: np.ndarray,
+    hop_length: int,
+    n_fft: int,
+    min_drift_cents: float,
+    max_correction_cents: float | None,
+    crossfade_ms: float,
+    min_span_ms: float,
+) -> np.ndarray:
+    reference_hz, _ = estimate_f0_median_hz(
+        reference_audio,
+        sample_rate,
+        n_fft=n_fft,
+        hop_length=hop_length,
+    )
+    probe_hz, _ = estimate_f0_median_hz(
+        audio,
+        sample_rate,
+        n_fft=n_fft,
+        hop_length=hop_length,
+    )
+    drift_cents = cents_difference(reference_hz, probe_hz)
+    if not math.isfinite(drift_cents) or drift_cents < min_drift_cents:
+        return np.asarray(audio, dtype=np.float32)
+    if not math.isfinite(reference_hz) or not math.isfinite(probe_hz):
+        return np.asarray(audio, dtype=np.float32)
+    if reference_hz <= 0.0 or probe_hz <= 0.0:
+        return np.asarray(audio, dtype=np.float32)
+
+    correction_cents = float(1200.0 * math.log2(reference_hz / probe_hz))
+    if max_correction_cents is not None and math.isfinite(max_correction_cents):
+        correction_cents = max(-float(max_correction_cents), min(float(max_correction_cents), correction_cents))
+    n_steps = float(correction_cents / 100.0)
+
+    sample_mask = sample_mask_from_frame_voicing(
+        frame_voiced_mask,
+        audio.shape[0],
+        hop_length=hop_length,
+    )
+    spans = contiguous_true_spans(sample_mask)
+    if not spans:
+        return np.asarray(audio, dtype=np.float32)
+
+    crossfade_samples = max(0, int(round(sample_rate * crossfade_ms / 1000.0)))
+    min_span_samples = max(1, int(round(sample_rate * min_span_ms / 1000.0)))
+    output = np.asarray(audio, dtype=np.float32).copy()
+
+    for start, end in spans:
+        if end - start < min_span_samples:
+            continue
+        span_start = max(0, start - crossfade_samples)
+        span_end = min(audio.shape[0], end + crossfade_samples)
+        segment = np.asarray(audio[span_start:span_end], dtype=np.float32)
+        if segment.size < max(32, 2 * crossfade_samples + 8):
+            continue
+        corrected = librosa.effects.pitch_shift(
+            segment,
+            sr=sample_rate,
+            n_steps=n_steps,
+            bins_per_octave=12,
+        )
+        corrected = librosa.util.fix_length(corrected.astype(np.float32), size=segment.shape[0])
+
+        weights = np.zeros(segment.shape[0], dtype=np.float32)
+        core_start = start - span_start
+        core_end = end - span_start
+        weights[core_start:core_end] = 1.0
+
+        if core_start > 0:
+            left = np.linspace(0.0, 1.0, num=core_start, endpoint=False, dtype=np.float32)
+            weights[:core_start] = left
+        if core_end < segment.shape[0]:
+            right_len = segment.shape[0] - core_end
+            right = np.linspace(1.0, 0.0, num=right_len, endpoint=False, dtype=np.float32)
+            weights[core_end:] = right
+
+        output[span_start:span_end] = (
+            output[span_start:span_end] * (1.0 - weights) + corrected * weights
+        ).astype(np.float32)
+    return output
 
 
 def align_time_axis(matrix: np.ndarray, target_frames: int) -> np.ndarray:
@@ -605,6 +758,27 @@ def rebuild_backend_target_log_mel(
     fmax: float,
     power: float,
     center: bool,
+    frame_distribution_anchor_alpha: float,
+    frame_anchor_l1_threshold: float | None,
+    frame_anchor_min_alpha: float,
+    target_bin_delta_threshold: float | None,
+    target_bin_delta_threshold_masculine: float | None,
+    target_bin_delta_threshold_feminine: float | None,
+    target_bin_delta_threshold_masculine_low_f0: float | None,
+    target_bin_delta_threshold_masculine_mid_f0: float | None,
+    target_bin_delta_threshold_masculine_high_f0: float | None,
+    target_bin_delta_threshold_feminine_low_f0: float | None,
+    target_bin_delta_threshold_feminine_mid_f0: float | None,
+    target_bin_delta_threshold_feminine_high_f0: float | None,
+    target_bin_shape_topk_count: int,
+    target_bin_shape_topk_sum_cutoff: float | None,
+    target_bin_delta_threshold_feminine_sharp: float | None,
+    target_bin_source_emd_cutoff: float | None,
+    target_bin_delta_threshold_masculine_weak: float | None,
+    target_bin_delta_threshold_feminine_weak: float | None,
+    target_bin_record_override_thresholds: dict[str, float],
+    target_bin_record_veto_ids: set[str],
+    target_bin_occupancy_threshold: float | None,
 ) -> tuple[np.ndarray, np.ndarray]:
     working_audio = np.asarray(original_audio, dtype=np.float32)
     if original_sample_rate != sample_rate:
@@ -626,18 +800,107 @@ def rebuild_backend_target_log_mel(
     edited_frames = align_time_axis(edited_frames.T, frame_count).T
     edited_frames = align_distribution_bins(edited_frames, source_mel_power.shape[0])
     edited_frames = normalize_frame_distributions(edited_frames)
+    source_distribution = align_vector_length(np.asarray(package["source_distribution"], dtype=np.float64), source_mel_power.shape[0])
+    target_distribution = align_vector_length(np.asarray(package["target_distribution"], dtype=np.float64), source_mel_power.shape[0])
+    target_occupancy = align_vector_length(np.asarray(package["target_occupancy"], dtype=np.float64), source_mel_power.shape[0])
     voiced_mask = align_vector_length(np.asarray(package["voiced_mask"], dtype=np.float64), frame_count) > 0.5
+    record_id = scalar_string(package["record_id"]).strip()
+    target_direction = scalar_string(package["target_direction"]).strip().lower()
+    f0_condition = scalar_string(package["f0_condition"]).strip().lower()
+    source_target_emd = one_dim_emd(source_distribution, target_distribution)
+    target_delta = np.abs(target_distribution - source_distribution)
+    topk = max(1, int(target_bin_shape_topk_count))
+    target_delta_topk_sum = float(np.sum(np.sort(target_delta)[-topk:]))
+
+    active_delta_threshold = target_bin_delta_threshold
+    if target_direction == "masculine" and target_bin_delta_threshold_masculine is not None:
+        active_delta_threshold = target_bin_delta_threshold_masculine
+    elif target_direction == "feminine" and target_bin_delta_threshold_feminine is not None:
+        active_delta_threshold = target_bin_delta_threshold_feminine
+    if target_direction == "masculine":
+        if f0_condition == "low_f0" and target_bin_delta_threshold_masculine_low_f0 is not None:
+            active_delta_threshold = target_bin_delta_threshold_masculine_low_f0
+        elif f0_condition == "mid_f0" and target_bin_delta_threshold_masculine_mid_f0 is not None:
+            active_delta_threshold = target_bin_delta_threshold_masculine_mid_f0
+        elif f0_condition == "high_f0" and target_bin_delta_threshold_masculine_high_f0 is not None:
+            active_delta_threshold = target_bin_delta_threshold_masculine_high_f0
+    elif target_direction == "feminine":
+        if f0_condition == "low_f0" and target_bin_delta_threshold_feminine_low_f0 is not None:
+            active_delta_threshold = target_bin_delta_threshold_feminine_low_f0
+        elif f0_condition == "mid_f0" and target_bin_delta_threshold_feminine_mid_f0 is not None:
+            active_delta_threshold = target_bin_delta_threshold_feminine_mid_f0
+        elif f0_condition == "high_f0" and target_bin_delta_threshold_feminine_high_f0 is not None:
+            active_delta_threshold = target_bin_delta_threshold_feminine_high_f0
+    if target_bin_source_emd_cutoff is not None and source_target_emd <= float(target_bin_source_emd_cutoff):
+        if target_direction == "masculine" and target_bin_delta_threshold_masculine_weak is not None:
+            active_delta_threshold = target_bin_delta_threshold_masculine_weak
+        elif target_direction == "feminine" and target_bin_delta_threshold_feminine_weak is not None:
+            active_delta_threshold = target_bin_delta_threshold_feminine_weak
+    if (
+        target_direction == "feminine"
+        and target_bin_shape_topk_sum_cutoff is not None
+        and target_bin_delta_threshold_feminine_sharp is not None
+        and target_delta_topk_sum >= float(target_bin_shape_topk_sum_cutoff)
+    ):
+        active_delta_threshold = target_bin_delta_threshold_feminine_sharp
+    if record_id in target_bin_record_override_thresholds:
+        active_delta_threshold = float(target_bin_record_override_thresholds[record_id])
+    record_force_source_only = record_id in target_bin_record_veto_ids
 
     target_mel_power = np.array(source_mel_power, dtype=np.float64, copy=True)
     source_frame_energy = np.sum(source_mel_power, axis=0)
+    bounded_anchor_alpha = max(0.0, min(1.0, float(frame_distribution_anchor_alpha)))
+    bounded_min_alpha = max(0.0, min(bounded_anchor_alpha, float(frame_anchor_min_alpha)))
     for frame_idx in range(frame_count):
         if not bool(voiced_mask[frame_idx]):
             continue
+        source_frame_distribution = source_mel_power[:, frame_idx] / max(source_frame_energy[frame_idx], 1e-12)
+        candidate_distribution = np.array(edited_frames[frame_idx], dtype=np.float64, copy=True)
+        if record_force_source_only:
+            candidate_distribution = np.array(source_frame_distribution, dtype=np.float64, copy=True)
+        elif active_delta_threshold is not None and target_bin_occupancy_threshold is not None:
+            stable_bins = (
+                np.abs(target_distribution - source_distribution) >= float(active_delta_threshold)
+            ) & (target_occupancy >= float(target_bin_occupancy_threshold))
+            candidate_distribution[~stable_bins] = source_frame_distribution[~stable_bins]
+            candidate_distribution = np.maximum(candidate_distribution, 1e-12)
+            candidate_distribution /= max(float(np.sum(candidate_distribution)), 1e-12)
+        frame_anchor_alpha = bounded_anchor_alpha
+        if frame_anchor_l1_threshold is not None and math.isfinite(frame_anchor_l1_threshold):
+            frame_l1 = float(np.sum(np.abs(candidate_distribution - source_frame_distribution)))
+            if frame_l1 > float(frame_anchor_l1_threshold):
+                max_l1 = max(2.0 - float(frame_anchor_l1_threshold), 1e-12)
+                reduction = min(max((frame_l1 - float(frame_anchor_l1_threshold)) / max_l1, 0.0), 1.0)
+                frame_anchor_alpha = bounded_anchor_alpha - reduction * (bounded_anchor_alpha - bounded_min_alpha)
+        anchored_distribution = (
+            frame_anchor_alpha * candidate_distribution
+            + (1.0 - frame_anchor_alpha) * source_frame_distribution
+        )
+        anchored_distribution = np.maximum(anchored_distribution, 1e-12)
+        anchored_distribution /= max(float(np.sum(anchored_distribution)), 1e-12)
         target_mel_power[:, frame_idx] = np.maximum(
-            edited_frames[frame_idx] * max(source_frame_energy[frame_idx], 1e-12),
+            anchored_distribution * max(source_frame_energy[frame_idx], 1e-12),
             1e-12,
         )
     return np.log(source_mel_power).astype(np.float32), np.log(target_mel_power).astype(np.float32)
+
+
+def blend_voiced_target_log_mel(
+    source_log_mel: np.ndarray,
+    target_log_mel: np.ndarray,
+    frame_voiced_mask: np.ndarray,
+    *,
+    alpha: float,
+) -> np.ndarray:
+    if alpha >= 0.999999:
+        return np.asarray(target_log_mel, dtype=np.float32)
+    bounded_alpha = max(0.0, min(1.0, float(alpha)))
+    source = np.asarray(source_log_mel, dtype=np.float64)
+    target = np.asarray(target_log_mel, dtype=np.float64)
+    voiced = align_vector_length(np.asarray(frame_voiced_mask, dtype=np.float64), target.shape[1]) > 0.5
+    blended = np.array(target, dtype=np.float64, copy=True)
+    blended[:, voiced] = bounded_alpha * target[:, voiced] + (1.0 - bounded_alpha) * source[:, voiced]
+    return blended.astype(np.float32)
 
 
 def save_audio(path: Path, audio: np.ndarray, sample_rate: int, clip_threshold: float) -> None:
@@ -783,8 +1046,33 @@ def write_summary_md(path: Path, rows: list[dict[str, str]], args: argparse.Name
         f"- n_mels: `{args.n_mels}`",
         f"- match_source_rms: `{args.match_source_rms}`",
         f"- pitch_correct_source_median: `{args.pitch_correct_source_median}`",
+        f"- pitch_correct_voiced_only: `{args.pitch_correct_voiced_only}`",
         f"- pitch_correct_min_drift_cents: `{args.pitch_correct_min_drift_cents}`",
         f"- pitch_correct_max_cents: `{args.pitch_correct_max_cents}`",
+        f"- pitch_correct_crossfade_ms: `{args.pitch_correct_crossfade_ms}`",
+        f"- pitch_correct_min_span_ms: `{args.pitch_correct_min_span_ms}`",
+        f"- voiced_target_blend_alpha: `{args.voiced_target_blend_alpha}`",
+        f"- frame_distribution_anchor_alpha: `{args.frame_distribution_anchor_alpha}`",
+        f"- frame_anchor_l1_threshold: `{args.frame_anchor_l1_threshold}`",
+        f"- frame_anchor_min_alpha: `{args.frame_anchor_min_alpha}`",
+        f"- target_bin_delta_threshold: `{args.target_bin_delta_threshold}`",
+        f"- target_bin_delta_threshold_masculine: `{args.target_bin_delta_threshold_masculine}`",
+        f"- target_bin_delta_threshold_feminine: `{args.target_bin_delta_threshold_feminine}`",
+        f"- target_bin_delta_threshold_masculine_low_f0: `{args.target_bin_delta_threshold_masculine_low_f0}`",
+        f"- target_bin_delta_threshold_masculine_mid_f0: `{args.target_bin_delta_threshold_masculine_mid_f0}`",
+        f"- target_bin_delta_threshold_masculine_high_f0: `{args.target_bin_delta_threshold_masculine_high_f0}`",
+        f"- target_bin_delta_threshold_feminine_low_f0: `{args.target_bin_delta_threshold_feminine_low_f0}`",
+        f"- target_bin_delta_threshold_feminine_mid_f0: `{args.target_bin_delta_threshold_feminine_mid_f0}`",
+        f"- target_bin_delta_threshold_feminine_high_f0: `{args.target_bin_delta_threshold_feminine_high_f0}`",
+        f"- target_bin_shape_topk_count: `{args.target_bin_shape_topk_count}`",
+        f"- target_bin_shape_topk_sum_cutoff: `{args.target_bin_shape_topk_sum_cutoff}`",
+        f"- target_bin_delta_threshold_feminine_sharp: `{args.target_bin_delta_threshold_feminine_sharp}`",
+        f"- target_bin_source_emd_cutoff: `{args.target_bin_source_emd_cutoff}`",
+        f"- target_bin_delta_threshold_masculine_weak: `{args.target_bin_delta_threshold_masculine_weak}`",
+        f"- target_bin_delta_threshold_feminine_weak: `{args.target_bin_delta_threshold_feminine_weak}`",
+        f"- target_bin_record_override: `{args.target_bin_record_override}`",
+        f"- target_bin_record_veto: `{args.target_bin_record_veto}`",
+        f"- target_bin_occupancy_threshold: `{args.target_bin_occupancy_threshold}`",
         f"- rvc_sid: `{args.rvc_sid}`",
         f"- bigvgan_root: `{resolve_path(args.bigvgan_root)}`" if args.backend == "bigvgan_local_v1" else None,
         f"- vocos_root: `{resolve_path(args.vocos_root)}`" if args.backend == "vocos_local_v1" else None,
@@ -825,6 +1113,8 @@ def write_summary_md(path: Path, rows: list[dict[str, str]], args: argparse.Name
 
 def main() -> None:
     args = parse_args()
+    record_override_thresholds = parse_record_threshold_overrides(args.target_bin_record_override)
+    record_veto_ids = {item.strip() for item in args.target_bin_record_veto if item and item.strip()}
     target_dir = resolve_path(args.target_dir)
     queue_csv = resolve_path(args.queue_csv)
     output_dir = resolve_path(args.output_dir)
@@ -969,7 +1259,35 @@ def main() -> None:
                     fmax=float(backend_context["fmax"]),
                     power=float(backend_context["power"]),
                     center=bool(backend_context["center"]),
+                    frame_distribution_anchor_alpha=args.frame_distribution_anchor_alpha,
+                    frame_anchor_l1_threshold=args.frame_anchor_l1_threshold,
+                    frame_anchor_min_alpha=args.frame_anchor_min_alpha,
+                    target_bin_delta_threshold=args.target_bin_delta_threshold,
+                    target_bin_delta_threshold_masculine=args.target_bin_delta_threshold_masculine,
+                    target_bin_delta_threshold_feminine=args.target_bin_delta_threshold_feminine,
+                    target_bin_delta_threshold_masculine_low_f0=args.target_bin_delta_threshold_masculine_low_f0,
+                    target_bin_delta_threshold_masculine_mid_f0=args.target_bin_delta_threshold_masculine_mid_f0,
+                    target_bin_delta_threshold_masculine_high_f0=args.target_bin_delta_threshold_masculine_high_f0,
+                    target_bin_delta_threshold_feminine_low_f0=args.target_bin_delta_threshold_feminine_low_f0,
+                    target_bin_delta_threshold_feminine_mid_f0=args.target_bin_delta_threshold_feminine_mid_f0,
+                    target_bin_delta_threshold_feminine_high_f0=args.target_bin_delta_threshold_feminine_high_f0,
+                    target_bin_shape_topk_count=args.target_bin_shape_topk_count,
+                    target_bin_shape_topk_sum_cutoff=args.target_bin_shape_topk_sum_cutoff,
+                    target_bin_delta_threshold_feminine_sharp=args.target_bin_delta_threshold_feminine_sharp,
+                    target_bin_source_emd_cutoff=args.target_bin_source_emd_cutoff,
+                    target_bin_delta_threshold_masculine_weak=args.target_bin_delta_threshold_masculine_weak,
+                    target_bin_delta_threshold_feminine_weak=args.target_bin_delta_threshold_feminine_weak,
+                    target_bin_record_override_thresholds=record_override_thresholds,
+                    target_bin_record_veto_ids=record_veto_ids,
+                    target_bin_occupancy_threshold=args.target_bin_occupancy_threshold,
                 )
+                if args.voiced_target_blend_alpha < 0.999999:
+                    target_backend_log_mel = blend_voiced_target_log_mel(
+                        source_backend_log_mel,
+                        target_backend_log_mel,
+                        np.asarray(package["voiced_mask"], dtype=np.float64),
+                        alpha=args.voiced_target_blend_alpha,
+                    )
                 source_probe_audio, probe_sample_rate = synthesize_wavernn_bridge(
                     source_backend_log_mel,
                     original_audio,
@@ -1011,7 +1329,35 @@ def main() -> None:
                     fmax=float(backend_context["fmax"]),
                     power=float(backend_context["power"]),
                     center=bool(backend_context["center"]),
+                    frame_distribution_anchor_alpha=args.frame_distribution_anchor_alpha,
+                    frame_anchor_l1_threshold=args.frame_anchor_l1_threshold,
+                    frame_anchor_min_alpha=args.frame_anchor_min_alpha,
+                    target_bin_delta_threshold=args.target_bin_delta_threshold,
+                    target_bin_delta_threshold_masculine=args.target_bin_delta_threshold_masculine,
+                    target_bin_delta_threshold_feminine=args.target_bin_delta_threshold_feminine,
+                    target_bin_delta_threshold_masculine_low_f0=args.target_bin_delta_threshold_masculine_low_f0,
+                    target_bin_delta_threshold_masculine_mid_f0=args.target_bin_delta_threshold_masculine_mid_f0,
+                    target_bin_delta_threshold_masculine_high_f0=args.target_bin_delta_threshold_masculine_high_f0,
+                    target_bin_delta_threshold_feminine_low_f0=args.target_bin_delta_threshold_feminine_low_f0,
+                    target_bin_delta_threshold_feminine_mid_f0=args.target_bin_delta_threshold_feminine_mid_f0,
+                    target_bin_delta_threshold_feminine_high_f0=args.target_bin_delta_threshold_feminine_high_f0,
+                    target_bin_shape_topk_count=args.target_bin_shape_topk_count,
+                    target_bin_shape_topk_sum_cutoff=args.target_bin_shape_topk_sum_cutoff,
+                    target_bin_delta_threshold_feminine_sharp=args.target_bin_delta_threshold_feminine_sharp,
+                    target_bin_source_emd_cutoff=args.target_bin_source_emd_cutoff,
+                    target_bin_delta_threshold_masculine_weak=args.target_bin_delta_threshold_masculine_weak,
+                    target_bin_delta_threshold_feminine_weak=args.target_bin_delta_threshold_feminine_weak,
+                    target_bin_record_override_thresholds=record_override_thresholds,
+                    target_bin_record_veto_ids=record_veto_ids,
+                    target_bin_occupancy_threshold=args.target_bin_occupancy_threshold,
                 )
+                if args.voiced_target_blend_alpha < 0.999999:
+                    target_backend_log_mel = blend_voiced_target_log_mel(
+                        source_backend_log_mel,
+                        target_backend_log_mel,
+                        np.asarray(package["voiced_mask"], dtype=np.float64),
+                        alpha=args.voiced_target_blend_alpha,
+                    )
                 source_probe_audio, probe_sample_rate = synthesize_bigvgan_bridge(
                     source_backend_log_mel,
                     original_audio,
@@ -1053,7 +1399,35 @@ def main() -> None:
                     fmax=float(backend_context["fmax"]),
                     power=float(backend_context["power"]),
                     center=bool(backend_context["center"]),
+                    frame_distribution_anchor_alpha=args.frame_distribution_anchor_alpha,
+                    frame_anchor_l1_threshold=args.frame_anchor_l1_threshold,
+                    frame_anchor_min_alpha=args.frame_anchor_min_alpha,
+                    target_bin_delta_threshold=args.target_bin_delta_threshold,
+                    target_bin_delta_threshold_masculine=args.target_bin_delta_threshold_masculine,
+                    target_bin_delta_threshold_feminine=args.target_bin_delta_threshold_feminine,
+                    target_bin_delta_threshold_masculine_low_f0=args.target_bin_delta_threshold_masculine_low_f0,
+                    target_bin_delta_threshold_masculine_mid_f0=args.target_bin_delta_threshold_masculine_mid_f0,
+                    target_bin_delta_threshold_masculine_high_f0=args.target_bin_delta_threshold_masculine_high_f0,
+                    target_bin_delta_threshold_feminine_low_f0=args.target_bin_delta_threshold_feminine_low_f0,
+                    target_bin_delta_threshold_feminine_mid_f0=args.target_bin_delta_threshold_feminine_mid_f0,
+                    target_bin_delta_threshold_feminine_high_f0=args.target_bin_delta_threshold_feminine_high_f0,
+                    target_bin_shape_topk_count=args.target_bin_shape_topk_count,
+                    target_bin_shape_topk_sum_cutoff=args.target_bin_shape_topk_sum_cutoff,
+                    target_bin_delta_threshold_feminine_sharp=args.target_bin_delta_threshold_feminine_sharp,
+                    target_bin_source_emd_cutoff=args.target_bin_source_emd_cutoff,
+                    target_bin_delta_threshold_masculine_weak=args.target_bin_delta_threshold_masculine_weak,
+                    target_bin_delta_threshold_feminine_weak=args.target_bin_delta_threshold_feminine_weak,
+                    target_bin_record_override_thresholds=record_override_thresholds,
+                    target_bin_record_veto_ids=record_veto_ids,
+                    target_bin_occupancy_threshold=args.target_bin_occupancy_threshold,
                 )
+                if args.voiced_target_blend_alpha < 0.999999:
+                    target_backend_log_mel = blend_voiced_target_log_mel(
+                        source_backend_log_mel,
+                        target_backend_log_mel,
+                        np.asarray(package["voiced_mask"], dtype=np.float64),
+                        alpha=args.voiced_target_blend_alpha,
+                    )
                 source_probe_audio, probe_sample_rate = synthesize_vocos_bridge(
                     source_backend_log_mel,
                     original_audio,
@@ -1084,23 +1458,35 @@ def main() -> None:
                 raise ValueError(f"Unsupported backend: {args.backend}")
 
             if args.pitch_correct_source_median:
-                source_probe_audio = pitch_correct_to_reference_median(
+                correction_fn = pitch_correct_to_reference_median
+                correction_kwargs = {
+                    "n_fft": args.n_fft,
+                    "hop_length": args.hop_length,
+                    "min_drift_cents": args.pitch_correct_min_drift_cents,
+                    "max_correction_cents": args.pitch_correct_max_cents,
+                }
+                if args.pitch_correct_voiced_only:
+                    correction_fn = pitch_correct_to_reference_median_voiced_only
+                    correction_kwargs = {
+                        "frame_voiced_mask": np.asarray(package["voiced_mask"], dtype=np.float64),
+                        "hop_length": args.hop_length,
+                        "n_fft": args.n_fft,
+                        "min_drift_cents": args.pitch_correct_min_drift_cents,
+                        "max_correction_cents": args.pitch_correct_max_cents,
+                        "crossfade_ms": args.pitch_correct_crossfade_ms,
+                        "min_span_ms": args.pitch_correct_min_span_ms,
+                    }
+                source_probe_audio = correction_fn(
                     source_probe_audio,
                     original_audio,
                     sample_rate,
-                    n_fft=args.n_fft,
-                    hop_length=args.hop_length,
-                    min_drift_cents=args.pitch_correct_min_drift_cents,
-                    max_correction_cents=args.pitch_correct_max_cents,
+                    **correction_kwargs,
                 )
-                target_probe_audio = pitch_correct_to_reference_median(
+                target_probe_audio = correction_fn(
                     target_probe_audio,
                     original_audio,
                     sample_rate,
-                    n_fft=args.n_fft,
-                    hop_length=args.hop_length,
-                    min_drift_cents=args.pitch_correct_min_drift_cents,
-                    max_correction_cents=args.pitch_correct_max_cents,
+                    **correction_kwargs,
                 )
 
             if args.match_source_rms:

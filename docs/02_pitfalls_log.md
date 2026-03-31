@@ -121,6 +121,93 @@
 - Rule: if post-vocoder pitch correction is used on this route, keep it bounded
   with both a drift trigger and a correction cap.
 
+### 16. Weak-row cap sweeps can be nonmonotonic
+
+- Problem: on unstable rows such as `p241_005_mic1`, nearby correction-cap
+  values can produce sharply different outcomes instead of a smooth tradeoff.
+- Impact: blind local cap sweeps can waste route budget and create false
+  confidence that a nearby cap will fix the row.
+- Rule: once cap behavior is visibly nonmonotonic on a weak row, stop nearby
+  cap tuning and switch to a different stabilization shape.
+
+### 17. Target-shift metrics can miss carrier-level structural collapse
+
+- Problem: a carrier stack can look targetward on the active machine metrics
+  while still warping speech structure enough to sound mechanical or novelty
+  filtered.
+- Impact: human review can become unable to judge resonance movement at all,
+  even if target-shift metrics looked promising.
+- Rule: for carrier-family experiments, do not rely on target-shift metrics
+  alone. Run a source-to-processed structure audit before sending a pack to
+  human review.
+
+### 18. Stronger source anchoring is not monotonic at row level
+
+- Problem: pack-level source-anchoring sweeps can reduce average structure risk
+  while collapsing individual rescued rows.
+- Impact: a setting can look safer in the aggregate and still destroy the route
+  on specific rows such as `p241_005_mic1`.
+- Rule: for ATRR carrier tuning, do not accept a stronger anchor setting from
+  pack averages alone. Check row-level targetward movement and structure risk in
+  the same pass.
+
+### 19. Stronger backend-side pitch rescue can collapse weak rows before structure improves
+
+- Problem: on remaining weak rows such as `p230_107_mic1`, increasing
+  post-vocoder pitch correction can reduce measured pitch drift while also
+  erasing targetward movement.
+- Impact: the row can look closer in pitch and still remain structurally unsafe,
+  producing no useful route progress.
+- Rule: do not treat stronger backend-side pitch rescue as the default next move
+  for weak ATRR BigVGAN rows. If a row already loses shift under stronger pitch
+  correction, move upstream to target-side selective gating instead.
+
+### 20. Target-side edit gates can be direction-sensitive
+
+- Problem: one global target-side bin-gating threshold can improve pack-level
+  structure risk while still over-suppressing one edit direction.
+- Impact: a global gate can hide a better direction-conditioned tradeoff and
+  make the route look flatter than it really is.
+- Rule: when target-side gating shows meaningful pack-level improvement, check
+  whether the best threshold differs by direction before freezing the baseline.
+
+### 21. Scalar source-target strength alone is too weak for the next target-side gate split
+
+- Problem: a simple weak-package override keyed only to utterance-level
+  source-target `EMD` does not separate the remaining bad rows cleanly enough.
+- Impact: the override can regress the pack while failing to improve the rows
+  it was supposed to rescue.
+- Rule: do not assume that scalar source-target strength is the next best split
+  after direction-conditioned gating. Prefer richer target-shape or `f0`
+  conditioned splits next.
+
+### 22. Whole-bucket f0 overrides can still be too blunt
+
+- Problem: a bucket-level threshold override can improve pack averages while
+  damaging a rescued row inside that same bucket.
+- Impact: a seemingly cleaner `f0` split can still be a route regression once
+  the key rows are inspected.
+- Rule: after a direction-conditioned gate is active, do not promote a whole
+  `f0` bucket override unless the main outlier rows also improve.
+
+### 23. A selective shape override can be real and still too small to matter
+
+- Problem: a target-shape-conditioned override can improve exactly the intended
+  row while leaving the pack nearly unchanged.
+- Impact: it is easy to overvalue a technically correct but practically tiny
+  refinement.
+- Rule: do not promote a shape-conditioned gate unless its row-level gain is
+  large enough to change the pack-level tradeoff materially.
+
+### 24. A row-level veto can improve the pack by becoming a control row
+
+- Problem: a record-level veto can produce a large pack-level structure gain by
+  turning a bad edit into near source passthrough.
+- Impact: the pack can look materially better while containing fewer truly
+  active edited rows than before.
+- Rule: if a promoted stack uses a row-level veto, document that row explicitly
+  as a control row and do not interpret its safety as an edited-row success.
+
 ## Archived Historical Pitfalls
 
 Historical and resolved setup-specific pitfalls were moved out of this active handoff file into:

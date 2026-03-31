@@ -135,12 +135,102 @@ The next active route-selection task is a new synthesis-family pivot.
   weak target packages and backend-instability rows.
 - `p241_005_mic1` is the clearest backend-instability row still worth trying to
   save.
-- The stack is therefore still machine-only even though it is now stronger than
-  the plain backend.
+- A single-row cap sweep on `p241_005_mic1` now shows that post-vocoder
+  correction-cap tuning is not monotonic on that row.
+- The next stabilization idea should therefore change the correction shape, not
+  just tune nearby cap values.
+- A voiced-only pre-vocoder target-log-mel blend has now been tested as that
+  shape change.
+- The resulting full8 stack is now the best machine result on the active route:
+  stronger targetward movement than the previous bounded-cap stack, materially
+  lower mel error, and still controlled pitch drift.
+- The active stack is now a machine-credible candidate for the first human
+  review on the new synthesis-family route.
+- The first fixed8 human pack for that stack is now built and smoke-validated.
+- That first human review is now complete.
+- Human result: reject the current carrier stack because all reviewed rows show
+  audible structural distortion and the output sounds mechanically synthesized
+  enough to block resonance judgment.
+- The route is not fully closed from that result alone, because the failure mode
+  is structure preservation, not necessarily target representation invalidity.
+- A new structure-focused quantitative audit is now implemented and run through
+  `scripts/audit_speech_structure_from_queue.py`.
+- That audit shows the current ATRR vocoder pack is structurally much farther
+  from the source than the old fixed8 `LSF v9a` pack.
+- A second structure-first audit path is now implemented through
+  `scripts/audit_atrr_vocoder_carrier_summary.py`.
+- That split audit shows the current BigVGAN stack adds some carrier-only
+  distortion, but the larger jump happens after the ATRR edit is injected into
+  the carrier input.
+- The adapter now supports a new pre-vocoder
+  `frame_distribution_anchor_alpha` control for stronger source anchoring at
+  the edited-frame stage.
+- A narrow fixed8 anchor sweep has now been run on top of the BigVGAN stack.
+- The best pack-level tradeoff in that sweep is
+  `frame_distribution_anchor_alpha = 0.75` plus the older
+  `voiced_target_blend_alpha = 0.75`.
+- That `anchor075` stack improves both target shift and structure metrics versus
+  the previously reviewed BigVGAN stack, but structure is still not clean enough
+  for another human review.
+- Stronger anchoring is also not monotonic at row level: `anchor050` and
+  `anchor0625` reduce average structure risk further but collapse
+  `p241_005_mic1`.
+- A follow-up selective frame-anchor sweep has now also been tested on top of
+  `anchor075`.
+- That selective control slightly lowers average structure risk, but the gain is
+  too small for the amount of shift it gives back.
+- It also collapses `p230_107_mic1` before that row becomes structurally safe.
+- A dedicated `p230_107_mic1` single-row pitch-rescue probe has now also been
+  tested with stronger post-vocoder correction.
+- That backend-side pitch rescue also fails: stronger correction reduces shift
+  to near zero before structure risk becomes acceptable.
+- The next route step has now moved upstream into target-side bin gating before
+  carrier synthesis.
+- This target-side gate is the first post-human-review control that materially
+  reduces structure risk without collapsing the entire pack.
+- A global sweep showed that bin-gating thresholds are direction-sensitive.
+- The current best machine-only stack now uses a direction-conditioned hybrid
+  threshold:
+  masculine delta `0.010`, feminine delta `0.015`, occupancy `0.05`.
+- This hybrid stack improves pack-level target probe structure risk from
+  `45.76` to `36.40` while keeping average shift at `41.65`.
+- It is not ready for human review yet, but it replaces plain `anchor075` as
+  the active machine baseline.
+- A follow-up utterance-level strength-conditioned extension has now also been
+  tested on top of that hybrid baseline.
+- That strength-conditioned override regresses the pack slightly and does not
+  improve the remaining high-risk rows in a useful way.
+- So the hybrid target-bin gate remains the active machine baseline.
+- A first `f0` conditioned refinement pass has now also been tested on top of
+  the hybrid baseline.
+- Tightening `masculine mid_f0` gives only a small structure gain while hurting
+  `p230_107_mic1`, and tightening `feminine high_f0` harms `p241_005_mic1`.
+- So none of the tested `f0` conditioned variants replace the current hybrid
+  baseline.
+- A first target-shape-conditioned override has now also been tested on top of
+  the hybrid baseline.
+- It is selective enough to touch the `2086` outlier without harming `p241`,
+  but the gain is too small to justify a new baseline.
+- A first row-targeted target-side control has now also been tested on top of
+  the hybrid baseline.
+- The strongest result so far uses a record-level veto for `p230_107_mic1` plus
+  a record-level override `2086_149214_000006_000002=0.025`.
+- This row-targeted stack improves average target probe structure risk from
+  `36.40` to `31.01` and edit-added structure risk from `15.26` to `9.87`,
+  while also raising average shift from `41.65` to `42.91`.
+- The route caveat is explicit: `p230_107_mic1` is now effectively source
+  passthrough and must be interpreted as a source-anchor control row rather than
+  as a transformed-row success.
+- This row-targeted stack now replaces the hybrid-only stack as the active
+  machine baseline for the ATRR BigVGAN route.
+- The second fixed8 human review pack for this promoted candidate is now built
+  at `artifacts/listening_review/stage0_atrr_vocoder_bigvgan_fixed8/rowveto_p230_override2086_025_v1/`.
+- That pack carries the `p230_107_mic1` control-row caveat in both the README
+  and the queue metadata.
 - The next carrier task is therefore not another local `RVC` bridge variant,
   not generic `WaveRNN`, and not `Vocos`.
-- The next carrier task is a narrow `VCTK`-focused BigVGAN diagnostics pass
-  that explains the remaining weak rows before any human review.
+- The immediate next action is to run human review on the new row-targeted
+  fixed8 pack.
 
 ## Process State
 
@@ -180,6 +270,18 @@ The workflow also includes a post-review strength rule:
 - `docs/90_local_bigvgan_probe_and_vocos_rejection_v1.md`
 - `docs/91_bigvgan_bounded_pitch_correction_probe_v1.md`
 - `docs/92_vctk_bigvgan_weak_row_diagnostics_v1.md`
+- `docs/93_p241_single_row_cap_sweep_nonmonotonicity_v1.md`
+- `docs/94_bigvgan_pre_vocoder_voiced_blend_full8_probe_v1.md`
+- `docs/95_first_atrr_vocoder_human_pack_ready_v1.md`
+- `docs/96_atrr_first_human_review_structural_distortion_reject_and_structure_audit_v1.md`
+- `docs/97_bigvgan_structure_first_anchor_sweep_v1.md`
+- `docs/98_selective_anchor_and_p230_pitch_rescue_fail_v1.md`
+- `docs/99_target_side_bin_gating_probe_v1.md`
+- `docs/100_strength_conditioned_bin_gate_rejected_v1.md`
+- `docs/101_f0_conditioned_bin_gate_probe_v1.md`
+- `docs/102_shape_conditioned_gate_probe_v1.md`
+- `docs/103_row_targeted_gate_baseline_and_second_human_pack_prep_v1.md`
+- `docs/104_second_atrr_row_targeted_human_pack_ready_v1.md`
 - `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v8.json`
 - `experiments/stage0_baseline/v1_full/speech_lsf_fixed_review_manifest_v8.csv`
 - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
@@ -203,6 +305,35 @@ The workflow also includes a post-review strength rule:
 - `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_vocos_smoke2/`
 - `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_rmsmatch_full8/`
 - `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_rmsmatch_pitchcorr150_cap300_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_blend075_pc150_cap200_full8/`
+- `artifacts/listening_review/stage0_atrr_vocoder_bigvgan_fixed8/blend075_pc150_cap200_v1/`
+- `scripts/build_atrr_vocoder_human_review_pack.py`
+- `scripts/audit_speech_structure_from_queue.py`
+- `scripts/audit_atrr_vocoder_carrier_summary.py`
+- `artifacts/diagnostics/speech_structure_audit/v1/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v1_baseline_split/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v3_anchor_sweep_plus0625/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v4_selective_anchor_sweep/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/p230_pitch_diag/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v6_target_bin_gating_sweep_plus010/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v7_target_bin_gating_hybrid/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v8_strength_conditioned_bin_gate/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v9_f0_conditioned_bin_gate_sweep/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v10_shape_conditioned_gate/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_anchor075_blend075_pc150_cap200_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_anchor075_binmask_hybrid_m010_f015_occ005_blend075_pc150_cap200_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_binmask_hybrid_strengthcut035_m010_f015_weakm015_weakf005_occ005_blend075_pc150_cap200_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_hybrid_f0_mmid015_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_hybrid_f0_fhigh020_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_hybrid_f0_mmid015_fhigh020_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_hybrid_shape_top3_042_fsharp020_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_hybrid_shape_top3_045_fsharp020_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_hybrid_rowveto_p230_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_hybrid_rowveto_p230_rowoverride_2086_020_full8/`
+- `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_hybrid_rowveto_p230_rowoverride_2086_025_full8/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v11_row_targeted_gate/`
+- `artifacts/diagnostics/atrr_carrier_structure_audit/v12_row_targeted_gate_plus2086_025/`
+- `artifacts/listening_review/stage0_atrr_vocoder_bigvgan_fixed8/rowveto_p230_override2086_025_v1/`
 
 ## Next Allowed Action
 
@@ -216,7 +347,18 @@ The next action is to continue the new synthesis-family route:
 6. keep generic `WaveRNN` rejected as a direct carrier candidate
 7. preserve backend-domain mel reconstruction as a required adapter step
 8. keep `external_models/bigvgan_v2_22khz_80band_256x/` as the active backend
-9. keep bounded pitch correction as the current best mitigation shape
-10. prioritize backend-stability diagnostics on `p241_005_mic1`
-11. do not expect backend-only fixes to rescue the weakest package-limited rows
-12. rerun machine probe before any new broad sweep or human pass
+9. reject the current voiced-blend BigVGAN stack for human-use continuation
+10. keep the ATRR target package family open
+11. require both target-shift metrics and structure audit before the next human
+    review
+12. use `anchor075` as the new machine-only BigVGAN baseline
+13. do not expect backend-only fixes to rescue the weakest package-limited rows
+14. do not assume stronger source anchoring is monotonic at row level
+15. move the next stabilization pass upstream into target-side selective gating
+16. use the row-targeted BigVGAN baseline with `p230` veto plus `2086=0.025`
+    override as the active machine-only stack
+17. when this stack goes to human review, interpret `p230_107_mic1` as a
+    source-anchor control row rather than as a transformed-row success
+18. use the already built fixed8 pack
+    `stage0_atrr_vocoder_bigvgan_fixed8/rowveto_p230_override2086_025_v1/`
+    as the next human-review entry point
