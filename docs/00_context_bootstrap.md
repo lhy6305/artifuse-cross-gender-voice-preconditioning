@@ -61,6 +61,10 @@ Only the following files are treated as active living docs right now:
 32. `docs/102_shape_conditioned_gate_probe_v1.md`
 33. `docs/103_row_targeted_gate_baseline_and_second_human_pack_prep_v1.md`
 34. `docs/104_second_atrr_row_targeted_human_pack_ready_v1.md`
+35. `docs/105_row_targeted_bigvgan_second_human_reject_v1.md`
+36. `docs/106_post_bigvgan_pivot_shortlist_and_encodec_roundtrip_probe_v1.md`
+37. `docs/107_encodec_anchored_mel_residual_probe_rejected_v1.md`
+38. `docs/108_encodec_core_masked_residual_probe_rejected_v1.md`
 
 ## Read Order
 
@@ -93,10 +97,14 @@ When context must be restored, read in this order:
 25. `docs/102_shape_conditioned_gate_probe_v1.md`
 26. `docs/103_row_targeted_gate_baseline_and_second_human_pack_prep_v1.md`
 27. `docs/104_second_atrr_row_targeted_human_pack_ready_v1.md`
-28. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
-29. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
-30. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-31. `docs/57_machine_first_review_gate_v1.md`
+28. `docs/105_row_targeted_bigvgan_second_human_reject_v1.md`
+29. `docs/106_post_bigvgan_pivot_shortlist_and_encodec_roundtrip_probe_v1.md`
+30. `docs/107_encodec_anchored_mel_residual_probe_rejected_v1.md`
+31. `docs/108_encodec_core_masked_residual_probe_rejected_v1.md`
+32. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
+33. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+34. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+35. `docs/57_machine_first_review_gate_v1.md`
 
 ## Hard Rules
 

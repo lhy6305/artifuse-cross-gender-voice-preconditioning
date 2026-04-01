@@ -229,8 +229,46 @@ The next active route-selection task is a new synthesis-family pivot.
   and the queue metadata.
 - The next carrier task is therefore not another local `RVC` bridge variant,
   not generic `WaveRNN`, and not `Vocos`.
-- The immediate next action is to run human review on the new row-targeted
-  fixed8 pack.
+- That second fixed8 human review is now complete.
+- Human result: the row-targeted BigVGAN stack still fails listening use.
+- Excluding the intentional `p230` control row, the transformed-row reading is:
+  `7/7` audible, `6/7` direction wrong, `1/7` direction uncertain, and `7/7`
+  artifact-heavy.
+- The row-targeted stack is therefore rejected for further human-review
+  continuation even though it improved machine structure metrics versus the
+  first BigVGAN human pass.
+- The active route should now stop local threshold tuning on this BigVGAN
+  family and move to a new carrier-family or carrier-boundary pivot.
+- The first concrete post-BigVGAN shortlist probe is now complete.
+- A new `Encodec 24khz` roundtrip-anchor probe shows materially better
+  structure preservation than the rejected row-targeted BigVGAN pack:
+  structure risk `18.39` versus `31.01`.
+- This does not prove ATRR edit success yet, because the roundtrip probe does
+  not inject the ATRR target.
+- But it is strong enough to promote a new active prototype direction:
+  source-preserving `Encodec` anchor plus narrow ATRR edit injection.
+- The active route should therefore move away from direct
+  `target_log_mel -> generic vocoder` synthesis and into a
+  source-preserving carrier-boundary prototype.
+- The first actual `Encodec` anchored ATRR injection probe is now complete.
+- That first shape used a bounded voiced-only mel residual on top of the
+  `Encodec` roundtrip anchor.
+- It is rejected as a low-leverage prototype: versus the plain `Encodec`
+  roundtrip baseline, targetward shift only moved from `42.08` to `42.38` or
+  `42.90`, while structure risk rose from `18.39` to `21.47` or `23.35`.
+- The `Encodec` family remains active, but the next move must change the
+  injection surface rather than continue scalar retuning of this broad mel
+  residual shape.
+- A follow-up `core-masked` mel-residual probe has now also been tested on the
+  same `Encodec` anchor.
+- That tighter mask does improve the tradeoff slightly versus the first broad
+  residual variants, but not enough to beat the plain `Encodec` roundtrip
+  baseline by a meaningful targetward margin.
+- The effective mask is also extremely narrow at roughly `5%` to `7.5%` of mel
+  bins on average.
+- So the next move should not continue mel-residual retuning at all.
+- The active `Encodec` route should now pivot to a narrower injection surface,
+  such as filter-side or latent-side injection.
 
 ## Process State
 
@@ -282,6 +320,10 @@ The workflow also includes a post-review strength rule:
 - `docs/102_shape_conditioned_gate_probe_v1.md`
 - `docs/103_row_targeted_gate_baseline_and_second_human_pack_prep_v1.md`
 - `docs/104_second_atrr_row_targeted_human_pack_ready_v1.md`
+- `docs/105_row_targeted_bigvgan_second_human_reject_v1.md`
+- `docs/106_post_bigvgan_pivot_shortlist_and_encodec_roundtrip_probe_v1.md`
+- `docs/107_encodec_anchored_mel_residual_probe_rejected_v1.md`
+- `docs/108_encodec_core_masked_residual_probe_rejected_v1.md`
 - `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v8.json`
 - `experiments/stage0_baseline/v1_full/speech_lsf_fixed_review_manifest_v8.csv`
 - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
@@ -308,6 +350,8 @@ The workflow also includes a post-review strength rule:
 - `artifacts/diagnostics/atrr_vocoder_carrier_adapter/v1_fixed8_v9a_bigvgan_11025_blend075_pc150_cap200_full8/`
 - `artifacts/listening_review/stage0_atrr_vocoder_bigvgan_fixed8/blend075_pc150_cap200_v1/`
 - `scripts/build_atrr_vocoder_human_review_pack.py`
+- `scripts/run_encodec_roundtrip_probe.py`
+- `scripts/run_encodec_atrr_residual_probe.py`
 - `scripts/audit_speech_structure_from_queue.py`
 - `scripts/audit_atrr_vocoder_carrier_summary.py`
 - `artifacts/diagnostics/speech_structure_audit/v1/`
@@ -334,6 +378,21 @@ The workflow also includes a post-review strength rule:
 - `artifacts/diagnostics/atrr_carrier_structure_audit/v11_row_targeted_gate/`
 - `artifacts/diagnostics/atrr_carrier_structure_audit/v12_row_targeted_gate_plus2086_025/`
 - `artifacts/listening_review/stage0_atrr_vocoder_bigvgan_fixed8/rowveto_p230_override2086_025_v1/`
+- `artifacts/listening_review_rollup/atrr_rowtargeted_v1/`
+- `artifacts/diagnostics/speech_structure_audit/v2_rowtargeted_vs_firstpass_vs_lsf/`
+- `artifacts/diagnostics/encodec_roundtrip_probe/v1_fixed8_bw24/`
+- `artifacts/diagnostics/encodec_roundtrip_probe/v1_fixed8_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_residual_probe/v1_fixed8_s020_d15_g20_bw24/`
+- `artifacts/diagnostics/encodec_atrr_residual_probe/v1_fixed8_s020_d15_g20_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_residual_probe/v1_fixed8_s030_d20_g30_bw24/`
+- `artifacts/diagnostics/encodec_atrr_residual_probe/v1_fixed8_s030_d20_g30_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_residual_probe/v2_fixed8_coremask_s020_d15_g20_bw24/`
+- `artifacts/diagnostics/encodec_atrr_residual_probe/v2_fixed8_coremask_s020_d15_g20_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_residual_probe/v2_fixed8_coremask_s030_d20_g30_off015_bw24/`
+- `artifacts/diagnostics/encodec_atrr_residual_probe/v2_fixed8_coremask_s030_d20_g30_off015_bw24_distribution/`
+- `artifacts/diagnostics/speech_structure_audit/v3_encodec_roundtrip_vs_rowtargeted_vs_lsf/`
+- `artifacts/diagnostics/speech_structure_audit/v4_encodec_injected_vs_roundtrip_vs_bigvgan/`
+- `artifacts/diagnostics/speech_structure_audit/v5_encodec_coremask_vs_roundtrip_vs_broad/`
 
 ## Next Allowed Action
 
@@ -359,6 +418,16 @@ The next action is to continue the new synthesis-family route:
     override as the active machine-only stack
 17. when this stack goes to human review, interpret `p230_107_mic1` as a
     source-anchor control row rather than as a transformed-row success
-18. use the already built fixed8 pack
-    `stage0_atrr_vocoder_bigvgan_fixed8/rowveto_p230_override2086_025_v1/`
-    as the next human-review entry point
+18. keep the completed row-targeted BigVGAN human result as a reject result,
+    not as a tuning baseline for another nearby human pass
+19. keep the ATRR target package family open while pivoting away from the
+    current BigVGAN tuning family
+20. use `Encodec` roundtrip anchor as the next source-preserving carrier probe
+    family
+21. keep the next prototype machine-only until ATRR edit injection remains near
+    the `Encodec` roundtrip structure ceiling
+22. keep the broad mel-residual and core-masked mel-residual variants as
+    rejected low-leverage prototypes
+23. do not keep retuning mel-residual injection on the `Encodec` route
+24. change the next injection surface to a narrower filter-side or latent-side
+    boundary before any human review

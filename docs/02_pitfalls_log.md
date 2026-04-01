@@ -208,6 +208,53 @@
 - Rule: if a promoted stack uses a row-level veto, document that row explicitly
   as a control row and do not interpret its safety as an edited-row success.
 
+### 25. Better structure metrics alone do not guarantee usable resonance judgment
+
+- Problem: a carrier stack can cut structure-risk scores substantially and still
+  sound obviously synthetic enough that core-resonance movement remains
+  unjudgeable on most rows.
+- Impact: a route can look materially improved in machine audits while still
+  failing the real listening goal.
+- Rule: after a structural improvement reaches human review, judge not only
+  whether change is audible but also whether core resonance becomes
+  interpretable. If artifacts still dominate perception, stop local tuning on
+  that carrier family.
+
+### 26. After a carrier-family rejection, screen source roundtrip first
+
+- Problem: it is easy to jump straight into a new edit-injection design without
+  checking whether the candidate carrier family itself has a high enough
+  structure-preservation ceiling.
+- Impact: route effort can be wasted on edit logic inside a carrier family that
+  is already too lossy for the listening goal.
+- Rule: after a human-reviewed carrier family is rejected for structural
+  distortion, run a source-only roundtrip probe on the next candidate family
+  before attempting ATRR edit injection.
+
+### 27. Compare injected variants against the carrier roundtrip baseline
+
+- Problem: a source-preserving carrier family can already shift the active
+  targetward metric slightly even before any intended ATRR edit is injected.
+- Impact: an injected prototype can look active while adding only trivial
+  targetward gain over the plain carrier roundtrip baseline.
+- Rule: for source-preserving carrier pivots, do not judge the first injected
+  prototype in isolation. It must beat the carrier roundtrip baseline by a
+  meaningful margin, not just remain cleaner than the previously rejected
+  family.
+
+### 28. A tighter mel-residual mask can still be too weak to justify the surface
+
+- Problem: narrowing a mel-domain residual to a strict ATRR core-support mask
+  can reduce structure cost, but it may also shrink the effective edit support
+  to a very small fraction of bins.
+- Impact: the new variant can look cleaner than the previous mel-residual
+  version while still failing to beat the plain carrier roundtrip baseline by a
+  meaningful margin.
+- Rule: if a masked mel-residual variant only improves the tradeoff slightly
+  and still stays near the roundtrip targetward baseline, close the whole
+  mel-residual surface and move to a narrower injection boundary instead of
+  continuing scalar mask tuning.
+
 ## Archived Historical Pitfalls
 
 Historical and resolved setup-specific pitfalls were moved out of this active handoff file into:
