@@ -267,8 +267,163 @@ The next active route-selection task is a new synthesis-family pivot.
 - The effective mask is also extremely narrow at roughly `5%` to `7.5%` of mel
   bins on average.
 - So the next move should not continue mel-residual retuning at all.
-- The active `Encodec` route should now pivot to a narrower injection surface,
-  such as filter-side or latent-side injection.
+- A first low-order `filter-side envelope` probe has now also been tested on
+  the same `Encodec` anchor.
+- That surface is also rejected.
+- The stricter variant lands at `39.42` shift and `20.66` structure risk.
+- The wider leaky variant lands at `37.95` shift and `22.16` structure risk.
+- Both are worse than the plain `Encodec` roundtrip baseline on targetward
+  movement while still staying above it on structure risk.
+- So the active `Encodec` route should now close both the `mel residual` and
+  `filter-side envelope` surfaces and move next to a true latent-side or
+  code-side injection boundary.
+- A first true `latent-side` probe has now also been tested on the same
+  `Encodec` anchor.
+- That probe uses a low-rank time-gated latent delta optimized against the
+  masked ATRR target log-mel delta while regularizing latent energy, temporal
+  roughness, and waveform drift back to the plain roundtrip anchor.
+- The conservative latent variant now lands at `42.29` targetward shift and
+  `17.56` structure risk.
+- A wider latent variant now lands at `42.40` targetward shift and `18.09`
+  structure risk.
+- Both latent variants beat the plain `Encodec` roundtrip baseline on both
+  pack-level axes, unlike the earlier mel-residual and filter-side probes.
+- The conservative latent variant is the cleaner current machine baseline
+  inside the `Encodec` family because it gives the larger structure gain while
+  still moving slightly targetward.
+- The wider latent variant is useful as a directionally stronger comparison,
+  but it raises flatness drift enough that it should not replace the
+  conservative latent baseline.
+- A first true `code-side` boundary has now also been tested against that
+  latent baseline.
+- That first code-side surface uses local soft mixing among nearby `Encodec`
+  codebook neighbors on upper quantizers while regularizing code energy,
+  temporal roughness, non-base code mass, and waveform drift back to the plain
+  roundtrip anchor.
+- The conservative code variant lands at `42.01` targetward shift and `17.57`
+  structure risk.
+- A wider code variant lands at `42.10` targetward shift and `17.70`
+  structure risk.
+- Neither code variant beats `latent v1` on both pack-level axes.
+- The conservative code variant nearly matches `latent v1` on structure, but
+  it stays weaker on targetward movement.
+- The wider code variant raises non-base code usage materially, but it still
+  does not clear `latent v1` and gives back some structure headroom.
+- So the first soft local `code-side` boundary is not promoted.
+- A follow-up harder `code-side` comparison has now also been tested through a
+  `teacher-latent -> hard native code refit` boundary on the same upper
+  quantizer slice.
+- That probe first optimizes a latent teacher on the active mask, then greedily
+  refits the editable quantizer range back into native `Encodec` codes.
+- The resulting refit pack lands at `41.88` targetward shift and `17.54`
+  structure risk.
+- This is structurally almost tied with `latent v1`, but it gives back too much
+  targetward movement and even falls slightly below the earlier conservative
+  soft-neighbor code result on shift.
+- So the first hard native code-refit surface is also not promoted.
+- A later teacher-guided shortlist `code-side` family has now also been tested
+  in two fixed8 variants.
+- That family uses the latent teacher only to define a target-aware native
+  shortlist per editable quantizer position, then optimizes soft code mixing
+  inside those teacher-guided shortlists.
+- The first variant lands at `42.35` targetward shift and `17.59` structure
+  risk.
+- A more conservative follow-up lands at `42.26` targetward shift and `17.58`
+  structure risk.
+- So this new family is directionally closer than the earlier soft-neighbor
+  and hard-refit code surfaces, but neither tested variant beats `latent v1`
+  on both pack-level axes.
+- A later sparse native `base <-> teacher code` gate family has now also been
+  tested as an even narrower code-side surface.
+- That family keeps the hard native teacher-code path fixed and learns only a
+  sparse time-and-quantizer gate between the base native code path and that
+  teacher native path.
+- The first fixed8 gate variant lands at `42.02` targetward shift and `17.57`
+  structure risk.
+- This is essentially tied with the earlier conservative soft-neighbor code
+  result and still fails to beat `latent v1` on either axis.
+- A later hard native `base <-> teacher code` commit-mask family has now also
+  been tested as a fully discrete follow-up to the sparse gate surface.
+- That family learns a binary commit mask between the base native code path and
+  a fixed teacher-derived native code path through a straight-through training
+  surrogate.
+- The first fixed8 commit variant lands at `40.89` targetward shift and `17.52`
+  structure risk.
+- So the discrete commit family is cleaner than the latent baseline only by a
+  very small margin, but it gives back far too much targetward movement and is
+  also not promoted.
+- A later hard native scaffold plus bounded residual repair hybrid has now also
+  been tested as a more fundamental follow-up to the pure code-side surfaces.
+- That family first builds a hard native code scaffold from the latent teacher
+  and then allows only a small low-rank continuous correction around that
+  scaffold.
+- The first fixed8 hybrid variant lands at `41.58` targetward shift and `17.58`
+  structure risk.
+- So the hybrid family does not recover the latent teacher advantage, and it is
+  actually weaker than the plain hard-refit checkpoint on both pack-level axes.
+- A later two-stage latent structured follow-up has now also been tested as a
+  non-code-side comparison inside the same `Encodec` family.
+- That family splits the edit into a primary latent target mover plus a smaller
+  latent context compensator that tries to keep off-core delta near zero.
+- The first fixed8 structured latent variant lands at `42.13` targetward shift
+  and `17.57` structure risk.
+- So the structured latent family stays clean, but it still gives back a small
+  amount of targetward movement versus `latent v1` while keeping structure
+  essentially tied.
+- Row-level reading is also not enough to promote it: tiny gains on a few weak
+  `VCTK` rows are offset by small regressions on stronger `LibriTTS` rows, and
+  no key weak row becomes a clear rescue.
+- A later soft time-frequency support latent family has now also been tested as
+  a one-stage objective follow-up inside the same `Encodec` route.
+- That family replaces the flat binary support weighting with a soft
+  frame-distribution-weighted support map plus an explicit off-support null
+  penalty in the same optimization.
+- The first fixed8 soft-support variant lands at `42.32` targetward shift and
+  `17.57` structure risk.
+- A more conservative follow-up lands at `42.26` targetward shift and `17.59`
+  structure risk.
+- So the soft-support family gets close, but it still does not beat
+  `latent v1` on both pack-level axes.
+- Row-level reading is also too mixed to promote it: the small weak-row gains
+  are offset by similarly small regressions on stronger rows, and no key weak
+  row becomes a clear rescue.
+- A later direct distribution-objective latent follow-up has now also been
+  tested inside the same `Encodec` route.
+- That family no longer fits masked log-mel delta directly.
+- Instead it fits frame-level edited resonance distributions plus a voiced
+  weighted utterance-level target distribution while anchoring frame energy
+  back toward the source.
+- The first fixed8 distribution-objective variant lands at `41.94` targetward
+  shift and `17.65` structure risk.
+- So this objective change is not promoted.
+- It does improve a few weak rows directionally, but it loses too much shift on
+  stronger rows and regresses the pack-level tradeoff versus `latent v1`.
+- A later blended latent dual-objective follow-up has now also been tested
+  inside the same `Encodec` route.
+- That family keeps the masked voiced-only delta-fit objective from
+  `latent v1`, then adds gap-adaptive frame-distribution and utterance-
+  distribution losses in the same optimization.
+- The first fixed8 dual-objective variant lands at `41.92` targetward shift
+  and `17.75` structure risk.
+- So blending the active latent baseline with the later distribution-objective
+  family does not rescue the route.
+- It is weaker than `latent v1` on both pack-level axes and also slightly
+  worse than the earlier direct distribution-objective checkpoint on
+  structure.
+- The active `Encodec` machine baseline therefore remains `latent v1
+  conservative`.
+- If latent-side is revisited later, the route should also treat this masked
+  delta-fit plus distribution blend family as closed for nearby retuning.
+- The active `Encodec` machine baseline remains `latent v1 conservative`.
+- If `code-side` is revisited later, the route should change the
+  parameterization more fundamentally rather than keep retuning nearby local
+  soft-neighbor, hard-refit, teacher-shortlist, sparse-gate, hard-commit, or
+  code-hybrid surfaces.
+- If latent-side is revisited later, the route should also change the
+  objective or support parameterization more fundamentally than the current
+  two-stage target-mover plus context-compensator split, this later soft
+  time-frequency support family, or this later direct distribution-objective
+  family.
 
 ## Process State
 
@@ -324,6 +479,18 @@ The workflow also includes a post-review strength rule:
 - `docs/106_post_bigvgan_pivot_shortlist_and_encodec_roundtrip_probe_v1.md`
 - `docs/107_encodec_anchored_mel_residual_probe_rejected_v1.md`
 - `docs/108_encodec_core_masked_residual_probe_rejected_v1.md`
+- `docs/109_encodec_filter_side_envelope_probe_rejected_v1.md`
+- `docs/110_encodec_latent_side_low_rank_probe_v1.md`
+- `docs/111_encodec_code_side_soft_neighbor_probe_not_promoted_v1.md`
+- `docs/112_encodec_code_refit_probe_not_promoted_v1.md`
+- `docs/113_encodec_teacher_shortlist_code_probe_not_promoted_v1.md`
+- `docs/114_encodec_code_gate_probe_not_promoted_v1.md`
+- `docs/115_encodec_code_commit_probe_not_promoted_v1.md`
+- `docs/116_encodec_code_hybrid_probe_not_promoted_v1.md`
+- `docs/117_encodec_latent_structured_probe_not_promoted_v1.md`
+- `docs/118_encodec_latent_soft_support_probe_not_promoted_v1.md`
+- `docs/119_encodec_latent_distribution_objective_probe_not_promoted_v1.md`
+- `docs/120_encodec_latent_dual_objective_probe_not_promoted_v1.md`
 - `experiments/stage0_baseline/v1_full/speech_lsf_resonance_candidate_v8.json`
 - `experiments/stage0_baseline/v1_full/speech_lsf_fixed_review_manifest_v8.csv`
 - `artifacts/listening_review/stage0_speech_lsf_listening_pack/v8/`
@@ -352,6 +519,18 @@ The workflow also includes a post-review strength rule:
 - `scripts/build_atrr_vocoder_human_review_pack.py`
 - `scripts/run_encodec_roundtrip_probe.py`
 - `scripts/run_encodec_atrr_residual_probe.py`
+- `scripts/run_encodec_atrr_filter_probe.py`
+- `scripts/run_encodec_atrr_latent_probe.py`
+- `scripts/run_encodec_atrr_code_probe.py`
+- `scripts/run_encodec_atrr_code_refit_probe.py`
+- `scripts/run_encodec_atrr_code_teacher_probe.py`
+- `scripts/run_encodec_atrr_code_gate_probe.py`
+- `scripts/run_encodec_atrr_code_commit_probe.py`
+- `scripts/run_encodec_atrr_code_hybrid_probe.py`
+- `scripts/run_encodec_atrr_latent_structured_probe.py`
+- `scripts/run_encodec_atrr_latent_support_probe.py`
+- `scripts/run_encodec_atrr_latent_distribution_probe.py`
+- `scripts/run_encodec_atrr_latent_dual_objective_probe.py`
 - `scripts/audit_speech_structure_from_queue.py`
 - `scripts/audit_atrr_vocoder_carrier_summary.py`
 - `artifacts/diagnostics/speech_structure_audit/v1/`
@@ -390,9 +569,58 @@ The workflow also includes a post-review strength rule:
 - `artifacts/diagnostics/encodec_atrr_residual_probe/v2_fixed8_coremask_s020_d15_g20_bw24_distribution/`
 - `artifacts/diagnostics/encodec_atrr_residual_probe/v2_fixed8_coremask_s030_d20_g30_off015_bw24/`
 - `artifacts/diagnostics/encodec_atrr_residual_probe/v2_fixed8_coremask_s030_d20_g30_off015_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_filter_probe/v1_fixed8_env12_s020_d15_g15_bw24/`
+- `artifacts/diagnostics/encodec_atrr_filter_probe/v1_fixed8_env12_s020_d15_g15_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_filter_probe/v2_fixed8_env16_s035_d20_g20_off015_bw24/`
+- `artifacts/diagnostics/encodec_atrr_filter_probe/v2_fixed8_env16_s035_d20_g20_off015_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_latent_probe/v1_fixed8_rank4_s020_d15_lc020_lt010_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_latent_probe/v1_fixed8_rank4_s020_d15_lc020_lt010_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_latent_probe/v2_fixed8_rank8_s035_d20_lc025_lt005_w050_off015_bw24/`
+- `artifacts/diagnostics/encodec_atrr_latent_probe/v2_fixed8_rank8_s035_d20_lc025_lt005_w050_off015_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_code_probe/v1_fixed8_q24_n8_k4_r4_s020_d15_cb020_ct010_nb005_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_code_probe/v1_fixed8_q24_n8_k4_r4_s020_d15_cb020_ct010_nb005_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_code_probe/v2_fixed8_q20_n12_k8_r8_s035_d20_cb010_ct005_nb002_w050_off015_bw24/`
+- `artifacts/diagnostics/encodec_atrr_code_probe/v2_fixed8_q20_n12_k8_r8_s035_d20_cb010_ct005_nb002_w050_off015_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_code_refit_probe/v1_fixed8_q24_n8_teacherlatentv1_bw24/`
+- `artifacts/diagnostics/encodec_atrr_code_refit_probe/v1_fixed8_q24_n8_teacherlatentv1_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_code_teacher_probe/v1_fixed8_q24_n8_c6_tr4_ts30_sr4_ss30_tb030_ib250_tp050_cb010_ct005_nb002_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_code_teacher_probe/v1_fixed8_q24_n8_c6_tr4_ts30_sr4_ss30_tb030_ib250_tp050_cb010_ct005_nb002_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_code_teacher_probe/v2_fixed8_q24_n8_c6_tr4_ts30_sr4_ss30_ib350_tp050_cb015_ct007_nb003_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_code_teacher_probe/v2_fixed8_q24_n8_c6_tr4_ts30_sr4_ss30_ib350_tp050_cb015_ct007_nb003_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_code_gate_probe/v1_fixed8_q24_n8_tr4_ts30_gr4_gs30_gb200_gt100_gl015_gtm007_gg020_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_code_gate_probe/v1_fixed8_q24_n8_tr4_ts30_gr4_gs30_gb200_gt100_gl015_gtm007_gg020_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_code_commit_probe/v1_fixed8_q24_n8_tr4_ts30_cr4_cs30_cb000_ct050_cl015_ctm007_cm010_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_code_commit_probe/v1_fixed8_q24_n8_tr4_ts30_cr4_cs30_cb000_ct050_cl015_ctm007_cm010_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_code_hybrid_probe/v1_fixed8_q24_n8_tr4_ts30_rr4_rs40_rc120_rl020_rt010_tg100_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_code_hybrid_probe/v1_fixed8_q24_n8_tr4_ts30_rr4_rs40_rc120_rl020_rt010_tg100_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_latent_structured_probe/v1_fixed8_tr4_ts30_tc020_tl020_tt010_cr2_cs20_cc008_cl025_ct012_cn040_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_latent_structured_probe/v1_fixed8_tr4_ts30_tc020_tl020_tt010_cr2_cs20_cc008_cl025_ct012_cn040_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_latent_support_probe/v1_fixed8_rank4_s020_d15_fb065_oa050_sf015_sp075_nf020_bw24/`
+- `artifacts/diagnostics/encodec_atrr_latent_support_probe/v1_fixed8_rank4_s020_d15_fb065_oa050_sf015_sp075_nf020_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_latent_support_probe/v2_fixed8_rank4_s020_d15_fb080_oa040_sf010_sp090_nf015_ln030_bw24/`
+- `artifacts/diagnostics/encodec_atrr_latent_support_probe/v2_fixed8_rank4_s020_d15_fb080_oa040_sf010_sp090_nf015_ln030_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_latent_distribution_probe/v1_fixed8_rank4_ds035_fu100_uu050_ea050_w100_bw24/`
+- `artifacts/diagnostics/encodec_atrr_latent_distribution_probe/v1_fixed8_rank4_ds035_fu100_uu050_ea050_w100_bw24_distribution/`
+- `artifacts/diagnostics/encodec_atrr_latent_dual_objective_probe/v1_fixed8_rank4_s020_d15_fk040_uk015_ea025_ds020_gf010_bw24/`
+- `artifacts/diagnostics/encodec_atrr_latent_dual_objective_probe/v1_fixed8_rank4_s020_d15_fk040_uk015_ea025_ds020_gf010_bw24_distribution/`
 - `artifacts/diagnostics/speech_structure_audit/v3_encodec_roundtrip_vs_rowtargeted_vs_lsf/`
 - `artifacts/diagnostics/speech_structure_audit/v4_encodec_injected_vs_roundtrip_vs_bigvgan/`
 - `artifacts/diagnostics/speech_structure_audit/v5_encodec_coremask_vs_roundtrip_vs_broad/`
+- `artifacts/diagnostics/speech_structure_audit/v6_encodec_filter_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v7_encodec_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v8_encodec_code_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v9_encodec_code_vs_latent_family/`
+- `artifacts/diagnostics/speech_structure_audit/v10_encodec_code_refit_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v11_encodec_code_teacher_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v12_encodec_code_teacher_family_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v13_encodec_code_gate_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v14_encodec_code_commit_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v15_encodec_code_hybrid_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v16_encodec_latent_structured_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v17_encodec_latent_support_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v18_encodec_latent_support_family_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v19_encodec_latent_distribution_vs_latent_vs_roundtrip/`
+- `artifacts/diagnostics/speech_structure_audit/v20_encodec_latent_dual_vs_latent_vs_distribution_vs_roundtrip/`
 
 ## Next Allowed Action
 
@@ -429,5 +657,46 @@ The next action is to continue the new synthesis-family route:
 22. keep the broad mel-residual and core-masked mel-residual variants as
     rejected low-leverage prototypes
 23. do not keep retuning mel-residual injection on the `Encodec` route
-24. change the next injection surface to a narrower filter-side or latent-side
-    boundary before any human review
+24. keep the tested low-order filter-side envelope variants as rejected
+    prototypes
+25. do not keep retuning filter-side envelope injection on the `Encodec` route
+26. keep `latent v1 conservative` as the current `Encodec` machine baseline
+27. keep the tested soft local code-side variants as comparison results, not
+    as promoted baselines
+28. do not keep retuning the current soft local neighbor code-side surface
+29. keep the tested hard native code-refit variant as a comparison result, not
+    as a promoted baseline
+30. do not keep retuning the current teacher-latent hard refit surface
+31. keep the tested teacher-shortlist code variants as comparison results, not
+    as promoted baselines
+32. do not keep retuning the current teacher-shortlist code surface nearby
+33. keep the tested sparse native code-gate variant as a comparison result,
+    not as a promoted baseline
+34. do not keep retuning the current sparse native code-gate surface nearby
+35. keep the tested hard native code-commit variant as a comparison result,
+    not as a promoted baseline
+36. do not keep retuning the current hard native code-commit surface nearby
+37. keep the tested hard native scaffold plus bounded residual hybrid as a
+    comparison result, not as a promoted baseline
+38. do not keep retuning the current hard native scaffold plus bounded
+    residual surface nearby
+39. if code-side is revisited later, change the parameterization more
+    fundamentally before any human review
+40. keep the tested two-stage latent structured variant as a comparison
+    result, not as a promoted baseline
+41. do not keep retuning the current target-mover plus context-compensator
+    latent surface nearby
+42. keep the tested soft-support latent variants as comparison results, not as
+    promoted baselines
+43. do not keep retuning the current soft time-frequency support latent family
+    nearby
+44. keep the tested direct distribution-objective latent variant as a
+    comparison result, not as a promoted baseline
+45. do not keep retuning the current direct distribution-objective latent
+    family nearby
+46. keep the tested dual-objective latent variant as a comparison result, not
+    as a promoted baseline
+47. do not keep retuning the current masked delta-fit plus gap-adaptive
+    distribution latent family nearby
+48. if latent-side is revisited later, change the objective or support
+    parameterization more fundamentally before any human review

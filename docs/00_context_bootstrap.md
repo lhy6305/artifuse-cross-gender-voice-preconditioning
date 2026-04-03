@@ -65,6 +65,18 @@ Only the following files are treated as active living docs right now:
 36. `docs/106_post_bigvgan_pivot_shortlist_and_encodec_roundtrip_probe_v1.md`
 37. `docs/107_encodec_anchored_mel_residual_probe_rejected_v1.md`
 38. `docs/108_encodec_core_masked_residual_probe_rejected_v1.md`
+39. `docs/109_encodec_filter_side_envelope_probe_rejected_v1.md`
+40. `docs/110_encodec_latent_side_low_rank_probe_v1.md`
+41. `docs/111_encodec_code_side_soft_neighbor_probe_not_promoted_v1.md`
+42. `docs/112_encodec_code_refit_probe_not_promoted_v1.md`
+43. `docs/113_encodec_teacher_shortlist_code_probe_not_promoted_v1.md`
+44. `docs/114_encodec_code_gate_probe_not_promoted_v1.md`
+45. `docs/115_encodec_code_commit_probe_not_promoted_v1.md`
+46. `docs/116_encodec_code_hybrid_probe_not_promoted_v1.md`
+47. `docs/117_encodec_latent_structured_probe_not_promoted_v1.md`
+48. `docs/118_encodec_latent_soft_support_probe_not_promoted_v1.md`
+49. `docs/119_encodec_latent_distribution_objective_probe_not_promoted_v1.md`
+50. `docs/120_encodec_latent_dual_objective_probe_not_promoted_v1.md`
 
 ## Read Order
 
@@ -101,10 +113,22 @@ When context must be restored, read in this order:
 29. `docs/106_post_bigvgan_pivot_shortlist_and_encodec_roundtrip_probe_v1.md`
 30. `docs/107_encodec_anchored_mel_residual_probe_rejected_v1.md`
 31. `docs/108_encodec_core_masked_residual_probe_rejected_v1.md`
-32. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
-33. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
-34. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
-35. `docs/57_machine_first_review_gate_v1.md`
+32. `docs/109_encodec_filter_side_envelope_probe_rejected_v1.md`
+33. `docs/110_encodec_latent_side_low_rank_probe_v1.md`
+34. `docs/111_encodec_code_side_soft_neighbor_probe_not_promoted_v1.md`
+35. `docs/112_encodec_code_refit_probe_not_promoted_v1.md`
+36. `docs/113_encodec_teacher_shortlist_code_probe_not_promoted_v1.md`
+37. `docs/114_encodec_code_gate_probe_not_promoted_v1.md`
+38. `docs/115_encodec_code_commit_probe_not_promoted_v1.md`
+39. `docs/116_encodec_code_hybrid_probe_not_promoted_v1.md`
+40. `docs/117_encodec_latent_structured_probe_not_promoted_v1.md`
+41. `docs/118_encodec_latent_soft_support_probe_not_promoted_v1.md`
+42. `docs/119_encodec_latent_distribution_objective_probe_not_promoted_v1.md`
+43. `docs/120_encodec_latent_dual_objective_probe_not_promoted_v1.md`
+44. `docs/81_lsf_v8_strength_escalation_machine_pass_v1.md`
+45. `docs/80_atrr_reconstruction_dead_end_and_strength_escalation_pivot_v1.md`
+46. `docs/79_atrr_lsf_reconstruction_prototype_v1_results.md`
+47. `docs/57_machine_first_review_gate_v1.md`
 
 ## Hard Rules
 

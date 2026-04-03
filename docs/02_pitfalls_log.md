@@ -255,6 +255,151 @@
   mel-residual surface and move to a narrower injection boundary instead of
   continuing scalar mask tuning.
 
+### 29. A low-order filter-side envelope can still regress below the roundtrip ceiling
+
+- Problem: moving from a mel-domain residual to a narrower low-order
+  filter-side envelope can reduce the apparent edit surface while also giving
+  back targetward movement to below the plain carrier roundtrip baseline.
+- Impact: the route can spend time on a seemingly more principled narrow
+  surface that is still not a useful ATRR carrier.
+- Rule: if a filter-side envelope variant stays above the roundtrip structure
+  ceiling and also falls below the roundtrip targetward baseline, close the
+  whole filter-side scalar-tuning surface and move to a true latent-side or
+  code-side boundary.
+
+### 30. Encodec decoder backward can fail through cuDNN RNNs in eval mode
+
+- Problem: a latent-side optimization loop that backpropagates through the
+  `Encodec` decoder on `CUDA` can hit `RuntimeError: cudnn RNN backward can
+  only be called in training mode` when the model stays in `eval` mode.
+- Impact: the first latent-side probe can fail before any optimization result
+  is produced, even though the forward path itself is valid.
+- Rule: for gradient-based latent or code-side probes through the `Encodec`
+  decoder, disable cuDNN on the decoder forward path or use another equivalent
+  decoder-call path that avoids the eval-mode cuDNN RNN backward restriction.
+
+### 31. Bilinear low-rank latent factors cannot both start at exact zero
+
+- Problem: a latent delta parameterized as `A @ B` has zero gradient on both
+  factors when both `A` and `B` are initialized to exact zero.
+- Impact: the optimization loop can appear to run normally while producing an
+  exact-zero latent edit, exact-zero waveform drift, and a false impression
+  that the surface is intrinsically too weak.
+- Rule: when using bilinear low-rank latent or code-side factors, initialize
+  both factors with small non-zero noise so gradient flow exists from the first
+  step.
+
+### 32. A hard native code refit can keep structure while losing the teacher gain
+
+- Problem: projecting a good latent-side teacher back into a narrow native
+  `Encodec` code slice through greedy hard refit can preserve structure while
+  quantization error gives back too much targetward movement.
+- Impact: a more natively discrete code-side boundary can look promising
+  because it stays structurally clean, yet still fail to beat the active latent
+  baseline on the actual route tradeoff.
+- Rule: if a teacher-to-code refit stays near the latent structure floor but
+  falls below the latent baseline on targetward shift, keep it as a comparison
+  result and do not spend route budget on nearby retuning of the same refit
+  surface.
+
+### 33. A teacher-guided native shortlist can get close without clearing the latent baseline
+
+- Problem: a code-side surface that uses a latent teacher only to define a
+  target-aware native shortlist can raise targetward movement beyond older
+  code-side designs while still failing to preserve quite as much structure as
+  the latent baseline.
+- Impact: the route can spend time on a more sophisticated native-code family
+  that looks promising in one direction but still does not win the actual
+  two-axis gate.
+- Rule: if a teacher-guided shortlist code family comes close but does not beat
+  the active latent baseline on both targetward shift and structure, record it
+  as a comparison checkpoint and stop nearby retuning of the same shortlist
+  surface.
+
+### 34. A sparse native code gate can be cleaner than it is useful
+
+- Problem: a very narrow gate between the base native code path and a
+  teacher-derived native code path can keep waveform drift extremely small
+  while also shrinking targetward movement back toward the weaker code-side
+  results.
+- Impact: a gate family can look disciplined and structurally safe without
+  providing enough directional gain to justify replacing the latent baseline.
+- Rule: if a sparse native code gate stays near the latent structure floor but
+  falls back to roughly the old conservative code-side shift level, keep it as
+  a comparison checkpoint and stop nearby retuning of that gate surface.
+
+### 35. A hard native commit mask can trade away too much movement for tiny structural gain
+
+- Problem: forcing code-side editing into a fully discrete base-versus-teacher
+  commit mask can slightly improve structure while collapsing a large share of
+  the targetward movement that the latent baseline already achieved.
+- Impact: a very native and interpretable code surface can still fail the route
+  because the structural gain is too small to pay for the directional loss.
+- Rule: if a hard native commit family gains only a tiny structure margin while
+  dropping far below the latent baseline on targetward shift, record it as a
+  comparison checkpoint and stop nearby retuning of that discrete commit
+  surface.
+
+### 36. A small continuous repair on top of a hard native scaffold may not recover the teacher path
+
+- Problem: adding a bounded low-rank residual correction on top of a hard
+  native code scaffold can improve local mel fit while still failing to close
+  the actual scaffold-to-teacher latent gap in a meaningful way.
+- Impact: the route can spend another optimization stage on a more flexible
+  hybrid surface that still underperforms both the active latent baseline and
+  even the simpler hard-refit checkpoint on pack-level metrics.
+- Rule: if a scaffold-plus-residual hybrid does not recover the latent teacher
+  advantage and cannot even beat the plain hard-refit comparison, record it as
+  a comparison checkpoint and stop nearby retuning of that hybrid surface.
+
+### 37. Queue-relative distribution diagnostics need full prototype coverage
+
+- Problem: `extract_resonance_distribution_diagnostics.py` builds each
+  target-gender prototype from the same queue being scored. Small smoke
+  subsets can drop the needed opposite-source-gender rows for a
+  `(group_value, target_direction)` pair.
+- Impact: a subset run can fail with `KeyError` or produce a non-comparable
+  partial read even though the processed audio itself is valid.
+- Rule: run queue-relative distribution diagnostics on the full comparison
+  queue, or keep subset sampling balanced enough that every scored group still
+  contains the required prototype pool for both source genders.
+
+### 38. A soft time-frequency support map can get close without clearing the latent baseline
+
+- Problem: replacing a flat binary latent support with a softer
+  frame-distribution-weighted time-frequency support plus an off-support null
+  penalty can slightly improve a few weak rows while causing equally small
+  regressions on stronger rows.
+- Impact: the new latent objective can look more targeted and still fail the
+  actual pack gate because the net shift gain is too small and structure does
+  not improve.
+- Rule: if a soft support latent family only lands near-tied with `latent v1`,
+  record it as a comparison checkpoint and do not spend route budget on nearby
+  support-floor, blend, or null-weight retuning.
+
+### 39. A direct distribution objective can improve weak rows while regressing the pack
+
+- Problem: fitting edited frame distributions and utterance-level target
+  distribution more directly can produce localized gains on a few weak rows
+  while materially giving back targetward movement on stronger rows.
+- Impact: the objective looks more aligned with the evaluation metric, yet the
+  pack-level tradeoff can still regress because row-level gains and losses are
+  redistributed unevenly.
+- Rule: if a direct distribution-objective latent family improves a few weak
+  rows but loses the pack-level gate versus `latent v1`, record it as a
+  comparison checkpoint and do not spend route budget on nearby scale or weight
+  retuning of that same family.
+
+### 40. Frame-level distribution weights cannot reuse mel-bin support masks directly
+
+- Problem: a hybrid latent objective can mix mel-bin support masks for
+  masked delta-fit with frame-level gap weights for distribution losses.
+  Multiplying those tensors directly crosses two different axes.
+- Impact: the probe can fail at runtime with a shape mismatch, or worse, a
+  silent broadcast bug can misweight the frame-level distribution objective.
+- Rule: keep masked delta-fit weights in mel-bin x frame space, and build
+  frame-level distribution weights separately in frame space only.
+
 ## Archived Historical Pitfalls
 
 Historical and resolved setup-specific pitfalls were moved out of this active handoff file into:

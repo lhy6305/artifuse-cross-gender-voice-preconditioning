@@ -1,0 +1,4 @@
+queue_label,rows,avg_logmel_dtw_l1,avg_mfcc_dtw_cosine,avg_voiced_overlap_iou,avg_f0_overlap_mae_cents,avg_harmonic_share_delta,avg_mean_log_flatness_delta,avg_zcr_delta,avg_structure_risk_score,top_risk_records
+v1_fixed8_bw24,8,0.5361,0.0011,0.9149,11.4966,-0.0136,0.0230,-0.0024,18.39,vctk_corpus_0_92__p231__p231_011_mic1__986481509c;vctk_corpus_0_92__p230__p230_107_mic1__8330d16640;vctk_corpus_0_92__p241__p241_005_mic1__21df46b3a2
+v1_fixed8_env12_s020_d15_g15_bw24,8,0.5806,0.0014,0.9108,12.1234,-0.0231,0.0659,-0.0011,20.66,vctk_corpus_0_92__p231__p231_011_mic1__986481509c;vctk_corpus_0_92__p230__p230_107_mic1__8330d16640;vctk_corpus_0_92__p241__p241_005_mic1__21df46b3a2
+v2_fixed8_env16_s035_d20_g20_off015_bw24,8,0.6039,0.0016,0.9062,11.9993,-0.0274,0.0848,-0.0004,22.16,vctk_corpus_0_92__p231__p231_011_mic1__986481509c;vctk_corpus_0_92__p230__p230_107_mic1__8330d16640;vctk_corpus_0_92__p241__p241_005_mic1__21df46b3a2
